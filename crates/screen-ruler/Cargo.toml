@@ -1,0 +1,12 @@
+[package]
+name = "mpt-screen-ruler"
+description = "Measure pixel distances on screen with overlay"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpt-common = { path = "../common" }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }

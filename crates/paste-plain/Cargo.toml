@@ -1,0 +1,11 @@
+[package]
+name = "mpt-paste-plain"
+description = "Paste clipboard contents as plain text, stripping all formatting"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpt-common = { path = "../common" }
+anyhow = { workspace = true }
+tracing = { workspace = true }

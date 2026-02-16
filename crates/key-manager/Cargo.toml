@@ -1,0 +1,15 @@
+[package]
+name = "mpt-key-manager"
+description = "Remap keys and create custom keyboard shortcuts"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpt-common = { path = "../common" }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
+tokio = { workspace = true }
+evdev = "0.12"

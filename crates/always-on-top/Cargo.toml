@@ -1,0 +1,14 @@
+[package]
+name = "mpt-always-on-top"
+description = "Pin windows to stay always on top"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpt-common = { path = "../common" }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+x11rb = { version = "0.13", features = ["allow-unsafe-code"] }
+wayland-client = "0.31"
+wayland-protocols = { version = "0.32", features = ["client", "unstable"] }

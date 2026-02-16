@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=MyPowerToys
+GenericName=System Utilities
+Comment=Suite of system utilities for Linux, inspired by Microsoft PowerToys
+Exec=mpt-settings
+Icon=my-power-toys
+Terminal=false
+Categories=Utility;System;Settings;
+Keywords=powertoys;utilities;tiling;launcher;
+StartupNotify=true

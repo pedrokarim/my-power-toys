@@ -1,0 +1,60 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/common",
+    "crates/daemon",
+    "crates/ui",
+    "crates/cli",
+    # Modules
+    "crates/always-on-top",
+    "crates/awake",
+    "crates/color-picker",
+    "crates/key-manager",
+    "crates/bulk-rename",
+    "crates/image-resizer",
+    "crates/screen-ruler",
+    "crates/text-extractor",
+    "crates/mouse-utils",
+    "crates/shortcut-guide",
+    "crates/paste-plain",
+    "crates/peek",
+    "crates/hosts-editor",
+    "crates/app-launcher",
+    "crates/fancy-zones",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0"
+authors = ["Ahmed Karim <karimisma6464@gmail.com>"]
+
+[workspace.dependencies]
+# Shared
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+anyhow = "1"
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# IPC
+zbus = "5"
+
+# Async
+tokio = { version = "1", features = ["full"] }
+
+# UI - Windows (iced)
+iced = "0.13"
+
+# UI - Overlays (egui)
+egui = "0.31"
+eframe = "0.31"
+
+# System
+dirs = "6"
+notify = "7"
+
+# Self-update
+self_update = { version = "0.42", default-features = false, features = ["archive-tar", "compression-flate2", "rustls"] }

@@ -1,0 +1,42 @@
+# Maintainer: Ahmed Karim <karimisma6464@gmail.com>
+pkgname=my-power-toys
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="System utilities for Linux inspired by Microsoft PowerToys"
+arch=('x86_64')
+url="https://github.com/pedrokarim/my-power-toys"
+license=('GPL-3.0-only')
+depends=('dbus' 'gcc-libs')
+makedepends=('rust' 'cargo')
+optdepends=(
+    'tesseract: OCR text extraction'
+    'wl-clipboard: clipboard operations on Wayland'
+    'xdotool: keyboard simulation on X11'
+    'xclip: clipboard operations on X11'
+    'imagemagick: image dimension detection'
+    'ffmpeg: media file preview'
+    'poppler: PDF preview'
+)
+source=("${pkgname}-${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "${srcdir}/${pkgname}-${pkgver}"
+    cargo build --release --locked
+}
+
+package() {
+    cd "${srcdir}/${pkgname}-${pkgver}"
+
+    install -Dm755 "target/release/mpt-daemon" "${pkgdir}/usr/bin/mpt-daemon"
+    install -Dm755 "target/release/mpt-settings" "${pkgdir}/usr/bin/mpt-settings"
+    install -Dm755 "target/release/mpt-ctl" "${pkgdir}/usr/bin/mpt-ctl"
+
+    install -Dm644 "assets/my-power-toys.desktop" "${pkgdir}/usr/share/applications/my-power-toys.desktop"
+    install -Dm644 "assets/my-power-toys-daemon.desktop" "${pkgdir}/usr/share/applications/my-power-toys-daemon.desktop"
+    install -Dm644 "assets/my-power-toys.service" "${pkgdir}/usr/lib/systemd/user/my-power-toys.service"
+
+    install -Dm644 "assets/icons/icon-48.png" "${pkgdir}/usr/share/icons/hicolor/48x48/apps/my-power-toys.png"
+    install -Dm644 "assets/icons/icon-128.png" "${pkgdir}/usr/share/icons/hicolor/128x128/apps/my-power-toys.png"
+    install -Dm644 "assets/icons/icon-256.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/my-power-toys.png"
+}

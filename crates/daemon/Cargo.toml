@@ -1,0 +1,37 @@
+[package]
+name = "mpt-daemon"
+description = "Central daemon for MyPowerToys - tray icon, module management"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "mpt-daemon"
+path = "src/main.rs"
+
+[dependencies]
+mpt-common = { path = "../common" }
+mpt-always-on-top = { path = "../always-on-top" }
+mpt-awake = { path = "../awake" }
+mpt-paste-plain = { path = "../paste-plain" }
+mpt-color-picker = { path = "../color-picker" }
+mpt-hosts-editor = { path = "../hosts-editor" }
+mpt-bulk-rename = { path = "../bulk-rename" }
+mpt-image-resizer = { path = "../image-resizer" }
+mpt-key-manager = { path = "../key-manager" }
+mpt-mouse-utils = { path = "../mouse-utils" }
+mpt-screen-ruler = { path = "../screen-ruler" }
+mpt-text-extractor = { path = "../text-extractor" }
+mpt-shortcut-guide = { path = "../shortcut-guide" }
+mpt-app-launcher = { path = "../app-launcher" }
+mpt-fancy-zones = { path = "../fancy-zones" }
+mpt-peek = { path = "../peek" }
+serde = { workspace = true }
+toml = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+zbus = { workspace = true }
+tokio = { workspace = true }
+dirs = { workspace = true }
+ksni = "0.2"

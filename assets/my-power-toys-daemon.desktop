@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=MyPowerToys Daemon
+Comment=Background daemon for MyPowerToys
+Exec=mpt-daemon
+Icon=my-power-toys
+Terminal=false
+Categories=Utility;System;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel

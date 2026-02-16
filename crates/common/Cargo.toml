@@ -1,0 +1,17 @@
+[package]
+name = "mpt-common"
+description = "Shared types, config, IPC and utilities for MyPowerToys"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+toml = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+dirs = { workspace = true }
+zbus = { workspace = true }
+tokio = { workspace = true }
+self_update = { workspace = true }

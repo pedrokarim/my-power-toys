@@ -1,0 +1,11 @@
+[package]
+name = "mpt-hosts-editor"
+description = "Graphical editor for /etc/hosts with toggle entries on/off"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpt-common = { path = "../common" }
+anyhow = { workspace = true }
+tracing = { workspace = true }

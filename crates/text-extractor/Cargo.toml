@@ -1,0 +1,12 @@
+[package]
+name = "mpt-text-extractor"
+description = "Extract text from any screen region using OCR"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpt-common = { path = "../common" }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }

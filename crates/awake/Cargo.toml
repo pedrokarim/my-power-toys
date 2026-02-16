@@ -1,0 +1,13 @@
+[package]
+name = "mpt-awake"
+description = "Prevent screen sleep and system suspend"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpt-common = { path = "../common" }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+zbus = { workspace = true }
+tokio = { workspace = true }

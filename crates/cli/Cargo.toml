@@ -1,0 +1,16 @@
+[package]
+name = "mpt-cli"
+description = "CLI control tool for MyPowerToys daemon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "mpt-ctl"
+path = "src/main.rs"
+
+[dependencies]
+mpt-common = { path = "../common" }
+anyhow = { workspace = true }
+zbus = { workspace = true }
+tokio = { workspace = true }

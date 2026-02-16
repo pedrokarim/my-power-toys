@@ -24,7 +24,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 license = "GPL-3.0"
 authors = ["Ahmed Karim <karimisma6464@gmail.com>"]
@@ -46,7 +46,7 @@ zbus = "5"
 tokio = { version = "1", features = ["full"] }
 
 # UI - Windows (iced)
-iced = "0.13"
+iced = { version = "0.13", features = ["image", "tokio"] }
 
 # UI - Overlays (egui)
 egui = "0.31"

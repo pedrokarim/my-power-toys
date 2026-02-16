@@ -18,5 +18,6 @@ serde = { workspace = true }
 toml = { workspace = true }
 dirs = { workspace = true }
 iced = { workspace = true }
+iced_fonts = { version = "0.1", features = ["bootstrap"] }
 zbus = { workspace = true }
 tokio = { workspace = true }

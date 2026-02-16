@@ -4,7 +4,7 @@ mod translations;
 use iced::font::Weight;
 use iced::time;
 use iced::widget::{
-    button, column, container, horizontal_rule, image, row, scrollable, text, toggler, Space,
+    Space, button, column, container, horizontal_rule, image, row, scrollable, text, toggler,
 };
 use iced::{Alignment, Color, Element, Font, Length, Padding, Subscription, Task, Theme};
 use iced_fonts::bootstrap::Bootstrap;
@@ -74,11 +74,7 @@ impl Ui {
 
     /// Returns a bold font when bold-text accessibility is on, otherwise default.
     fn font(&self) -> Font {
-        if self.bold {
-            bold()
-        } else {
-            Font::DEFAULT
-        }
+        if self.bold { bold() } else { Font::DEFAULT }
     }
 
     /// Scales padding down by ~30% when compact layout is on.
@@ -328,13 +324,11 @@ impl Settings {
             ui,
         ));
 
-        container(
-            column![
-                header,
-                container(horizontal_rule(1)).padding(Padding::from([0.0, 12.0])),
-                scrollable(nav.padding(Padding::from([8.0, 4.0]))).height(Length::Fill),
-            ],
-        )
+        container(column![
+            header,
+            container(horizontal_rule(1)).padding(Padding::from([0.0, 12.0])),
+            scrollable(nav.padding(Padding::from([8.0, 4.0]))).height(Length::Fill),
+        ])
         .width(250)
         .height(Length::Fill)
         .style(theme::sidebar)
@@ -430,9 +424,7 @@ impl Settings {
         let left = row![
             icon_badge(module.icon, module.accent, ui.sz(18.0)),
             column![
-                text(module.name.clone())
-                    .size(ui.sz(14.0))
-                    .font(ui.font()),
+                text(module.name.clone()).size(ui.sz(14.0)).font(ui.font()),
                 text(module.description.clone())
                     .size(ui.sz(12.0))
                     .font(ui.font())
@@ -457,9 +449,7 @@ impl Settings {
         .spacing(12)
         .align_y(Alignment::Center);
 
-        let content = row![left, right]
-            .align_y(Alignment::Center)
-            .spacing(12);
+        let content = row![left, right].align_y(Alignment::Center).spacing(12);
 
         card(content, ui)
     }
@@ -509,12 +499,10 @@ impl Settings {
                         .spacing(6)
                         .align_y(Alignment::Center),
                         Space::with_height(12),
-                        toggler(m.running)
-                            .label(tr.enabled)
-                            .on_toggle({
-                                let id = m.id.clone();
-                                move |v| Message::ToggleModule(id.clone(), v)
-                            }),
+                        toggler(m.running).label(tr.enabled).on_toggle({
+                            let id = m.id.clone();
+                            move |v| Message::ToggleModule(id.clone(), v)
+                        }),
                     ]
                     .spacing(8),
                     ui,
@@ -549,8 +537,7 @@ impl Settings {
                     ui,
                 );
 
-                let mut content =
-                    column![header, Space::with_height(4), status_card].spacing(12);
+                let mut content = column![header, Space::with_height(4), status_card].spacing(12);
                 if let Some(hk) = hotkey_card {
                     content = content.push(hk);
                 }
@@ -864,17 +851,13 @@ fn kbd<'a>(key: &str, ui: Ui) -> Element<'a, Message> {
 /// Colored icon badge (perfectly square rounded container).
 fn icon_badge<'a>(icon: Bootstrap, accent: Color, size: f32) -> Element<'a, Message> {
     let box_size = size * 1.7;
-    container(
-        text(icon.to_string())
-            .font(BOOTSTRAP_FONT)
-            .size(size),
-    )
-    .width(box_size)
-    .height(box_size)
-    .center_x(box_size)
-    .center_y(box_size)
-    .style(theme::icon_badge(accent))
-    .into()
+    container(text(icon.to_string()).font(BOOTSTRAP_FONT).size(size))
+        .width(box_size)
+        .height(box_size)
+        .center_x(box_size)
+        .center_y(box_size)
+        .style(theme::icon_badge(accent))
+        .into()
 }
 
 /// Sidebar button with a Bootstrap icon.
@@ -894,9 +877,7 @@ fn sidebar_icon_button(
             } else {
                 theme::overlay0(ui.dark)
             }),
-        text(label.to_string())
-            .size(ui.sz(13.0))
-            .font(ui.font()),
+        text(label.to_string()).size(ui.sz(13.0)).font(ui.font()),
     ]
     .spacing(8)
     .align_y(Alignment::Center);
@@ -920,9 +901,7 @@ fn sidebar_badge_button(
 ) -> Element<'static, Message> {
     let content = row![
         icon_badge(icon, accent, ui.sz(13.0)),
-        text(label.to_string())
-            .size(ui.sz(13.0))
-            .font(ui.font()),
+        text(label.to_string()).size(ui.sz(13.0)).font(ui.font()),
     ]
     .spacing(8)
     .align_y(Alignment::Center);
@@ -937,15 +916,11 @@ fn sidebar_badge_button(
 
 /// Segmented control button.
 fn seg_button(label: &str, active: bool, msg: Message, ui: Ui) -> Element<'static, Message> {
-    button(
-        text(label.to_string())
-            .size(ui.sz(11.0))
-            .font(ui.font()),
-    )
-    .on_press(msg)
-    .padding(Padding::from([5.0, 10.0]))
-    .style(theme::seg_button(active))
-    .into()
+    button(text(label.to_string()).size(ui.sz(11.0)).font(ui.font()))
+        .on_press(msg)
+        .padding(Padding::from([5.0, 10.0]))
+        .style(theme::seg_button(active))
+        .into()
 }
 
 /// Info row: faded label + value.
@@ -956,9 +931,7 @@ fn info_row<'a>(label: &str, value: &str, ui: Ui) -> Element<'a, Message> {
             .font(ui.font())
             .color(theme::subtext0(ui.dark))
             .width(120),
-        text(value.to_string())
-            .size(ui.sz(13.0))
-            .font(ui.font()),
+        text(value.to_string()).size(ui.sz(13.0)).font(ui.font()),
     ]
     .spacing(12)
     .into()
@@ -974,9 +947,7 @@ fn pref_toggle<'a>(
 ) -> Element<'a, Message> {
     row![
         column![
-            text(label.to_string())
-                .size(ui.sz(14.0))
-                .font(ui.font()),
+            text(label.to_string()).size(ui.sz(14.0)).font(ui.font()),
             text(desc.to_string())
                 .size(ui.sz(12.0))
                 .font(ui.font())

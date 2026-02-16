@@ -101,7 +101,11 @@ pub fn card(hc: bool) -> impl Fn(&Theme) -> container::Style {
             background: Some(palette.background.weak.color.into()),
             border: Border {
                 radius: 12.0.into(),
-                color: if hc { palette.secondary.weak.color } else { Color::TRANSPARENT },
+                color: if hc {
+                    palette.secondary.weak.color
+                } else {
+                    Color::TRANSPARENT
+                },
                 width: if hc { 1.5 } else { 0.0 },
             },
             shadow: NO_SHADOW,
@@ -149,11 +153,7 @@ pub fn icon_badge(accent: Color) -> impl Fn(&Theme) -> container::Style {
     move |theme| {
         let is_dark = theme.extended_palette().is_dark;
         let factor = if is_dark { 0.25 } else { 0.15 };
-        let base = if is_dark {
-            Color::BLACK
-        } else {
-            Color::WHITE
-        };
+        let base = if is_dark { Color::BLACK } else { Color::WHITE };
         // Blend accent with base at low opacity
         let bg = Color {
             r: accent.r * factor + base.r * (1.0 - factor),
@@ -252,4 +252,3 @@ pub fn seg_button(active: bool) -> impl Fn(&Theme, button::Status) -> button::St
         }
     }
 }
-

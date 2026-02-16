@@ -16,6 +16,12 @@
   <img src="https://img.shields.io/badge/platform-Linux-green" alt="Platform Linux">
 </p>
 
+<p align="center">
+  <a href="https://pedrokarim.github.io/my-power-toys">Website</a> &middot;
+  <a href="https://github.com/pedrokarim/my-power-toys/releases/latest">Download</a> &middot;
+  <a href="docs/auto-updater.md">Auto-Updater Docs</a>
+</p>
+
 ---
 
 ## What is this?
@@ -77,7 +83,15 @@ my-power-toys/
 
 ## Installation
 
-### From source (recommended)
+### Quick install (recommended)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/packaging/install.sh | bash
+```
+
+This will download the latest release from GitHub and install everything automatically.
+
+### From source
 
 ```bash
 # Prerequisites
@@ -85,16 +99,11 @@ sudo apt install libdbus-1-dev libwayland-dev  # Debian/Ubuntu
 # or
 sudo pacman -S dbus wayland                     # Arch
 
-# Clone and install
+# Clone and build
 git clone https://github.com/pedrokarim/my-power-toys.git
 cd my-power-toys
-./packaging/install.sh
+cargo build --release
 ```
-
-This will:
-- Build all binaries in release mode
-- Install `mpt-daemon`, `mpt-settings`, `mpt-ctl` to `~/.cargo/bin/`
-- Set up autostart and systemd user service
 
 ### Arch Linux (AUR)
 

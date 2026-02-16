@@ -156,7 +156,10 @@ fn cmd_check_update() -> Result<()> {
     println!("Checking for updates...");
     match mpt_common::updater::check_for_update() {
         Ok(Some(info)) => {
-            println!("Update available: {} -> {}", info.current_version, info.latest_version);
+            println!(
+                "Update available: {} -> {}",
+                info.current_version, info.latest_version
+            );
             if !info.release_notes.is_empty() {
                 println!("\nRelease notes:\n{}", info.release_notes);
             }
@@ -182,7 +185,9 @@ fn cmd_update() -> Result<()> {
             );
             let version = mpt_common::updater::perform_update("mpt-ctl")?;
             println!("Successfully updated to v{version}.");
-            println!("Restart the daemon to complete the update: systemctl --user restart mpt-daemon");
+            println!(
+                "Restart the daemon to complete the update: systemctl --user restart mpt-daemon"
+            );
         }
         Ok(None) => {
             println!("Already up to date (v{}).", env!("CARGO_PKG_VERSION"));

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyPowerToys — PowerToys for Linux</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/assets/icons/icon-32.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #60cdff;
+            --accent-dark: #0078d4;
+            --bg-base: #0d1117;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --text: #f5f5f5;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-base);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Mica-like background */
+        .bg-layer {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(96, 205, 255, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 20%, rgba(0, 120, 212, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 40% at 20% 80%, rgba(134, 97, 193, 0.05) 0%, transparent 50%),
+                var(--bg-base);
+        }
+
+        /* Noise texture overlay */
+        .bg-layer::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.015;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 128px 128px;
+        }
+
+        /* Glass card mixin */
+        .glass {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            transition: all 0.2s ease;
+        }
+
+        .glass:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 12px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(13, 17, 23, 0.7);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .nav-brand img {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 24px 80px;
+            position: relative;
+        }
+
+        .hero-icon {
+            width: 96px;
+            height: 96px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.06);
+        }
+
+        .version-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent);
+            background: rgba(96, 205, 255, 0.08);
+            border: 1px solid rgba(96, 205, 255, 0.15);
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            border-radius: var(--radius);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-dark);
+            color: white;
+            box-shadow: 0 1px 4px rgba(0, 120, 212, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #1a8ad4;
+            box-shadow: 0 4px 16px rgba(0, 120, 212, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Install command */
+        .install-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .install-box code {
+            font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 13px;
+            color: var(--text-secondary);
+            flex: 1;
+            text-align: left;
+            white-space: nowrap;
+            overflow-x: auto;
+        }
+
+        .install-box code span {
+            color: var(--accent);
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .copy-btn.copied {
+            color: #4ade80;
+        }
+
+        /* Badges */
+        .badges {
+            display: flex;
+            gap: 24px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .badge-dot.green { background: #4ade80; }
+        .badge-dot.blue { background: var(--accent); }
+        .badge-dot.purple { background: #a78bfa; }
+        .badge-dot.orange { background: #fb923c; }
+
+        /* Features Section */
+        .section {
+            padding: 80px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 56px;
+        }
+
+        .section-header h2 {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* Module grid */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+        }
+
+        .module-card {
+            padding: 24px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .module-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            background: rgba(96, 205, 255, 0.08);
+            border: 1px solid rgba(96, 205, 255, 0.1);
+        }
+
+        .module-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .module-card p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Highlight cards row */
+        .highlights {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 80px;
+        }
+
+        .highlight-card {
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        .highlight-card .h-icon {
+            font-size: 28px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .highlight-card h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .highlight-card p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Install Section */
+        .install-section {
+            text-align: center;
+            padding: 80px 24px;
+        }
+
+        .install-card {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 48px 40px;
+        }
+
+        .install-card h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .install-card p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .install-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .install-method {
+            padding: 16px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+        }
+
+        .install-method-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .install-method code {
+            font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        footer a:hover {
+            color: var(--text);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 12px 16px;
+            }
+
+            .highlights {
+                grid-template-columns: 1fr;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .install-box {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .install-box code {
+                text-align: center;
+            }
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Selection */
+        ::selection {
+            background: rgba(0, 120, 212, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-layer"></div>
+
+    <!-- Nav -->
+    <nav>
+        <a href="#" class="nav-brand">
+            <img src="https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/assets/icons/icon-128.png" alt="MyPowerToys">
+            MyPowerToys
+        </a>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#modules">Modules</a>
+            <a href="#install">Install</a>
+            <a href="https://github.com/pedrokarim/my-power-toys" target="_blank">GitHub</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <img src="https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/assets/icons/icon-128.png" alt="MyPowerToys" class="hero-icon">
+        <div class="version-badge">v0.2.0</div>
+        <h1>MyPowerToys</h1>
+        <p>Suite d'utilitaires systeme pour Linux, inspiree de Microsoft PowerToys. Modulaire, legere et native.</p>
+
+        <div class="hero-actions">
+            <a href="https://github.com/pedrokarim/my-power-toys/releases/latest" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download
+            </a>
+            <a href="https://github.com/pedrokarim/my-power-toys" class="btn btn-secondary" target="_blank">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                GitHub
+            </a>
+        </div>
+
+        <div class="install-box">
+            <code><span>$</span> curl -fsSL https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/packaging/install.sh | bash</code>
+            <button class="copy-btn" onclick="copyInstall(this)" title="Copy">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+        </div>
+
+        <div class="badges">
+            <span class="badge"><span class="badge-dot green"></span>Open Source</span>
+            <span class="badge"><span class="badge-dot blue"></span>Wayland + X11</span>
+            <span class="badge"><span class="badge-dot purple"></span>Written in Rust</span>
+            <span class="badge"><span class="badge-dot orange"></span>Auto-Update</span>
+        </div>
+    </section>
+
+    <!-- Highlights -->
+    <section class="section" id="features">
+        <div class="section-header">
+            <h2>Built for Linux, from the ground up</h2>
+            <p>Designed to be lightweight, modular, and deeply integrated with your desktop.</p>
+        </div>
+
+        <div class="highlights">
+            <div class="glass highlight-card">
+                <span class="h-icon">&#9881;</span>
+                <h3>Modular</h3>
+                <p>Each tool is an independent module. Enable only what you need, disable the rest.</p>
+            </div>
+            <div class="glass highlight-card">
+                <span class="h-icon">&#9889;</span>
+                <h3>Lightweight</h3>
+                <p>Minimal daemon in memory. Modules are loaded on demand, not all at once.</p>
+            </div>
+            <div class="glass highlight-card">
+                <span class="h-icon">&#128296;</span>
+                <h3>Native</h3>
+                <p>Built in Rust with native Wayland and X11 support. No Electron, no web views.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modules -->
+    <section class="section" id="modules">
+        <div class="section-header">
+            <h2>15+ Power Utilities</h2>
+            <p>Everything you need to supercharge your Linux desktop.</p>
+        </div>
+
+        <div class="modules-grid">
+            <div class="glass module-card">
+                <div class="module-icon">&#128204;</div>
+                <div>
+                    <h3>Always on Top</h3>
+                    <p>Pin any window above all others with a single shortcut.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#9749;</div>
+                <div>
+                    <h3>Awake</h3>
+                    <p>Prevent your screen from sleeping, with timed or indefinite modes.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#127912;</div>
+                <div>
+                    <h3>Color Picker</h3>
+                    <p>Pick any color from your screen. Copy as HEX, RGB or HSL.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#9000;</div>
+                <div>
+                    <h3>Key Manager</h3>
+                    <p>Remap keys and create custom shortcuts per application.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#128196;</div>
+                <div>
+                    <h3>Bulk Rename</h3>
+                    <p>Rename files in batch with regex, sequences and live preview.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#128444;</div>
+                <div>
+                    <h3>Image Resizer</h3>
+                    <p>Resize images in bulk with presets or custom dimensions.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#128207;</div>
+                <div>
+                    <h3>Screen Ruler</h3>
+                    <p>Measure pixel distances on screen with precision.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#128172;</div>
+                <div>
+                    <h3>Text Extractor</h3>
+                    <p>OCR — capture text from anywhere on your screen.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#128433;</div>
+                <div>
+                    <h3>Mouse Utilities</h3>
+                    <p>Find My Mouse, click highlighter, and crosshair cursor.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#9899;</div>
+                <div>
+                    <h3>Shortcut Guide</h3>
+                    <p>Hold Super to see all available keyboard shortcuts.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#128203;</div>
+                <div>
+                    <h3>Paste as Plain Text</h3>
+                    <p>Strip formatting and paste clean text every time.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#128065;</div>
+                <div>
+                    <h3>Peek</h3>
+                    <p>Quick Look for Linux — preview files without opening them.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#127760;</div>
+                <div>
+                    <h3>Hosts Editor</h3>
+                    <p>Visual editor for /etc/hosts with toggle on/off.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#128269;</div>
+                <div>
+                    <h3>App Launcher</h3>
+                    <p>Spotlight-like launcher with search, calculator and plugins.</p>
+                </div>
+            </div>
+            <div class="glass module-card">
+                <div class="module-icon">&#11036;</div>
+                <div>
+                    <h3>FancyZones</h3>
+                    <p>Advanced window tiling with custom zone layouts.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Install -->
+    <section class="install-section" id="install">
+        <div class="glass install-card">
+            <h2>Get Started</h2>
+            <p>Install MyPowerToys on your Linux distribution.</p>
+
+            <div class="install-methods">
+                <div class="install-method">
+                    <div class="install-method-label">Quick Install</div>
+                    <code>curl -fsSL https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/packaging/install.sh | bash</code>
+                </div>
+                <div class="install-method">
+                    <div class="install-method-label">Arch Linux (AUR)</div>
+                    <code>yay -S my-power-toys</code>
+                </div>
+                <div class="install-method">
+                    <div class="install-method-label">From Source</div>
+                    <code>git clone https://github.com/pedrokarim/my-power-toys && cd my-power-toys && cargo build --release</code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>MyPowerToys &mdash; GPL-3.0 &middot; Made with Rust &middot; <a href="https://github.com/pedrokarim/my-power-toys">GitHub</a></p>
+    </footer>
+
+    <script>
+        function copyInstall(btn) {
+            const cmd = 'curl -fsSL https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/packaging/install.sh | bash';
+            navigator.clipboard.writeText(cmd).then(() => {
+                btn.classList.add('copied');
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,33 +1,132 @@
 #!/bin/bash
-# Simple install script — build and install to ~/.cargo/bin + setup autostart
+# MyPowerToys — remote install script
+# Usage: curl -fsSL https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/packaging/install.sh | bash
 set -euo pipefail
 
-echo "==> Building MyPowerToys (release)..."
-cargo build --release
+REPO="pedrokarim/my-power-toys"
+INSTALL_DIR="$HOME/.local/bin"
+ICON_DIR="$HOME/.local/share/icons/hicolor/128x128/apps"
+AUTOSTART_DIR="$HOME/.config/autostart"
+SYSTEMD_DIR="$HOME/.config/systemd/user"
+TMPDIR="$(mktemp -d)"
 
-echo "==> Installing binaries to ~/.cargo/bin..."
-cp target/release/mpt-daemon ~/.cargo/bin/
-cp target/release/mpt-settings ~/.cargo/bin/
-cp target/release/mpt-ctl ~/.cargo/bin/
+cleanup() { rm -rf "$TMPDIR"; }
+trap cleanup EXIT
 
+echo "==> MyPowerToys installer"
+echo ""
+
+# Detect architecture
+ARCH="$(uname -m)"
+case "$ARCH" in
+    x86_64)  TARGET="x86_64-unknown-linux-gnu" ;;
+    aarch64) TARGET="aarch64-unknown-linux-gnu" ;;
+    *)
+        echo "Error: unsupported architecture: $ARCH"
+        exit 1
+        ;;
+esac
+
+# Fetch latest release version from GitHub API
+echo "==> Fetching latest release..."
+RELEASE_JSON="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest")"
+VERSION="$(echo "$RELEASE_JSON" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"v\?\([^"]*\)".*/\1/')"
+
+if [ -z "$VERSION" ]; then
+    echo "Error: could not determine latest version."
+    echo "Check https://github.com/$REPO/releases"
+    exit 1
+fi
+
+echo "    Latest version: v$VERSION"
+
+# Download release archive
+ASSET_NAME="my-power-toys-${VERSION}-${TARGET}.tar.gz"
+DOWNLOAD_URL="https://github.com/$REPO/releases/download/v${VERSION}/${ASSET_NAME}"
+
+echo "==> Downloading $ASSET_NAME..."
+if ! curl -fSL --progress-bar -o "$TMPDIR/release.tar.gz" "$DOWNLOAD_URL"; then
+    echo "Error: failed to download $DOWNLOAD_URL"
+    echo "Check that the release exists at https://github.com/$REPO/releases"
+    exit 1
+fi
+
+# Extract
+echo "==> Extracting..."
+tar xzf "$TMPDIR/release.tar.gz" -C "$TMPDIR"
+
+# Install binaries
+echo "==> Installing binaries to $INSTALL_DIR..."
+mkdir -p "$INSTALL_DIR"
+for bin in mpt-daemon mpt-ctl mpt-settings; do
+    if [ -f "$TMPDIR/$bin" ]; then
+        install -m 755 "$TMPDIR/$bin" "$INSTALL_DIR/$bin"
+        echo "    Installed $bin"
+    fi
+done
+
+# Check PATH
+case ":$PATH:" in
+    *":$INSTALL_DIR:"*) ;;
+    *)
+        echo ""
+        echo "    WARNING: $INSTALL_DIR is not in your PATH."
+        echo "    Add this to your ~/.bashrc or ~/.zshrc:"
+        echo "      export PATH=\"\$HOME/.local/bin:\$PATH\""
+        echo ""
+        ;;
+esac
+
+# Download and install icon
 echo "==> Installing icon..."
-mkdir -p ~/.local/share/icons/hicolor/128x128/apps
-cp assets/icons/icon-128.png ~/.local/share/icons/hicolor/128x128/apps/my-power-toys.png
+mkdir -p "$ICON_DIR"
+curl -fsSL "https://raw.githubusercontent.com/$REPO/main/assets/icons/icon-128.png" \
+    -o "$ICON_DIR/my-power-toys.png" 2>/dev/null || true
 
+# Setup desktop autostart
 echo "==> Setting up autostart..."
-mkdir -p ~/.config/autostart
-cp assets/my-power-toys-daemon.desktop ~/.config/autostart/
+mkdir -p "$AUTOSTART_DIR"
+cat > "$AUTOSTART_DIR/my-power-toys-daemon.desktop" << 'DESKTOP'
+[Desktop Entry]
+Type=Application
+Name=MyPowerToys Daemon
+Comment=Background daemon for MyPowerToys
+Exec=mpt-daemon
+Icon=my-power-toys
+Terminal=false
+Categories=Utility;System;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel
+DESKTOP
 
+# Setup systemd user service
 echo "==> Setting up systemd user service..."
-mkdir -p ~/.config/systemd/user
-cp assets/my-power-toys.service ~/.config/systemd/user/
-systemctl --user daemon-reload
+mkdir -p "$SYSTEMD_DIR"
+cat > "$SYSTEMD_DIR/my-power-toys.service" << SYSTEMD
+[Unit]
+Description=MyPowerToys Daemon
+Documentation=https://github.com/$REPO
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=$INSTALL_DIR/mpt-daemon
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
+SYSTEMD
+systemctl --user daemon-reload 2>/dev/null || true
 
 echo ""
-echo "Installation complete!"
+echo "  MyPowerToys v$VERSION installed successfully!"
 echo ""
 echo "  Start the daemon:   mpt-daemon"
 echo "  Open settings:      mpt-settings"
 echo "  CLI control:        mpt-ctl list"
 echo ""
 echo "  Or use systemd:     systemctl --user enable --now my-power-toys.service"
+echo ""

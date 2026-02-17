@@ -537,7 +537,7 @@
     <!-- Hero -->
     <section class="hero">
         <img src="https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/assets/icons/icon-128.png" alt="MyPowerToys" class="hero-icon">
-        <div class="version-badge">v0.3.3</div>
+        <div class="version-badge" id="version-badge">v...</div>
         <h1>MyPowerToys</h1>
         <p>Suite d'utilitaires systeme pour Linux, inspiree de Microsoft PowerToys. Modulaire, legere et native.</p>
 
@@ -738,6 +738,10 @@
     </footer>
 
     <script>
+        fetch('https://api.github.com/repos/pedrokarim/my-power-toys/releases/latest')
+            .then(r => r.json())
+            .then(d => { if (d.tag_name) document.getElementById('version-badge').textContent = d.tag_name; });
+
         function copyInstall(btn) {
             const cmd = 'curl -fsSL https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/packaging/install.sh | bash';
             navigator.clipboard.writeText(cmd).then(() => {

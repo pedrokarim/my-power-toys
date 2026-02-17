@@ -1,12 +1,12 @@
 [Unit]
 Description=MyPowerToys Daemon
-Documentation=https://github.com/you/my-power-toys
+Documentation=https://github.com/pedrokarim/my-power-toys
 After=graphical-session.target
 PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=%h/.cargo/bin/mpt-daemon
+ExecStart=%h/.local/bin/mpt-daemon
 Restart=on-failure
 RestartSec=5
 

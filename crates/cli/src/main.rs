@@ -186,7 +186,7 @@ fn cmd_update() -> Result<()> {
             let version = mpt_common::updater::perform_update("mpt-ctl")?;
             println!("Successfully updated to v{version}.");
             println!(
-                "Restart the daemon to complete the update: systemctl --user restart mpt-daemon"
+                "Restart the daemon to complete the update: systemctl --user restart my-power-toys"
             );
         }
         Ok(None) => {

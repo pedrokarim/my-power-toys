@@ -417,7 +417,7 @@ impl Settings {
             logo,
             column![
                 text("MyPowerToys").size(ui.sz(28.0)).font(bold()).color(ui.heading()),
-                text("Version 0.1.0")
+                text(format!("Version {}", env!("CARGO_PKG_VERSION")))
                     .size(ui.sz(14.0))
                     .color(theme::subtext0(ui.dark)),
             ]

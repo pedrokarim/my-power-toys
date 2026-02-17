@@ -508,7 +508,7 @@ impl Settings {
                     ]
                     .spacing(2),
                 )
-                .style(theme::segmented_control(ui.glass)),
+                .style(theme::segmented_control),
             ]
             .spacing(4),
             ui,
@@ -536,7 +536,7 @@ impl Settings {
                     ]
                     .spacing(2),
                 )
-                .style(theme::segmented_control(ui.glass)),
+                .style(theme::segmented_control),
             ]
             .spacing(4),
             ui,
@@ -559,7 +559,7 @@ impl Settings {
                     ]
                     .spacing(2),
                 )
-                .style(theme::segmented_control(ui.glass)),
+                .style(theme::segmented_control),
             ]
             .spacing(4),
             ui,
@@ -735,7 +735,7 @@ impl Settings {
             )
             .on_press(Message::PickCustomImage)
             .padding(Padding::from([8.0, 16.0]))
-            .style(theme::seg_button(false, ui.glass)),
+            .style(theme::seg_button(false)),
         );
 
         if !self.custom_image_history.is_empty() {

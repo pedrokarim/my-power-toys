@@ -116,7 +116,7 @@ pub fn seg_button(label: &str, active: bool, msg: Message, ui: Ui) -> Element<'s
     button(text(label.to_string()).size(ui.sz(11.0)).font(ui.font()))
         .on_press(msg)
         .padding(Padding::from([5.0, 10.0]))
-        .style(theme::seg_button(active, ui.glass))
+        .style(theme::seg_button(active))
         .into()
 }
 

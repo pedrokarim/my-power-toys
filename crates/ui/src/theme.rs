@@ -116,16 +116,6 @@ pub fn subtext1(is_dark: bool) -> Color {
     }
 }
 
-// ── Glass mode default text colour ───────────────────────────────────
-/// Light text colour forced on all glass-mode containers so that labels,
-/// toggle text, and any widget without an explicit `.color()` stay readable.
-const GLASS_TEXT: Color = Color {
-    r: 0.804,
-    g: 0.839,
-    b: 0.957,
-    a: 1.0,
-}; // ≈ (205, 214, 244) – same as dark-mode palette text
-
 // ── Container styles ────────────────────────────────────────────────────
 
 const NO_SHADOW: Shadow = Shadow {
@@ -138,7 +128,7 @@ const NO_SHADOW: Shadow = Shadow {
 pub fn sidebar(glass: bool) -> impl Fn(&Theme) -> container::Style {
     move |theme| {
         let palette = theme.extended_palette();
-        let base = if glass || palette.is_dark {
+        let base = if palette.is_dark {
             DARK_SIDEBAR
         } else {
             palette.background.strong.color
@@ -155,7 +145,7 @@ pub fn sidebar(glass: bool) -> impl Fn(&Theme) -> container::Style {
             background: Some(bg.into()),
             border: Border::default(),
             shadow: NO_SHADOW,
-            text_color: if glass { Some(GLASS_TEXT) } else { None },
+            text_color: None,
         }
     }
 }
@@ -164,7 +154,7 @@ pub fn sidebar(glass: bool) -> impl Fn(&Theme) -> container::Style {
 pub fn card(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
     move |theme| {
         let palette = theme.extended_palette();
-        let base = if glass || palette.is_dark {
+        let base = if palette.is_dark {
             DARK_SURFACE
         } else {
             palette.background.weak.color
@@ -182,7 +172,7 @@ pub fn card(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
             border: Border {
                 radius: 12.0.into(),
                 color: if hc {
-                    if glass || palette.is_dark {
+                    if palette.is_dark {
                         DARK_BORDER
                     } else {
                         palette.secondary.weak.color
@@ -193,7 +183,7 @@ pub fn card(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
                 width: if hc { 1.5 } else { 0.0 },
             },
             shadow: NO_SHADOW,
-            text_color: if glass { Some(GLASS_TEXT) } else { None },
+            text_color: None,
         }
     }
 }
@@ -202,12 +192,12 @@ pub fn card(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
 pub fn stat_card(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
     move |theme| {
         let palette = theme.extended_palette();
-        let base = if glass || palette.is_dark {
+        let base = if palette.is_dark {
             DARK_SURFACE
         } else {
             palette.background.weak.color
         };
-        let border_color = if glass || palette.is_dark {
+        let border_color = if palette.is_dark {
             DARK_BORDER
         } else {
             palette.background.strong.color
@@ -235,7 +225,7 @@ pub fn stat_card(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
                 width: if hc { 2.0 } else { 1.0 },
             },
             shadow: NO_SHADOW,
-            text_color: if glass { Some(GLASS_TEXT) } else { None },
+            text_color: None,
         }
     }
 }
@@ -244,7 +234,7 @@ pub fn stat_card(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
 pub fn kbd(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
     move |theme| {
         let palette = theme.extended_palette();
-        let base = if glass || palette.is_dark {
+        let base = if palette.is_dark {
             DARK_ELEVATED
         } else {
             palette.background.strong.color
@@ -261,7 +251,7 @@ pub fn kbd(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
             background: Some(bg.into()),
             border: Border {
                 radius: 6.0.into(),
-                color: if glass || palette.is_dark {
+                color: if palette.is_dark {
                     DARK_BORDER
                 } else {
                     palette.secondary.weak.color
@@ -269,7 +259,7 @@ pub fn kbd(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
                 width: if hc { 2.0 } else { 1.0 },
             },
             shadow: NO_SHADOW,
-            text_color: if glass { Some(GLASS_TEXT) } else { None },
+            text_color: None,
         }
     }
 }
@@ -337,42 +327,29 @@ pub fn nav_button(selected: bool) -> impl Fn(&Theme, button::Status) -> button::
 }
 
 /// Outer container for the segmented control.
-pub fn segmented_control(glass: bool) -> impl Fn(&Theme) -> container::Style {
-    move |theme| {
-        let palette = theme.extended_palette();
-        // Use DARK_ELEVATED (lighter than DARK_SURFACE) so it stands out from the card.
-        let bg = if glass || palette.is_dark {
-            DARK_ELEVATED
-        } else {
-            palette.background.weak.color
-        };
-        let bg = if glass {
-            Color { a: 0.6, ..bg }
-        } else {
-            bg
-        };
-        container::Style {
-            background: Some(bg.into()),
-            border: Border {
-                radius: 8.0.into(),
-                color: if glass || palette.is_dark {
-                    Color { a: 0.25, ..DARK_BORDER }
-                } else {
-                    Color::TRANSPARENT
-                },
-                width: if glass || palette.is_dark { 1.0 } else { 0.0 },
-            },
-            shadow: NO_SHADOW,
-            text_color: None,
-        }
+pub fn segmented_control(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+    let bg = if palette.is_dark {
+        DARK_SURFACE
+    } else {
+        palette.background.weak.color
+    };
+    container::Style {
+        background: Some(bg.into()),
+        border: Border {
+            radius: 8.0.into(),
+            color: Color::TRANSPARENT,
+            width: 0.0,
+        },
+        shadow: NO_SHADOW,
+        text_color: None,
     }
 }
 
 /// Individual segment button inside the segmented control.
-pub fn seg_button(active: bool, glass: bool) -> impl Fn(&Theme, button::Status) -> button::Style {
+pub fn seg_button(active: bool) -> impl Fn(&Theme, button::Status) -> button::Style {
     move |theme, status| {
         let palette = theme.extended_palette();
-        let is_dark = glass || palette.is_dark;
         let (bg, fg) = if active {
             (
                 Some(palette.primary.weak.color.into()),
@@ -381,23 +358,14 @@ pub fn seg_button(active: bool, glass: bool) -> impl Fn(&Theme, button::Status) 
         } else {
             match status {
                 button::Status::Hovered => {
-                    let hover_bg = if is_dark {
-                        Color::from_rgba8(255, 255, 255, 0.10)
+                    let hover_bg = if palette.is_dark {
+                        DARK_ELEVATED
                     } else {
                         palette.background.strong.color
                     };
-                    let fg = if is_dark { GLASS_TEXT } else { palette.background.base.text };
-                    (Some(hover_bg.into()), fg)
+                    (Some(hover_bg.into()), palette.background.base.text)
                 }
-                _ => {
-                    // Key fix: use a visible light colour instead of palette.secondary.weak.text
-                    let fg = if is_dark {
-                        Color::from_rgb8(170, 178, 208)
-                    } else {
-                        palette.secondary.weak.text
-                    };
-                    (None, fg)
-                }
+                _ => (None, palette.secondary.weak.text),
             }
         };
         button::Style {

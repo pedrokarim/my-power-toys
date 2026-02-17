@@ -121,12 +121,42 @@ WantedBy=graphical-session.target
 SYSTEMD
 systemctl --user daemon-reload 2>/dev/null || true
 
+# Enable and start daemon automatically
+echo "==> Enabling and starting daemon..."
+if systemctl --user enable --now my-power-toys.service 2>/dev/null; then
+    echo "    Daemon started via systemd"
+else
+    echo "    WARNING: Could not enable systemd service."
+    echo "    The daemon will still autostart at login via desktop autostart."
+    echo "    You can start it manually: mpt-daemon"
+fi
+
+# Install application menu entry for mpt-settings
+APP_DIR="$HOME/.local/share/applications"
+echo "==> Installing application menu entry..."
+mkdir -p "$APP_DIR"
+cat > "$APP_DIR/my-power-toys.desktop" << 'DESKTOP'
+[Desktop Entry]
+Type=Application
+Name=MyPowerToys
+GenericName=System Utilities
+Comment=Suite of system utilities for Linux, inspired by Microsoft PowerToys
+Exec=mpt-settings
+Icon=my-power-toys
+Terminal=false
+Categories=Utility;System;Settings;
+Keywords=powertoys;utilities;tiling;launcher;
+StartupNotify=true
+DESKTOP
+
+# Update desktop database if available
+update-desktop-database "$APP_DIR" 2>/dev/null || true
+
 echo ""
 echo "  MyPowerToys v$VERSION installed successfully!"
 echo ""
-echo "  Start the daemon:   mpt-daemon"
-echo "  Open settings:      mpt-settings"
+echo "  The daemon is running in the background."
+echo "  Open settings:      mpt-settings (or find 'MyPowerToys' in your app menu)"
 echo "  CLI control:        mpt-ctl list"
-echo ""
-echo "  Or use systemd:     systemctl --user enable --now my-power-toys.service"
+echo "  Daemon status:      systemctl --user status my-power-toys"
 echo ""

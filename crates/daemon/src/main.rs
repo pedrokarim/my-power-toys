@@ -4,9 +4,27 @@ mod tray;
 
 use anyhow::Result;
 use mpt_common::config::load_daemon_config;
+use mpt_common::ipc;
 use mpt_common::platform;
 use std::sync::{Arc, Mutex};
-use tracing::{info, warn};
+use tracing::{error, info, warn};
+
+/// Check if another daemon instance is already running via D-Bus.
+async fn another_instance_running() -> bool {
+    let conn = match zbus::Connection::session().await {
+        Ok(c) => c,
+        Err(_) => return false,
+    };
+    conn.call_method(
+        Some(ipc::BUS_NAME),
+        ipc::OBJECT_PATH,
+        Some(ipc::BUS_NAME),
+        "Ping",
+        &(),
+    )
+    .await
+    .is_ok()
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -16,6 +34,15 @@ async fn main() -> Result<()> {
                 .add_directive("mpt=info".parse().unwrap()),
         )
         .init();
+
+    // Singleton check: exit if another daemon is already running
+    if another_instance_running().await {
+        error!("Another mpt-daemon instance is already running.");
+        eprintln!("Error: another mpt-daemon instance is already running.");
+        eprintln!("Check with: mpt-ctl ping");
+        eprintln!("Or manage via: systemctl --user status my-power-toys");
+        std::process::exit(1);
+    }
 
     let ds = platform::detect_display_server();
     let de = platform::detect_desktop_environment();
@@ -47,7 +74,8 @@ async fn main() -> Result<()> {
     let dbus_registry = Arc::clone(&registry);
     tokio::spawn(async move {
         if let Err(e) = dbus::serve(dbus_registry).await {
-            tracing::error!("D-Bus server error: {e}");
+            error!("D-Bus server error: {e}");
+            std::process::exit(1);
         }
     });
 

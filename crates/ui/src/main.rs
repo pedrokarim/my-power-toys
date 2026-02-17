@@ -9,6 +9,7 @@ use iced::widget::{
 use iced::{Alignment, Color, Element, Font, Length, Padding, Subscription, Task, Theme};
 use iced_fonts::bootstrap::Bootstrap;
 use iced_fonts::{BOOTSTRAP_FONT, BOOTSTRAP_FONT_BYTES};
+use mpt_common::ipc;
 use std::time::Duration;
 use translations::Language;
 
@@ -107,6 +108,7 @@ struct Settings {
 enum Message {
     NavigateTo(Page),
     ToggleModule(String, bool),
+    ToggleModuleResult(String, bool, String),
     SetThemeMode(ThemeMode),
     SetLanguage(Language),
     SetFontSize(FontSize),
@@ -115,6 +117,94 @@ enum Message {
     ToggleCompactLayout(bool),
     ToggleReducedMotion(bool),
     SystemThemeCheck,
+    DaemonPoll,
+    DaemonState(DaemonStateResult),
+}
+
+#[derive(Debug, Clone)]
+struct DaemonStateResult {
+    connected: bool,
+    modules: Vec<(String, String, bool)>,
+}
+
+/// Check daemon status and fetch module list via D-Bus.
+async fn poll_daemon() -> DaemonStateResult {
+    let conn = match zbus::Connection::session().await {
+        Ok(c) => c,
+        Err(_) => {
+            return DaemonStateResult {
+                connected: false,
+                modules: vec![],
+            };
+        }
+    };
+
+    // Try ping
+    if conn
+        .call_method(
+            Some(ipc::BUS_NAME),
+            ipc::OBJECT_PATH,
+            Some(ipc::BUS_NAME),
+            "Ping",
+            &(),
+        )
+        .await
+        .is_err()
+    {
+        return DaemonStateResult {
+            connected: false,
+            modules: vec![],
+        };
+    }
+
+    // Fetch module list
+    let modules = match conn
+        .call_method(
+            Some(ipc::BUS_NAME),
+            ipc::OBJECT_PATH,
+            Some(ipc::BUS_NAME),
+            "ListModules",
+            &(),
+        )
+        .await
+    {
+        Ok(msg) => msg
+            .body()
+            .deserialize::<Vec<(String, String, bool)>>()
+            .unwrap_or_default(),
+        Err(_) => vec![],
+    };
+
+    DaemonStateResult {
+        connected: true,
+        modules,
+    }
+}
+
+/// Toggle a module on the daemon via D-Bus. Returns (module_id, desired_state, result).
+async fn daemon_toggle_module(id: String, enable: bool) -> (String, bool, String) {
+    let method = if enable { "StartModule" } else { "StopModule" };
+    let result = async {
+        let conn = zbus::Connection::session().await?;
+        let msg = conn
+            .call_method(
+                Some(ipc::BUS_NAME),
+                ipc::OBJECT_PATH,
+                Some(ipc::BUS_NAME),
+                method,
+                &id.as_str(),
+            )
+            .await?;
+        let r: String = msg.body().deserialize()?;
+        Ok::<String, zbus::Error>(r)
+    }
+    .await;
+
+    let status = match result {
+        Ok(s) => s,
+        Err(e) => format!("error: {e}"),
+    };
+    (id, enable, status)
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -165,7 +255,8 @@ impl Settings {
                 compact_layout: false,
                 reduced_motion: false,
             },
-            Task::none(),
+            // Check daemon immediately at startup
+            Task::perform(poll_daemon(), Message::DaemonState),
         )
     }
 
@@ -205,8 +296,24 @@ impl Settings {
         match message {
             Message::NavigateTo(page) => self.page = page,
             Message::ToggleModule(id, enabled) => {
+                // Optimistic UI update
                 if let Some(m) = self.modules.iter_mut().find(|m| m.id == id) {
                     m.running = enabled;
+                }
+                // Send D-Bus call to daemon
+                if self.daemon_connected {
+                    return Task::perform(
+                        daemon_toggle_module(id, enabled),
+                        |(id, enabled, result)| Message::ToggleModuleResult(id, enabled, result),
+                    );
+                }
+            }
+            Message::ToggleModuleResult(id, desired, result) => {
+                if result != "ok" {
+                    // Revert on failure
+                    if let Some(m) = self.modules.iter_mut().find(|m| m.id == id) {
+                        m.running = !desired;
+                    }
                 }
             }
             Message::SetThemeMode(mode) => self.theme_mode = mode,
@@ -217,16 +324,31 @@ impl Settings {
             Message::ToggleCompactLayout(v) => self.compact_layout = v,
             Message::ToggleReducedMotion(v) => self.reduced_motion = v,
             Message::SystemThemeCheck => self.system_is_dark = detect_system_dark(),
+            Message::DaemonPoll => {
+                return Task::perform(poll_daemon(), Message::DaemonState);
+            }
+            Message::DaemonState(state) => {
+                self.daemon_connected = state.connected;
+                // Sync running states from daemon
+                for (id, _name, running) in &state.modules {
+                    if let Some(m) = self.modules.iter_mut().find(|m| &m.id == id) {
+                        m.running = *running;
+                    }
+                }
+            }
         }
         Task::none()
     }
 
     fn subscription(&self) -> Subscription<Message> {
+        let mut subs = vec![
+            // Poll daemon status every 3 seconds
+            time::every(Duration::from_secs(3)).map(|_| Message::DaemonPoll),
+        ];
         if self.theme_mode == ThemeMode::System {
-            time::every(Duration::from_secs(2)).map(|_| Message::SystemThemeCheck)
-        } else {
-            Subscription::none()
+            subs.push(time::every(Duration::from_secs(2)).map(|_| Message::SystemThemeCheck));
         }
+        Subscription::batch(subs)
     }
 
     // ── Root view ───────────────────────────────────────────────────────────

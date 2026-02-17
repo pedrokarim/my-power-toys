@@ -52,6 +52,9 @@ iced = { version = "0.13", features = ["image", "tokio"] }
 egui = "0.31"
 eframe = "0.31"
 
+# File dialogs
+rfd = "0.15"
+
 # System
 dirs = "6"
 notify = "7"

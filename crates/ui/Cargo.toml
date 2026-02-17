@@ -21,3 +21,4 @@ iced = { workspace = true }
 iced_fonts = { version = "0.1", features = ["bootstrap"] }
 zbus = { workspace = true }
 tokio = { workspace = true }
+rfd = { workspace = true }

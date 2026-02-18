@@ -519,6 +519,20 @@ pub fn swatch_btn(selected: bool) -> impl Fn(&Theme, button::Status) -> button::
     }
 }
 
+/// Banner image container with rounded corners.
+pub fn banner_card() -> impl Fn(&Theme) -> container::Style {
+    move |_theme| container::Style {
+        border: Border {
+            radius: 12.0.into(),
+            color: Color::TRANSPARENT,
+            width: 0.0,
+        },
+        shadow: NO_SHADOW,
+        background: None,
+        text_color: None,
+    }
+}
+
 /// Solid-color swatch preview container.
 pub fn color_swatch(color: Color) -> impl Fn(&Theme) -> container::Style {
     move |_theme| container::Style {

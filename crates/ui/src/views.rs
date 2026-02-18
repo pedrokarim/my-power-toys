@@ -523,6 +523,74 @@ impl Settings {
         let module = self.modules.iter().find(|m| m.id == id);
         match module {
             Some(m) => {
+                // Banner image
+                let banner_path = format!(
+                    "{}/assets/banners/{}-banner.png",
+                    env!("CARGO_MANIFEST_DIR").replace("/crates/ui", ""),
+                    id
+                );
+                let has_banner = std::path::Path::new(&banner_path).exists();
+
+                let banner_hero = if has_banner {
+                    let bg = image(&banner_path)
+                        .content_fit(ContentFit::Cover)
+                        .width(Length::Fill)
+                        .height(Length::Fill);
+
+                    // Gradient overlay at bottom for text readability
+                    let gradient_overlay = container(Space::new(0, 0))
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .style(|_: &Theme| container::Style {
+                            background: Some(
+                                gradient::Linear::new(std::f32::consts::PI)
+                                    .add_stop(0.0, Color::TRANSPARENT)
+                                    .add_stop(0.55, Color::TRANSPARENT)
+                                    .add_stop(1.0, Color::from_rgba8(0, 0, 0, 0.75))
+                                    .into(),
+                            ),
+                            ..container::Style::default()
+                        });
+
+                    // Module title overlaid on banner bottom
+                    let title_overlay = container(
+                        row![
+                            icon_badge(m.icon, m.accent, ui.sz(26.0)),
+                            column![
+                                text(&m.name)
+                                    .size(ui.sz(26.0))
+                                    .font(bold())
+                                    .color(Color::WHITE),
+                                text(&m.description)
+                                    .size(ui.sz(13.0))
+                                    .font(ui.font())
+                                    .color(Color::from_rgba8(255, 255, 255, 0.7)),
+                            ]
+                            .spacing(2),
+                        ]
+                        .spacing(14)
+                        .align_y(Alignment::Center),
+                    )
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .align_y(iced::alignment::Vertical::Bottom)
+                    .padding(Padding::from([16.0, 20.0]));
+
+                    Some(
+                        container(
+                            stack![bg, gradient_overlay, title_overlay]
+                                .width(Length::Fill)
+                                .height(Length::Fill),
+                        )
+                        .width(Length::Fill)
+                        .height(280)
+                        .clip(true)
+                        .style(theme::banner_card()),
+                    )
+                } else {
+                    None
+                };
+
                 let dot_col = if m.running {
                     theme::green()
                 } else {
@@ -530,22 +598,29 @@ impl Settings {
                 };
                 let status_txt = if m.running { tr.running } else { tr.stopped };
 
-                let header = row![
-                    icon_badge(m.icon, m.accent, ui.sz(28.0)),
-                    column![
-                        text(&m.name)
-                            .size(ui.sz(28.0))
-                            .font(bold())
-                            .color(ui.heading()),
-                        text(&m.description)
-                            .size(ui.sz(14.0))
-                            .font(ui.font())
-                            .color(theme::subtext1(ui.dark)),
-                    ]
-                    .spacing(4),
-                ]
-                .spacing(16)
-                .align_y(Alignment::Center);
+                // Header only shown when no banner (fallback)
+                let header = if !has_banner {
+                    Some(
+                        row![
+                            icon_badge(m.icon, m.accent, ui.sz(28.0)),
+                            column![
+                                text(&m.name)
+                                    .size(ui.sz(28.0))
+                                    .font(bold())
+                                    .color(ui.heading()),
+                                text(&m.description)
+                                    .size(ui.sz(14.0))
+                                    .font(ui.font())
+                                    .color(theme::subtext1(ui.dark)),
+                            ]
+                            .spacing(4),
+                        ]
+                        .spacing(16)
+                        .align_y(Alignment::Center),
+                    )
+                } else {
+                    None
+                };
 
                 let status_card = card(
                     column![
@@ -698,7 +773,15 @@ impl Settings {
 
                 let tests_card = card(test_content, ui);
 
-                let mut content = column![header, Space::with_height(4), status_card].spacing(12);
+                let mut content = column![].spacing(12);
+                if let Some(b) = banner_hero {
+                    content = content.push(b);
+                }
+                if let Some(h) = header {
+                    content = content.push(h);
+                    content = content.push(Space::with_height(4));
+                }
+                content = content.push(status_card);
                 if let Some(hk) = hotkey_card {
                     content = content.push(hk);
                 }

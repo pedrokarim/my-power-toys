@@ -34,7 +34,12 @@ impl SearchIndex {
     }
 
     /// Search for apps and evaluate calculator expressions.
-    pub fn search(&self, query: &str) -> Vec<SearchResult> {
+    pub fn search(
+        &self,
+        query: &str,
+        max_results: usize,
+        show_calculator: bool,
+    ) -> Vec<SearchResult> {
         let query = query.trim().to_lowercase();
         if query.is_empty() {
             return Vec::new();
@@ -43,11 +48,13 @@ impl SearchIndex {
         let mut results = Vec::new();
 
         // Check if it's a calculator expression
-        if let Some(calc_result) = calculator::evaluate(&query) {
-            results.push(SearchResult::Calculation {
-                expression: query.clone(),
-                result: calc_result,
-            });
+        if show_calculator {
+            if let Some(calc_result) = calculator::evaluate(&query) {
+                results.push(SearchResult::Calculation {
+                    expression: query.clone(),
+                    result: calc_result,
+                });
+            }
         }
 
         // Search apps
@@ -64,8 +71,7 @@ impl SearchIndex {
         // Sort by score descending
         app_results.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Take top 8
-        for (score, entry) in app_results.into_iter().take(8) {
+        for (score, entry) in app_results.into_iter().take(max_results) {
             results.push(SearchResult::App {
                 entry: entry.clone(),
                 score,
@@ -159,14 +165,21 @@ mod tests {
     #[test]
     fn search_calculator() {
         let index = SearchIndex::new();
-        let results = index.search("2 + 3");
+        let results = index.search("2 + 3", 8, true);
         assert!(results.iter().any(|r| matches!(r, SearchResult::Calculation { result, .. } if (*result - 5.0).abs() < 0.01)));
+    }
+
+    #[test]
+    fn search_calculator_disabled() {
+        let index = SearchIndex::new();
+        let results = index.search("2 + 3", 8, false);
+        assert!(!results.iter().any(|r| matches!(r, SearchResult::Calculation { .. })));
     }
 
     #[test]
     fn search_empty_returns_nothing() {
         let index = SearchIndex::new();
-        assert!(index.search("").is_empty());
+        assert!(index.search("", 8, true).is_empty());
     }
 
     #[test]

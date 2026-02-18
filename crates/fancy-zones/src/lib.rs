@@ -1,3 +1,4 @@
+pub mod config;
 pub mod layout;
 
 use anyhow::Result;
@@ -7,15 +8,30 @@ use tracing::info;
 
 pub struct FancyZones {
     running: bool,
-    layouts: Vec<layout::Layout>,
+    config: config::FancyZonesConfig,
 }
 
 impl FancyZones {
     pub fn new() -> Self {
+        let config = mpt_common::config::load_module_config("fancy-zones").unwrap_or_default();
         Self {
             running: false,
-            layouts: vec![layout::Layout::default_columns(3)],
+            config,
         }
+    }
+
+    pub fn config(&self) -> &config::FancyZonesConfig {
+        &self.config
+    }
+
+    /// Get the currently active layout.
+    pub fn active_layout(&self) -> Option<&layout::Layout> {
+        self.config.layouts.get(self.config.active_layout)
+    }
+
+    /// Save current config to disk.
+    pub fn save_config(&self) -> Result<()> {
+        mpt_common::config::save_module_config("fancy-zones", &self.config)
     }
 }
 
@@ -44,7 +60,10 @@ impl PowerModule for FancyZones {
 
     fn start(&mut self) -> Result<()> {
         self.running = true;
-        info!("FancyZones started with {} layout(s)", self.layouts.len());
+        info!(
+            "FancyZones started with {} layout(s)",
+            self.config.layouts.len()
+        );
         Ok(())
     }
 

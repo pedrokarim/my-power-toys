@@ -74,7 +74,7 @@ pub fn detect_kind(path: &Path) -> FileKind {
 }
 
 /// Generate a preview for a file.
-pub fn generate_preview(path: &Path) -> Result<FilePreview> {
+pub fn generate_preview(path: &Path, max_preview_lines: usize, max_dir_entries: usize) -> Result<FilePreview> {
     if !path.exists() {
         return Err(anyhow!("file not found: {}", path.display()));
     }
@@ -96,7 +96,7 @@ pub fn generate_preview(path: &Path) -> Result<FilePreview> {
 
     match kind {
         FileKind::Text => {
-            preview.preview_text = Some(read_text_preview(path, 50)?);
+            preview.preview_text = Some(read_text_preview(path, max_preview_lines)?);
         }
         FileKind::Image => {
             preview.dimensions = get_image_dimensions(path);
@@ -108,7 +108,7 @@ pub fn generate_preview(path: &Path) -> Result<FilePreview> {
             preview.duration = get_media_duration(path);
         }
         FileKind::Directory => {
-            preview.preview_text = Some(list_directory(path, 20)?);
+            preview.preview_text = Some(list_directory(path, max_dir_entries)?);
         }
         FileKind::Unknown => {}
     }

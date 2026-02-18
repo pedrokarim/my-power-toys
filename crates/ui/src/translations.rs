@@ -64,7 +64,6 @@ pub struct Tr {
     pub enabled: &'static str,
     pub hotkey: &'static str,
     pub module_settings: &'static str,
-    pub module_settings_placeholder: &'static str,
     pub module_not_found: &'static str,
 
     // Tests
@@ -123,6 +122,26 @@ pub struct Tr {
     pub license: &'static str,
     pub repo: &'static str,
     pub prog_lang: &'static str,
+
+    // Module settings labels
+    pub ms_no_settings: &'static str,
+    pub ms_format: &'static str,
+    pub ms_ocr_language: &'static str,
+    pub ms_preset: &'static str,
+    pub ms_output_format: &'static str,
+    pub ms_quality: &'static str,
+    pub ms_find_my_mouse: &'static str,
+    pub ms_find_my_mouse_desc: &'static str,
+    pub ms_click_highlighter: &'static str,
+    pub ms_click_highlighter_desc: &'static str,
+    pub ms_crosshair: &'static str,
+    pub ms_crosshair_desc: &'static str,
+    pub ms_max_results: &'static str,
+    pub ms_calculator: &'static str,
+    pub ms_calculator_desc: &'static str,
+    pub ms_zone_gap: &'static str,
+    pub ms_preview_lines: &'static str,
+    pub ms_dir_entries: &'static str,
 }
 
 pub fn get(lang: Language) -> &'static Tr {

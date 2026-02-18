@@ -37,6 +37,20 @@ pub enum Message {
     CloseUpdateDialog,
     ConfirmUpdateInstall,
     UpdateInstallFinished(UpdateInstallResult),
+    // Module settings
+    SetColorPickerFormat(String),
+    SetTextExtractorLang(String),
+    SetImageResizerPreset(String),
+    SetImageResizerFormat(String),
+    SetImageResizerQuality(u8),
+    ToggleMouseFindMyMouse(bool),
+    ToggleMouseClickHighlighter(bool),
+    ToggleMouseCrosshair(bool),
+    SetAppLauncherMaxResults(usize),
+    ToggleAppLauncherCalc(bool),
+    SetFancyZonesGap(u32),
+    SetPeekPreviewLines(usize),
+    SetPeekDirEntries(usize),
 }
 
 #[derive(Debug, Clone)]

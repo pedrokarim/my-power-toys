@@ -660,18 +660,7 @@ impl Settings {
                     )
                 });
 
-                let settings_content = column![
-                    text(tr.module_settings)
-                        .size(ui.sz(16.0))
-                        .font(bold())
-                        .color(ui.heading()),
-                    text(tr.module_settings_placeholder)
-                        .size(ui.sz(13.0))
-                        .font(ui.font())
-                        .color(theme::subtext0(ui.dark)),
-                ]
-                .spacing(8);
-                let settings_card = card(settings_content, ui);
+                let settings_card = self.view_module_settings(id, tr, ui);
 
                 let help_open = self.dependency_help_for.as_deref() == Some(m.id.as_str());
                 let mut test_header = row![
@@ -1855,5 +1844,468 @@ impl Settings {
         }
 
         card(content, ui)
+    }
+
+    // ── Module settings ──────────────────────────────────────────────────────
+
+    fn view_module_settings<'a>(
+        &self,
+        id: &str,
+        tr: &'a translations::Tr,
+        ui: Ui,
+    ) -> Element<'a, Message> {
+        let content = match id {
+            "color-picker" => self.settings_color_picker(tr, ui),
+            "text-extractor" => self.settings_text_extractor(tr, ui),
+            "image-resizer" => self.settings_image_resizer(tr, ui),
+            "mouse-utils" => self.settings_mouse_utils(tr, ui),
+            "app-launcher" => self.settings_app_launcher(tr, ui),
+            "fancy-zones" => self.settings_fancy_zones(tr, ui),
+            "peek" => self.settings_peek(tr, ui),
+            _ => column![
+                text(tr.module_settings)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text(tr.ms_no_settings)
+                    .size(ui.sz(13.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            ]
+            .spacing(8)
+            .into(),
+        };
+        card(content, ui)
+    }
+
+    fn settings_color_picker<'a>(
+        &self,
+        tr: &'a translations::Tr,
+        ui: Ui,
+    ) -> Element<'a, Message> {
+        let cfg = &self.module_configs.color_picker;
+        column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            text(tr.ms_format)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        "HEX",
+                        cfg.format == "hex",
+                        Message::SetColorPickerFormat("hex".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "RGB",
+                        cfg.format == "rgb",
+                        Message::SetColorPickerFormat("rgb".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "HSL",
+                        cfg.format == "hsl",
+                        Message::SetColorPickerFormat("hsl".into()),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+        ]
+        .spacing(8)
+        .into()
+    }
+
+    fn settings_text_extractor<'a>(
+        &self,
+        tr: &'a translations::Tr,
+        ui: Ui,
+    ) -> Element<'a, Message> {
+        let cfg = &self.module_configs.text_extractor;
+        column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            text(tr.ms_ocr_language)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        "English",
+                        cfg.language == "eng",
+                        Message::SetTextExtractorLang("eng".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "Français",
+                        cfg.language == "fra",
+                        Message::SetTextExtractorLang("fra".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "Deutsch",
+                        cfg.language == "deu",
+                        Message::SetTextExtractorLang("deu".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "Español",
+                        cfg.language == "spa",
+                        Message::SetTextExtractorLang("spa".into()),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+        ]
+        .spacing(8)
+        .into()
+    }
+
+    fn settings_image_resizer<'a>(
+        &self,
+        tr: &'a translations::Tr,
+        ui: Ui,
+    ) -> Element<'a, Message> {
+        let cfg = &self.module_configs.image_resizer;
+        column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            // Preset
+            text(tr.ms_preset)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        "Small (640)",
+                        cfg.preset == "small",
+                        Message::SetImageResizerPreset("small".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "Medium (1280)",
+                        cfg.preset == "medium",
+                        Message::SetImageResizerPreset("medium".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "Large (1920)",
+                        cfg.preset == "large",
+                        Message::SetImageResizerPreset("large".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "Phone (1080)",
+                        cfg.preset == "phone",
+                        Message::SetImageResizerPreset("phone".into()),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+            // Output format
+            text(tr.ms_output_format)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        "Original",
+                        cfg.output_format == "original",
+                        Message::SetImageResizerFormat("original".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "PNG",
+                        cfg.output_format == "png",
+                        Message::SetImageResizerFormat("png".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "JPEG",
+                        cfg.output_format == "jpeg",
+                        Message::SetImageResizerFormat("jpeg".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "WebP",
+                        cfg.output_format == "webp",
+                        Message::SetImageResizerFormat("webp".into()),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+            // Quality
+            text(tr.ms_quality)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        "75",
+                        cfg.quality == 75,
+                        Message::SetImageResizerQuality(75),
+                        ui
+                    ),
+                    seg_button(
+                        "85",
+                        cfg.quality == 85,
+                        Message::SetImageResizerQuality(85),
+                        ui
+                    ),
+                    seg_button(
+                        "95",
+                        cfg.quality == 95,
+                        Message::SetImageResizerQuality(95),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+        ]
+        .spacing(8)
+        .into()
+    }
+
+    fn settings_mouse_utils<'a>(
+        &self,
+        tr: &'a translations::Tr,
+        ui: Ui,
+    ) -> Element<'a, Message> {
+        let cfg = &self.module_configs.mouse_utils;
+        column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            pref_toggle(
+                tr.ms_find_my_mouse,
+                tr.ms_find_my_mouse_desc,
+                cfg.find_my_mouse,
+                Message::ToggleMouseFindMyMouse,
+                ui
+            ),
+            pref_toggle(
+                tr.ms_click_highlighter,
+                tr.ms_click_highlighter_desc,
+                cfg.click_highlighter,
+                Message::ToggleMouseClickHighlighter,
+                ui
+            ),
+            pref_toggle(
+                tr.ms_crosshair,
+                tr.ms_crosshair_desc,
+                cfg.crosshair,
+                Message::ToggleMouseCrosshair,
+                ui
+            ),
+        ]
+        .spacing(12)
+        .into()
+    }
+
+    fn settings_app_launcher<'a>(
+        &self,
+        tr: &'a translations::Tr,
+        ui: Ui,
+    ) -> Element<'a, Message> {
+        let cfg = &self.module_configs.app_launcher;
+        column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            // Max results
+            text(tr.ms_max_results)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        "5",
+                        cfg.max_results == 5,
+                        Message::SetAppLauncherMaxResults(5),
+                        ui
+                    ),
+                    seg_button(
+                        "8",
+                        cfg.max_results == 8,
+                        Message::SetAppLauncherMaxResults(8),
+                        ui
+                    ),
+                    seg_button(
+                        "10",
+                        cfg.max_results == 10,
+                        Message::SetAppLauncherMaxResults(10),
+                        ui
+                    ),
+                    seg_button(
+                        "15",
+                        cfg.max_results == 15,
+                        Message::SetAppLauncherMaxResults(15),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+            // Calculator toggle
+            pref_toggle(
+                tr.ms_calculator,
+                tr.ms_calculator_desc,
+                cfg.show_calculator,
+                Message::ToggleAppLauncherCalc,
+                ui
+            ),
+        ]
+        .spacing(8)
+        .into()
+    }
+
+    fn settings_fancy_zones<'a>(
+        &self,
+        tr: &'a translations::Tr,
+        ui: Ui,
+    ) -> Element<'a, Message> {
+        let cfg = &self.module_configs.fancy_zones;
+        column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            text(tr.ms_zone_gap)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        "0 px",
+                        cfg.zone_gap == 0,
+                        Message::SetFancyZonesGap(0),
+                        ui
+                    ),
+                    seg_button(
+                        "4 px",
+                        cfg.zone_gap == 4,
+                        Message::SetFancyZonesGap(4),
+                        ui
+                    ),
+                    seg_button(
+                        "8 px",
+                        cfg.zone_gap == 8,
+                        Message::SetFancyZonesGap(8),
+                        ui
+                    ),
+                    seg_button(
+                        "16 px",
+                        cfg.zone_gap == 16,
+                        Message::SetFancyZonesGap(16),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+        ]
+        .spacing(8)
+        .into()
+    }
+
+    fn settings_peek<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
+        let cfg = &self.module_configs.peek;
+        column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            // Preview lines
+            text(tr.ms_preview_lines)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        "25",
+                        cfg.max_preview_lines == 25,
+                        Message::SetPeekPreviewLines(25),
+                        ui
+                    ),
+                    seg_button(
+                        "50",
+                        cfg.max_preview_lines == 50,
+                        Message::SetPeekPreviewLines(50),
+                        ui
+                    ),
+                    seg_button(
+                        "100",
+                        cfg.max_preview_lines == 100,
+                        Message::SetPeekPreviewLines(100),
+                        ui
+                    ),
+                    seg_button(
+                        "200",
+                        cfg.max_preview_lines == 200,
+                        Message::SetPeekPreviewLines(200),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+            // Dir entries
+            text(tr.ms_dir_entries)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        "10",
+                        cfg.max_dir_entries == 10,
+                        Message::SetPeekDirEntries(10),
+                        ui
+                    ),
+                    seg_button(
+                        "20",
+                        cfg.max_dir_entries == 20,
+                        Message::SetPeekDirEntries(20),
+                        ui
+                    ),
+                    seg_button(
+                        "50",
+                        cfg.max_dir_entries == 50,
+                        Message::SetPeekDirEntries(50),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+        ]
+        .spacing(8)
+        .into()
     }
 }

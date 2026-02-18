@@ -28,6 +28,10 @@
 
 MyPowerToys brings the best ideas from [Microsoft PowerToys](https://github.com/microsoft/PowerToys) to Linux, reimplemented from scratch in Rust. It runs as a lightweight background daemon with a tray icon, and each tool is an independent module you can enable or disable.
 
+<p align="center">
+  <img src="assets/main-screen-app.png" alt="MyPowerToys Settings Dashboard" width="700">
+</p>
+
 ## Modules
 
 | Module | Description | Hotkey |

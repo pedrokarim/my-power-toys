@@ -1,6 +1,7 @@
 mod daemon;
 mod helpers;
 mod message;
+mod module_settings;
 mod modules;
 mod persistence;
 mod theme;
@@ -100,6 +101,7 @@ struct Settings {
     toast_queue: VecDeque<ToastNotification>,
     update_state: UpdateState,
     update_dialog_open: bool,
+    module_configs: module_settings::ModuleConfigs,
 }
 
 // ── Update ──────────────────────────────────────────────────────────────────
@@ -134,6 +136,7 @@ impl Settings {
                 toast_queue: VecDeque::new(),
                 update_state: UpdateState::Unknown,
                 update_dialog_open: false,
+                module_configs: module_settings::ModuleConfigs::load_all(),
             },
             Task::perform(daemon::poll_daemon(), Message::DaemonState),
         )
@@ -439,6 +442,59 @@ impl Settings {
                         self.queue_toast(ToastKind::Error, tr.toast_error_title, &message);
                     }
                 }
+            }
+            // Module settings
+            Message::SetColorPickerFormat(fmt) => {
+                self.module_configs.color_picker.format = fmt;
+                self.module_configs.save("color-picker");
+            }
+            Message::SetTextExtractorLang(lang) => {
+                self.module_configs.text_extractor.language = lang;
+                self.module_configs.save("text-extractor");
+            }
+            Message::SetImageResizerPreset(preset) => {
+                self.module_configs.image_resizer.preset = preset;
+                self.module_configs.save("image-resizer");
+            }
+            Message::SetImageResizerFormat(fmt) => {
+                self.module_configs.image_resizer.output_format = fmt;
+                self.module_configs.save("image-resizer");
+            }
+            Message::SetImageResizerQuality(q) => {
+                self.module_configs.image_resizer.quality = q;
+                self.module_configs.save("image-resizer");
+            }
+            Message::ToggleMouseFindMyMouse(v) => {
+                self.module_configs.mouse_utils.find_my_mouse = v;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::ToggleMouseClickHighlighter(v) => {
+                self.module_configs.mouse_utils.click_highlighter = v;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::ToggleMouseCrosshair(v) => {
+                self.module_configs.mouse_utils.crosshair = v;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetAppLauncherMaxResults(n) => {
+                self.module_configs.app_launcher.max_results = n;
+                self.module_configs.save("app-launcher");
+            }
+            Message::ToggleAppLauncherCalc(v) => {
+                self.module_configs.app_launcher.show_calculator = v;
+                self.module_configs.save("app-launcher");
+            }
+            Message::SetFancyZonesGap(gap) => {
+                self.module_configs.fancy_zones.zone_gap = gap;
+                self.module_configs.save("fancy-zones");
+            }
+            Message::SetPeekPreviewLines(n) => {
+                self.module_configs.peek.max_preview_lines = n;
+                self.module_configs.save("peek");
+            }
+            Message::SetPeekDirEntries(n) => {
+                self.module_configs.peek.max_dir_entries = n;
+                self.module_configs.save("peek");
             }
         }
         Task::none()

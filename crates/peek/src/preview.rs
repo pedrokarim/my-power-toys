@@ -74,7 +74,11 @@ pub fn detect_kind(path: &Path) -> FileKind {
 }
 
 /// Generate a preview for a file.
-pub fn generate_preview(path: &Path, max_preview_lines: usize, max_dir_entries: usize) -> Result<FilePreview> {
+pub fn generate_preview(
+    path: &Path,
+    max_preview_lines: usize,
+    max_dir_entries: usize,
+) -> Result<FilePreview> {
     if !path.exists() {
         return Err(anyhow!("file not found: {}", path.display()));
     }

@@ -317,10 +317,7 @@ pub fn key_cap(active: bool) -> impl Fn(&Theme) -> container::Style {
     move |theme| {
         let palette = theme.extended_palette();
         let (bg, border_color) = if active {
-            (
-                palette.primary.weak.color,
-                palette.primary.base.color,
-            )
+            (palette.primary.weak.color, palette.primary.base.color)
         } else {
             let base = if palette.is_dark {
                 DARK_ELEVATED

@@ -1878,11 +1878,7 @@ impl Settings {
         card(content, ui)
     }
 
-    fn settings_color_picker<'a>(
-        &self,
-        tr: &'a translations::Tr,
-        ui: Ui,
-    ) -> Element<'a, Message> {
+    fn settings_color_picker<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
         let cfg = &self.module_configs.color_picker;
         column![
             text(tr.module_settings)
@@ -1972,11 +1968,7 @@ impl Settings {
         .into()
     }
 
-    fn settings_image_resizer<'a>(
-        &self,
-        tr: &'a translations::Tr,
-        ui: Ui,
-    ) -> Element<'a, Message> {
+    fn settings_image_resizer<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
         let cfg = &self.module_configs.image_resizer;
         column![
             text(tr.module_settings)
@@ -2087,11 +2079,7 @@ impl Settings {
         .into()
     }
 
-    fn settings_mouse_utils<'a>(
-        &self,
-        tr: &'a translations::Tr,
-        ui: Ui,
-    ) -> Element<'a, Message> {
+    fn settings_mouse_utils<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
         let cfg = &self.module_configs.mouse_utils;
         column![
             text(tr.module_settings)
@@ -2124,11 +2112,7 @@ impl Settings {
         .into()
     }
 
-    fn settings_app_launcher<'a>(
-        &self,
-        tr: &'a translations::Tr,
-        ui: Ui,
-    ) -> Element<'a, Message> {
+    fn settings_app_launcher<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
         let cfg = &self.module_configs.app_launcher;
         column![
             text(tr.module_settings)
@@ -2183,11 +2167,7 @@ impl Settings {
         .into()
     }
 
-    fn settings_fancy_zones<'a>(
-        &self,
-        tr: &'a translations::Tr,
-        ui: Ui,
-    ) -> Element<'a, Message> {
+    fn settings_fancy_zones<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
         let cfg = &self.module_configs.fancy_zones;
         column![
             text(tr.module_settings)
@@ -2200,24 +2180,9 @@ impl Settings {
                 .color(theme::subtext0(ui.dark)),
             container(
                 row![
-                    seg_button(
-                        "0 px",
-                        cfg.zone_gap == 0,
-                        Message::SetFancyZonesGap(0),
-                        ui
-                    ),
-                    seg_button(
-                        "4 px",
-                        cfg.zone_gap == 4,
-                        Message::SetFancyZonesGap(4),
-                        ui
-                    ),
-                    seg_button(
-                        "8 px",
-                        cfg.zone_gap == 8,
-                        Message::SetFancyZonesGap(8),
-                        ui
-                    ),
+                    seg_button("0 px", cfg.zone_gap == 0, Message::SetFancyZonesGap(0), ui),
+                    seg_button("4 px", cfg.zone_gap == 4, Message::SetFancyZonesGap(4), ui),
+                    seg_button("8 px", cfg.zone_gap == 8, Message::SetFancyZonesGap(8), ui),
                     seg_button(
                         "16 px",
                         cfg.zone_gap == 16,

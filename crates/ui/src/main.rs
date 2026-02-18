@@ -510,9 +510,7 @@ impl Settings {
             subs.push(time::every(Duration::from_secs(2)).map(|_| Message::SystemThemeCheck));
         }
         if self.hotkey_test_active && self.hotkey_test_rx.is_some() {
-            subs.push(
-                time::every(Duration::from_millis(20)).map(|_| Message::PollKeyboardEvents),
-            );
+            subs.push(time::every(Duration::from_millis(20)).map(|_| Message::PollKeyboardEvents));
         }
         Subscription::batch(subs)
     }

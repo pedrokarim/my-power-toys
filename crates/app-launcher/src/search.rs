@@ -173,7 +173,11 @@ mod tests {
     fn search_calculator_disabled() {
         let index = SearchIndex::new();
         let results = index.search("2 + 3", 8, false);
-        assert!(!results.iter().any(|r| matches!(r, SearchResult::Calculation { .. })));
+        assert!(
+            !results
+                .iter()
+                .any(|r| matches!(r, SearchResult::Calculation { .. }))
+        );
     }
 
     #[test]

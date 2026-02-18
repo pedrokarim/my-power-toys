@@ -403,11 +403,7 @@ pub fn swatch_btn(selected: bool) -> impl Fn(&Theme, button::Status) -> button::
             text_color: palette.background.base.text,
             border: Border {
                 radius: 10.0.into(),
-                color: if selected {
-                    blue()
-                } else {
-                    Color::TRANSPARENT
-                },
+                color: if selected { blue() } else { Color::TRANSPARENT },
                 width: if selected { 2.5 } else { 0.0 },
             },
             shadow: NO_SHADOW,

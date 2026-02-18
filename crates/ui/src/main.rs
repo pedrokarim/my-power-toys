@@ -1,22 +1,24 @@
-mod theme;
-mod translations;
 mod daemon;
 mod helpers;
 mod message;
 mod modules;
 mod persistence;
+mod theme;
+mod translations;
 mod types;
 mod views;
 mod widgets;
 
-use iced::time;
 use iced::theme::Palette;
+use iced::time;
 use iced::{Color, Subscription, Task, Theme};
 use iced_fonts::BOOTSTRAP_FONT_BYTES;
-use std::path::PathBuf;
-use std::time::Duration;
-use translations::Language;
 use message::*;
+use mpt_common::platform::DisplayServer;
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::time::{Duration, Instant};
+use translations::Language;
 use types::*;
 
 // ── State ───────────────────────────────────────────────────────────────────
@@ -35,6 +37,13 @@ struct Settings {
     reduced_motion: bool,
     visual_theme: VisualTheme,
     custom_image_history: Vec<PathBuf>,
+    shortcut_test_results: HashMap<String, String>,
+    dependency_help_for: Option<String>,
+    distro_name: String,
+    package_manager: helpers::PackageManager,
+    display_server: DisplayServer,
+    toast_message: Option<String>,
+    toast_until: Option<Instant>,
 }
 
 // ── Update ──────────────────────────────────────────────────────────────────
@@ -57,6 +66,13 @@ impl Settings {
                 reduced_motion: false,
                 visual_theme,
                 custom_image_history,
+                shortcut_test_results: HashMap::new(),
+                dependency_help_for: None,
+                distro_name: helpers::detect_distro_name(),
+                package_manager: helpers::detect_package_manager(),
+                display_server: helpers::detect_display_server(),
+                toast_message: None,
+                toast_until: None,
             },
             Task::perform(daemon::poll_daemon(), Message::DaemonState),
         )
@@ -128,6 +144,48 @@ impl Settings {
                     }
                 }
             }
+            Message::TriggerHotkeyTest(id) => {
+                if !self.daemon_connected {
+                    self.shortcut_test_results
+                        .insert(id, "error: daemon disconnected".to_string());
+                    return Task::none();
+                }
+                self.shortcut_test_results
+                    .insert(id.clone(), "pending".to_string());
+                return Task::perform(daemon::daemon_trigger_hotkey(id), |(id, result)| {
+                    Message::TriggerHotkeyTestResult(id, result)
+                });
+            }
+            Message::TriggerHotkeyTestResult(id, result) => {
+                self.shortcut_test_results.insert(id, result);
+            }
+            Message::ToggleDependencyHelp(id) => {
+                if self.dependency_help_for.as_deref() == Some(id.as_str()) {
+                    self.dependency_help_for = None;
+                } else {
+                    self.dependency_help_for = Some(id);
+                }
+            }
+            Message::CloseDependencyHelp => {
+                self.dependency_help_for = None;
+            }
+            Message::CopyInstallCommand(command) => {
+                let tr = translations::get(self.language);
+                let msg = match helpers::copy_to_clipboard(&command) {
+                    Ok(()) => tr.toast_command_copied.to_string(),
+                    Err(_) => tr.toast_copy_failed.to_string(),
+                };
+                self.toast_message = Some(msg);
+                self.toast_until = Some(Instant::now() + Duration::from_secs(3));
+            }
+            Message::ToastTick => {
+                if let Some(until) = self.toast_until
+                    && Instant::now() >= until
+                {
+                    self.toast_message = None;
+                    self.toast_until = None;
+                }
+            }
             Message::SetThemeMode(mode) => self.theme_mode = mode,
             Message::SetLanguage(lang) => self.language = lang,
             Message::SetFontSize(size) => self.font_size = size,
@@ -170,9 +228,10 @@ impl Settings {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        let mut subs = vec![
-            time::every(Duration::from_secs(3)).map(|_| Message::DaemonPoll),
-        ];
+        let mut subs = vec![time::every(Duration::from_secs(3)).map(|_| Message::DaemonPoll)];
+        if self.toast_until.is_some() {
+            subs.push(time::every(Duration::from_millis(250)).map(|_| Message::ToastTick));
+        }
         if self.theme_mode == ThemeMode::System {
             subs.push(time::every(Duration::from_secs(2)).map(|_| Message::SystemThemeCheck));
         }

@@ -90,6 +90,7 @@ pub enum Page {
     Dashboard,
     Module(String),
     Preferences,
+    Tests,
     About,
 }
 
@@ -134,11 +135,7 @@ impl Ui {
     }
 
     pub fn font(&self) -> Font {
-        if self.bold {
-            bold()
-        } else {
-            Font::DEFAULT
-        }
+        if self.bold { bold() } else { Font::DEFAULT }
     }
 
     pub fn pad(&self, base: f32) -> f32 {

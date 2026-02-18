@@ -1,11 +1,11 @@
 use iced::widget::{button, column, container, row, text, toggler};
 use iced::{Alignment, Color, Element, Length, Padding};
-use iced_fonts::bootstrap::Bootstrap;
 use iced_fonts::BOOTSTRAP_FONT;
+use iced_fonts::bootstrap::Bootstrap;
 
 use crate::message::Message;
 use crate::theme;
-use crate::types::{bold, Ui};
+use crate::types::{Ui, bold};
 
 pub fn card<'a>(content: impl Into<Element<'a, Message>>, ui: Ui) -> Element<'a, Message> {
     container(content)
@@ -168,9 +168,7 @@ pub fn theme_swatch_btn<'a>(
     button(
         column![
             preview.into(),
-            text(label.to_string())
-                .size(ui.sz(10.0))
-                .font(ui.font()),
+            text(label.to_string()).size(ui.sz(10.0)).font(ui.font()),
         ]
         .spacing(4)
         .align_x(Alignment::Center),

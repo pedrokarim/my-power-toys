@@ -1,9 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-use crate::types::{
-    VisualTheme, ACCENT_THEMES, BUILTIN_BACKGROUNDS, GRADIENT_THEMES,
-};
+use crate::types::{ACCENT_THEMES, BUILTIN_BACKGROUNDS, GRADIENT_THEMES, VisualTheme};
 
 #[derive(Serialize, Deserialize, Default)]
 struct UiPrefs {

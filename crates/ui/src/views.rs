@@ -1,19 +1,19 @@
 use iced::gradient;
 use iced::widget::{
-    Space, button, column, container, horizontal_rule, image, row, scrollable, stack, text,
-    toggler,
+    Space, button, column, container, horizontal_rule, image, row, scrollable, stack, text, toggler,
 };
 use iced::{Alignment, Color, ContentFit, Element, Length, Padding, Theme};
-use iced_fonts::bootstrap::Bootstrap;
 use iced_fonts::BOOTSTRAP_FONT;
+use iced_fonts::bootstrap::Bootstrap;
 
+use crate::Settings;
+use crate::helpers;
 use crate::message::Message;
 use crate::theme;
 use crate::translations;
 use crate::translations::Language;
 use crate::types::*;
 use crate::widgets::*;
-use crate::Settings;
 
 impl Settings {
     // ── Root view ───────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ impl Settings {
     pub fn view(&self) -> Element<'_, Message> {
         let content = row![self.view_sidebar(), self.view_content()].height(Length::Fill);
 
-        match &self.visual_theme {
+        let base: Element<'_, Message> = match &self.visual_theme {
             VisualTheme::Default => content.into(),
             VisualTheme::Color(idx) => {
                 let (_name, bg_rgb, _preview) = ACCENT_THEMES[*idx];
@@ -98,7 +98,43 @@ impl Settings {
                     .height(Length::Fill)
                     .into()
             }
-        }
+        };
+
+        self.with_toast_overlay(base)
+    }
+
+    fn with_toast_overlay<'a>(&'a self, base: Element<'a, Message>) -> Element<'a, Message> {
+        let Some(msg) = self.toast_message.as_ref() else {
+            return base;
+        };
+
+        let ui = self.ui();
+        let toast = container(text(msg.clone()).size(ui.sz(12.0)).font(ui.font()))
+            .padding(Padding::from([8.0, 12.0]))
+            .style(theme::card(ui.contrast, ui.glass));
+
+        let overlay = container(
+            column![
+                Space::with_height(Length::Fill),
+                row![Space::with_width(Length::Fill), toast]
+                    .align_y(Alignment::End)
+                    .spacing(8),
+            ]
+            .spacing(0),
+        )
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .padding(Padding {
+            top: 0.0,
+            right: 16.0,
+            bottom: 16.0,
+            left: 0.0,
+        });
+
+        stack![base, overlay]
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
     }
 
     // ── Sidebar ─────────────────────────────────────────────────────────────
@@ -118,7 +154,10 @@ impl Settings {
             row![
                 logo,
                 column![
-                    text("MyPowerToys").size(ui.sz(16.0)).font(bold()).color(ui.heading()),
+                    text("MyPowerToys")
+                        .size(ui.sz(16.0))
+                        .font(bold())
+                        .color(ui.heading()),
                     text(tr.settings)
                         .size(ui.sz(11.0))
                         .color(theme::subtext0(ui.dark)),
@@ -176,6 +215,13 @@ impl Settings {
             ui,
         ));
         nav = nav.push(sidebar_icon_button(
+            Bootstrap::Lightning,
+            tr.tests,
+            self.page == Page::Tests,
+            Message::NavigateTo(Page::Tests),
+            ui,
+        ));
+        nav = nav.push(sidebar_icon_button(
             Bootstrap::InfoCircle,
             tr.about,
             self.page == Page::About,
@@ -202,6 +248,7 @@ impl Settings {
             Page::Dashboard => self.view_dashboard(),
             Page::Module(id) => self.view_module(id),
             Page::Preferences => self.view_preferences(),
+            Page::Tests => self.view_tests(),
             Page::About => self.view_about(),
         };
         container(scrollable(
@@ -256,12 +303,18 @@ impl Settings {
         }
 
         column![
-            text(tr.dashboard).size(ui.sz(28.0)).font(bold()).color(ui.heading()),
+            text(tr.dashboard)
+                .size(ui.sz(28.0))
+                .font(bold())
+                .color(ui.heading()),
             status,
             Space::with_height(4),
             stats,
             Space::with_height(8),
-            text(tr.all_modules).size(ui.sz(18.0)).font(bold()).color(ui.heading()),
+            text(tr.all_modules)
+                .size(ui.sz(18.0))
+                .font(bold())
+                .color(ui.heading()),
             modules_col,
         ]
         .spacing(12)
@@ -329,7 +382,10 @@ impl Settings {
                 let header = row![
                     icon_badge(m.icon, m.accent, ui.sz(28.0)),
                     column![
-                        text(&m.name).size(ui.sz(28.0)).font(bold()).color(ui.heading()),
+                        text(&m.name)
+                            .size(ui.sz(28.0))
+                            .font(bold())
+                            .color(ui.heading()),
                         text(&m.description)
                             .size(ui.sz(14.0))
                             .font(ui.font())
@@ -378,27 +434,437 @@ impl Settings {
                     )
                 });
 
-                let settings_card = card(
-                    column![
-                        text(tr.module_settings).size(ui.sz(16.0)).font(bold()).color(ui.heading()),
-                        text(tr.module_settings_placeholder)
-                            .size(ui.sz(13.0))
+                let settings_content = column![
+                    text(tr.module_settings)
+                        .size(ui.sz(16.0))
+                        .font(bold())
+                        .color(ui.heading()),
+                    text(tr.module_settings_placeholder)
+                        .size(ui.sz(13.0))
+                        .font(ui.font())
+                        .color(theme::subtext0(ui.dark)),
+                ]
+                .spacing(8);
+                let settings_card = card(settings_content, ui);
+
+                let help_open = self.dependency_help_for.as_deref() == Some(m.id.as_str());
+                let mut test_header = row![
+                    text(tr.tests)
+                        .size(ui.sz(16.0))
+                        .font(bold())
+                        .color(ui.heading()),
+                    Space::with_width(Length::Fill),
+                ]
+                .spacing(8)
+                .align_y(Alignment::Center);
+
+                if m.hotkey.is_some() {
+                    let trigger_btn = {
+                        let base = button(text(tr.test_action).size(ui.sz(12.0)).font(ui.font()))
+                            .padding(Padding::from([6.0, 12.0]))
+                            .style(theme::seg_button(false));
+                        if self.daemon_connected {
+                            base.on_press(Message::TriggerHotkeyTest(m.id.clone()))
+                        } else {
+                            base
+                        }
+                    };
+                    test_header = test_header.push(trigger_btn);
+                }
+
+                if self.has_dependency_help(&m.id) {
+                    let help_btn = button(
+                        row![
+                            text(Bootstrap::InfoCircle.to_string())
+                                .font(BOOTSTRAP_FONT)
+                                .size(ui.sz(12.0)),
+                            text(if help_open { tr.deps_hide } else { tr.deps_help })
+                                .size(ui.sz(12.0))
+                                .font(ui.font()),
+                        ]
+                        .spacing(6)
+                        .align_y(Alignment::Center),
+                    )
+                    .padding(Padding::from([6.0, 10.0]))
+                    .style(theme::seg_button(false))
+                    .on_press(Message::ToggleDependencyHelp(m.id.clone()));
+                    test_header = test_header.push(help_btn);
+                }
+
+                let mut test_content = column![test_header].spacing(8);
+
+                if let Some(hk) = m.hotkey.as_ref() {
+                    let result = self
+                        .shortcut_test_results
+                        .get(&m.id)
+                        .map(String::as_str)
+                        .unwrap_or("-");
+                    let result_col = if result == "ok" {
+                        theme::green()
+                    } else if result == "pending" {
+                        theme::blue()
+                    } else if result.starts_with("error") {
+                        theme::red()
+                    } else {
+                        theme::subtext0(ui.dark)
+                    };
+
+                    test_content = test_content.push(
+                        row![
+                            text(format!("{}:", tr.hotkey))
+                                .size(ui.sz(12.0))
+                                .font(ui.font())
+                                .color(theme::subtext0(ui.dark)),
+                            kbd(hk, ui),
+                        ]
+                        .spacing(8)
+                        .align_y(Alignment::Center),
+                    );
+                    test_content = test_content.push(
+                        text(format!("{}: {}", tr.test_result, result))
+                            .size(ui.sz(12.0))
+                            .font(ui.font())
+                            .color(result_col),
+                    );
+                } else {
+                    test_content = test_content.push(
+                        text(tr.tests_no_hotkey)
+                            .size(ui.sz(12.0))
                             .font(ui.font())
                             .color(theme::subtext0(ui.dark)),
-                    ]
-                    .spacing(8),
-                    ui,
-                );
+                    );
+                }
+
+                if help_open {
+                    if let Some(help_card) = self.view_dependency_help_card(&m.id) {
+                        test_content = test_content.push(help_card);
+                    }
+                }
+
+                let tests_card = card(test_content, ui);
 
                 let mut content = column![header, Space::with_height(4), status_card].spacing(12);
                 if let Some(hk) = hotkey_card {
                     content = content.push(hk);
                 }
                 content = content.push(settings_card);
+                content = content.push(tests_card);
                 content.width(Length::Fill).into()
             }
             None => text(tr.module_not_found).size(ui.sz(20.0)).into(),
         }
+    }
+
+    // ── Tests ───────────────────────────────────────────────────────────────
+
+    fn view_tests(&self) -> Element<'_, Message> {
+        let tr = translations::get(self.language);
+        let ui = self.ui();
+
+        let mut tests = column![].spacing(8);
+        let mut has_shortcut = false;
+
+        for module in self.modules.iter().filter(|m| m.hotkey.is_some()) {
+            has_shortcut = true;
+            let hk = module.hotkey.as_deref().unwrap_or("-");
+            let status_txt = if module.running {
+                tr.running
+            } else {
+                tr.stopped
+            };
+            let status_col = if module.running {
+                theme::green()
+            } else {
+                theme::overlay0(ui.dark)
+            };
+
+            let result = self
+                .shortcut_test_results
+                .get(&module.id)
+                .map(String::as_str)
+                .unwrap_or("-");
+            let result_col = if result == "ok" {
+                theme::green()
+            } else if result == "pending" {
+                theme::blue()
+            } else if result.starts_with("error") {
+                theme::red()
+            } else {
+                theme::subtext0(ui.dark)
+            };
+
+            let trigger_btn = {
+                let base = button(text(tr.test_action).size(ui.sz(12.0)).font(ui.font()))
+                    .padding(Padding::from([6.0, 12.0]))
+                    .style(theme::seg_button(false));
+                if self.daemon_connected {
+                    base.on_press(Message::TriggerHotkeyTest(module.id.clone()))
+                } else {
+                    base
+                }
+            };
+
+            let help_open = self.dependency_help_for.as_deref() == Some(module.id.as_str());
+            let help_btn: Element<'_, Message> = if self.has_dependency_help(&module.id) {
+                button(
+                    text(Bootstrap::InfoCircle.to_string())
+                        .font(BOOTSTRAP_FONT)
+                        .size(ui.sz(12.0)),
+                )
+                .padding(Padding::from([6.0, 10.0]))
+                .style(theme::seg_button(false))
+                .on_press(Message::ToggleDependencyHelp(module.id.clone()))
+                .into()
+            } else {
+                Space::with_width(0).into()
+            };
+
+            let mut card_content = column![
+                row![
+                    icon_badge(module.icon, module.accent, ui.sz(16.0)),
+                    column![
+                        text(module.name.clone()).size(ui.sz(14.0)).font(ui.font()),
+                        row![
+                            text(format!("{}:", tr.hotkey))
+                                .size(ui.sz(12.0))
+                                .font(ui.font())
+                                .color(theme::subtext0(ui.dark)),
+                            kbd(hk, ui),
+                        ]
+                        .spacing(6)
+                        .align_y(Alignment::Center),
+                    ]
+                    .spacing(4)
+                    .width(Length::Fill),
+                    row![trigger_btn, help_btn]
+                        .spacing(6)
+                        .align_y(Alignment::Center),
+                ]
+                .spacing(10)
+                .align_y(Alignment::Center),
+                row![
+                    text(format!("{}: {}", tr.status, status_txt))
+                        .size(ui.sz(12.0))
+                        .font(ui.font())
+                        .color(status_col),
+                    Space::with_width(Length::Fill),
+                    text(format!("{}: {}", tr.test_result, result))
+                        .size(ui.sz(12.0))
+                        .font(ui.font())
+                        .color(result_col),
+                ]
+                .align_y(Alignment::Center),
+            ]
+            .spacing(10);
+
+            if help_open {
+                if let Some(help_card) = self.view_dependency_help_card(&module.id) {
+                    card_content = card_content.push(help_card);
+                }
+            }
+
+            tests = tests.push(card(card_content, ui));
+        }
+
+        let daemon_hint = if self.daemon_connected {
+            text(tr.daemon_connected)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::green())
+        } else {
+            text(tr.daemon_required)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::red())
+        };
+
+        let body: Element<'_, Message> = if has_shortcut {
+            tests.into()
+        } else {
+            text(tr.no_shortcuts)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark))
+                .into()
+        };
+
+        column![
+            text(tr.tests_title)
+                .size(ui.sz(28.0))
+                .font(bold())
+                .color(ui.heading()),
+            text(tr.tests_desc)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(theme::subtext1(ui.dark)),
+            daemon_hint,
+            Space::with_height(4),
+            body,
+        ]
+        .spacing(12)
+        .width(Length::Fill)
+        .into()
+    }
+
+    fn has_dependency_help(&self, module_id: &str) -> bool {
+        matches!(module_id, "text-extractor" | "color-picker" | "paste-plain")
+    }
+
+    fn dependency_packages(&self, module_id: &str) -> Option<Vec<&'static str>> {
+        use helpers::PackageManager;
+
+        let packages = match module_id {
+            "text-extractor" => match self.package_manager {
+                PackageManager::Apt => {
+                    vec![
+                        "tesseract-ocr",
+                        "wl-clipboard",
+                        "xclip",
+                        "gnome-screenshot",
+                        "scrot",
+                    ]
+                }
+                _ => vec![
+                    "tesseract",
+                    "wl-clipboard",
+                    "xclip",
+                    "gnome-screenshot",
+                    "scrot",
+                ],
+            },
+            "color-picker" => vec![
+                "wl-clipboard",
+                "xclip",
+                "xdotool",
+                "gnome-screenshot",
+                "scrot",
+            ],
+            "paste-plain" => vec!["wl-clipboard", "xclip", "xdotool"],
+            _ => return None,
+        };
+        Some(packages)
+    }
+
+    fn dependency_notes_for_module(&self, module_id: &str) -> Vec<String> {
+        let mut notes = match module_id {
+            "text-extractor" => vec![
+                "Le module a besoin de Tesseract pour faire l'OCR.".to_string(),
+                "Pour Wayland wlroots, vous pouvez aussi installer grim + slurp.".to_string(),
+            ],
+            "color-picker" => vec![
+                "Le module a besoin d'un outil de capture d'écran et du presse-papiers."
+                    .to_string(),
+                "Le test lit la position souris via xdotool.".to_string(),
+            ],
+            "paste-plain" => vec![
+                "Le module utilise wl-clipboard/xclip pour le presse-papiers.".to_string(),
+                "Le collage est simulé via xdotool (Ctrl+V).".to_string(),
+            ],
+            _ => vec![],
+        };
+
+        if self.display_server == mpt_common::platform::DisplayServer::Wayland
+            && matches!(module_id, "color-picker" | "paste-plain")
+        {
+            notes.push(
+                "Sous Wayland, xdotool peut etre limité selon votre session. Si besoin, testez en session X11."
+                    .to_string(),
+            );
+        }
+
+        notes
+    }
+
+    fn install_command(&self, packages: &[&str]) -> String {
+        use helpers::PackageManager;
+
+        match self.package_manager {
+            PackageManager::Apt => format!("sudo apt install {}", packages.join(" ")),
+            PackageManager::Pacman => format!("sudo pacman -S --needed {}", packages.join(" ")),
+            PackageManager::Dnf => format!("sudo dnf install {}", packages.join(" ")),
+            PackageManager::Zypper => format!("sudo zypper install {}", packages.join(" ")),
+            PackageManager::Unknown => format!("install: {}", packages.join(" ")),
+        }
+    }
+
+    fn view_dependency_help_card(&self, module_id: &str) -> Option<Element<'_, Message>> {
+        let tr = translations::get(self.language);
+        let ui = self.ui();
+        let packages = self.dependency_packages(module_id)?;
+        let command = self.install_command(&packages);
+        let system_label = format!(
+            "{} • {}",
+            self.distro_name,
+            helpers::display_server_label(self.display_server)
+        );
+
+        let mut notes_col = column![
+            text(format!("{}:", tr.deps_notes))
+                .size(ui.sz(12.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark))
+        ]
+        .spacing(4);
+
+        for note in self.dependency_notes_for_module(module_id) {
+            notes_col = notes_col.push(
+                text(format!("• {note}"))
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            );
+        }
+
+        if self.package_manager == helpers::PackageManager::Unknown {
+            notes_col = notes_col.push(
+                text("• Gestionnaire de paquets non détecté automatiquement.")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            );
+        }
+
+        let copy_btn = button(text(tr.deps_copy).size(ui.sz(12.0)).font(ui.font()))
+            .padding(Padding::from([6.0, 10.0]))
+            .style(theme::seg_button(false))
+            .on_press(Message::CopyInstallCommand(command.clone()));
+
+        let continue_btn = button(text(tr.deps_continue).size(ui.sz(12.0)).font(ui.font()))
+            .padding(Padding::from([6.0, 12.0]))
+            .style(theme::seg_button(false))
+            .on_press(Message::CloseDependencyHelp);
+
+        Some(card(
+            column![
+                text(tr.deps_title)
+                    .size(ui.sz(14.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text(format!("{}: {}", tr.deps_for_system, system_label))
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                text(format!("{}:", tr.deps_command))
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                row![
+                    container(text(command).size(ui.sz(12.0)).font(ui.font()))
+                        .padding(Padding::from([6.0, 10.0]))
+                        .width(Length::Fill)
+                        .style(theme::kbd(ui.contrast, ui.glass)),
+                    copy_btn,
+                ]
+                .spacing(8)
+                .align_y(Alignment::Center),
+                notes_col,
+                row![Space::with_width(Length::Fill), continue_btn]
+                    .spacing(8)
+                    .align_y(Alignment::Center),
+            ]
+            .spacing(8),
+            ui,
+        ))
     }
 
     // ── About ───────────────────────────────────────────────────────────────
@@ -416,7 +882,10 @@ impl Settings {
         let header = row![
             logo,
             column![
-                text("MyPowerToys").size(ui.sz(28.0)).font(bold()).color(ui.heading()),
+                text("MyPowerToys")
+                    .size(ui.sz(28.0))
+                    .font(bold())
+                    .color(ui.heading()),
                 text(format!("Version {}", env!("CARGO_PKG_VERSION")))
                     .size(ui.sz(14.0))
                     .color(theme::subtext0(ui.dark)),
@@ -428,7 +897,10 @@ impl Settings {
 
         let desc = card(
             column![
-                text(tr.about_title).size(ui.sz(16.0)).font(bold()).color(ui.heading()),
+                text(tr.about_title)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
                 text(tr.about_desc).size(ui.sz(14.0)).font(ui.font()),
                 text(tr.about_detail)
                     .size(ui.sz(14.0))
@@ -453,7 +925,10 @@ impl Settings {
 
         let tech = card(
             column![
-                text(tr.tech_stack).size(ui.sz(16.0)).font(bold()).color(ui.heading()),
+                text(tr.tech_stack)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
                 info_row(tr.prog_lang, "Rust (edition 2024)", ui),
                 info_row("Settings UI", "iced", ui),
                 info_row("Overlays", "egui / eframe", ui),
@@ -479,7 +954,10 @@ impl Settings {
         // Appearance card
         let appearance_card = card(
             column![
-                text(tr.appearance).size(ui.sz(16.0)).font(bold()).color(ui.heading()),
+                text(tr.appearance)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
                 text(tr.theme_desc)
                     .size(ui.sz(13.0))
                     .font(ui.font())
@@ -520,7 +998,10 @@ impl Settings {
         // Language card
         let language_card = card(
             column![
-                text(tr.language).size(ui.sz(16.0)).font(bold()).color(ui.heading()),
+                text(tr.language)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
                 text(tr.lang_desc)
                     .size(ui.sz(13.0))
                     .font(ui.font())
@@ -528,11 +1009,36 @@ impl Settings {
                 Space::with_height(8),
                 container(
                     row![
-                        seg_button("Fran\u{00e7}ais", self.language == Language::Fr, Message::SetLanguage(Language::Fr), ui),
-                        seg_button("English", self.language == Language::En, Message::SetLanguage(Language::En), ui),
-                        seg_button("Espa\u{00f1}ol", self.language == Language::Es, Message::SetLanguage(Language::Es), ui),
-                        seg_button("\u{65e5}\u{672c}\u{8a9e}", self.language == Language::Jp, Message::SetLanguage(Language::Jp), ui),
-                        seg_button("\u{4e2d}\u{6587}", self.language == Language::Cn, Message::SetLanguage(Language::Cn), ui),
+                        seg_button(
+                            "Fran\u{00e7}ais",
+                            self.language == Language::Fr,
+                            Message::SetLanguage(Language::Fr),
+                            ui
+                        ),
+                        seg_button(
+                            "English",
+                            self.language == Language::En,
+                            Message::SetLanguage(Language::En),
+                            ui
+                        ),
+                        seg_button(
+                            "Espa\u{00f1}ol",
+                            self.language == Language::Es,
+                            Message::SetLanguage(Language::Es),
+                            ui
+                        ),
+                        seg_button(
+                            "\u{65e5}\u{672c}\u{8a9e}",
+                            self.language == Language::Jp,
+                            Message::SetLanguage(Language::Jp),
+                            ui
+                        ),
+                        seg_button(
+                            "\u{4e2d}\u{6587}",
+                            self.language == Language::Cn,
+                            Message::SetLanguage(Language::Cn),
+                            ui
+                        ),
                     ]
                     .spacing(2),
                 )
@@ -545,7 +1051,10 @@ impl Settings {
         // Text size card
         let text_size_card = card(
             column![
-                text(tr.text_size).size(ui.sz(16.0)).font(bold()).color(ui.heading()),
+                text(tr.text_size)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
                 text(tr.text_size_desc)
                     .size(ui.sz(13.0))
                     .font(ui.font())
@@ -553,9 +1062,24 @@ impl Settings {
                 Space::with_height(8),
                 container(
                     row![
-                        seg_button(tr.small, self.font_size == FontSize::Small, Message::SetFontSize(FontSize::Small), ui),
-                        seg_button(tr.medium, self.font_size == FontSize::Medium, Message::SetFontSize(FontSize::Medium), ui),
-                        seg_button(tr.large, self.font_size == FontSize::Large, Message::SetFontSize(FontSize::Large), ui),
+                        seg_button(
+                            tr.small,
+                            self.font_size == FontSize::Small,
+                            Message::SetFontSize(FontSize::Small),
+                            ui
+                        ),
+                        seg_button(
+                            tr.medium,
+                            self.font_size == FontSize::Medium,
+                            Message::SetFontSize(FontSize::Medium),
+                            ui
+                        ),
+                        seg_button(
+                            tr.large,
+                            self.font_size == FontSize::Large,
+                            Message::SetFontSize(FontSize::Large),
+                            ui
+                        ),
                     ]
                     .spacing(2),
                 )
@@ -568,19 +1092,49 @@ impl Settings {
         // Accessibility card
         let accessibility_card = card(
             column![
-                text(tr.accessibility).size(ui.sz(16.0)).font(bold()).color(ui.heading()),
+                text(tr.accessibility)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
                 Space::with_height(4),
-                pref_toggle(tr.high_contrast, tr.high_contrast_desc, self.high_contrast, Message::ToggleHighContrast, ui),
-                pref_toggle(tr.bold_text, tr.bold_text_desc, self.bold_text, Message::ToggleBoldText, ui),
-                pref_toggle(tr.compact_layout, tr.compact_layout_desc, self.compact_layout, Message::ToggleCompactLayout, ui),
-                pref_toggle(tr.reduced_motion, tr.reduced_motion_desc, self.reduced_motion, Message::ToggleReducedMotion, ui),
+                pref_toggle(
+                    tr.high_contrast,
+                    tr.high_contrast_desc,
+                    self.high_contrast,
+                    Message::ToggleHighContrast,
+                    ui
+                ),
+                pref_toggle(
+                    tr.bold_text,
+                    tr.bold_text_desc,
+                    self.bold_text,
+                    Message::ToggleBoldText,
+                    ui
+                ),
+                pref_toggle(
+                    tr.compact_layout,
+                    tr.compact_layout_desc,
+                    self.compact_layout,
+                    Message::ToggleCompactLayout,
+                    ui
+                ),
+                pref_toggle(
+                    tr.reduced_motion,
+                    tr.reduced_motion_desc,
+                    self.reduced_motion,
+                    Message::ToggleReducedMotion,
+                    ui
+                ),
             ]
             .spacing(12),
             ui,
         );
 
         column![
-            text(tr.preferences).size(ui.sz(28.0)).font(bold()).color(ui.heading()),
+            text(tr.preferences)
+                .size(ui.sz(28.0))
+                .font(bold())
+                .color(ui.heading()),
             Space::with_height(4),
             appearance_card,
             theme_card,
@@ -598,7 +1152,10 @@ impl Settings {
     fn view_theme_card(&self) -> Element<'_, Message> {
         let ui = self.ui();
         let mut content = column![
-            text("Visual Theme").size(ui.sz(16.0)).font(bold()).color(ui.heading()),
+            text("Visual Theme")
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
             text("Background style for the settings window")
                 .size(ui.sz(13.0))
                 .font(ui.font())

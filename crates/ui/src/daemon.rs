@@ -81,6 +81,30 @@ pub async fn daemon_toggle_module(id: String, enable: bool) -> (String, bool, St
     (id, enable, status)
 }
 
+pub async fn daemon_trigger_hotkey(id: String) -> (String, String) {
+    let result = async {
+        let conn = zbus::Connection::session().await?;
+        let msg = conn
+            .call_method(
+                Some(ipc::BUS_NAME),
+                ipc::OBJECT_PATH,
+                Some(ipc::BUS_NAME),
+                "TriggerHotkey",
+                &id.as_str(),
+            )
+            .await?;
+        let r: String = msg.body().deserialize()?;
+        Ok::<String, zbus::Error>(r)
+    }
+    .await;
+
+    let status = match result {
+        Ok(s) => s,
+        Err(e) => format!("error: {e}"),
+    };
+    (id, status)
+}
+
 pub async fn pick_image_file() -> Option<PathBuf> {
     let handle = rfd::AsyncFileDialog::new()
         .add_filter("Images", &["jpg", "jpeg", "png", "bmp", "gif", "webp"])

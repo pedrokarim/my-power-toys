@@ -244,10 +244,10 @@ impl Settings {
                 }
             }
             Message::ToggleModuleResult(id, desired, result) => {
-                if result != "ok" {
-                    if let Some(m) = self.modules.iter_mut().find(|m| m.id == id) {
-                        m.running = !desired;
-                    }
+                if result != "ok"
+                    && let Some(m) = self.modules.iter_mut().find(|m| m.id == id)
+                {
+                    m.running = !desired;
                 }
             }
             Message::TriggerHotkeyTest(id) => {

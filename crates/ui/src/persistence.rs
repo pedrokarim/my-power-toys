@@ -51,26 +51,23 @@ fn parse_visual_theme(s: &str) -> VisualTheme {
     if s.is_empty() || s == "default" {
         return VisualTheme::Default;
     }
-    if let Some(idx) = s.strip_prefix("color:") {
-        if let Ok(i) = idx.parse::<usize>() {
-            if i < ACCENT_THEMES.len() {
-                return VisualTheme::Color(i);
-            }
-        }
+    if let Some(idx) = s.strip_prefix("color:")
+        && let Ok(i) = idx.parse::<usize>()
+        && i < ACCENT_THEMES.len()
+    {
+        return VisualTheme::Color(i);
     }
-    if let Some(idx) = s.strip_prefix("gradient:") {
-        if let Ok(i) = idx.parse::<usize>() {
-            if i < GRADIENT_THEMES.len() {
-                return VisualTheme::Gradient(i);
-            }
-        }
+    if let Some(idx) = s.strip_prefix("gradient:")
+        && let Ok(i) = idx.parse::<usize>()
+        && i < GRADIENT_THEMES.len()
+    {
+        return VisualTheme::Gradient(i);
     }
-    if let Some(idx) = s.strip_prefix("builtin:") {
-        if let Ok(i) = idx.parse::<usize>() {
-            if i < BUILTIN_BACKGROUNDS.len() {
-                return VisualTheme::BuiltinImage(i);
-            }
-        }
+    if let Some(idx) = s.strip_prefix("builtin:")
+        && let Ok(i) = idx.parse::<usize>()
+        && i < BUILTIN_BACKGROUNDS.len()
+    {
+        return VisualTheme::BuiltinImage(i);
     }
     if let Some(path) = s.strip_prefix("custom:") {
         return VisualTheme::CustomImage(PathBuf::from(path));

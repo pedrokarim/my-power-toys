@@ -30,7 +30,8 @@ pub const ACCENT_THEMES: &[(&str, [u8; 3], [u8; 3])] = &[
 ];
 
 /// (name, angle_degrees, start RGB, mid RGB, end RGB)
-pub const GRADIENT_THEMES: &[(&str, f32, [u8; 3], [u8; 3], [u8; 3])] = &[
+pub type GradientTheme = (&'static str, f32, [u8; 3], [u8; 3], [u8; 3]);
+pub const GRADIENT_THEMES: &[GradientTheme] = &[
     ("Aurora", 135.0, [10, 60, 30], [20, 40, 100], [60, 20, 100]),
     ("Sunset", 180.0, [120, 40, 20], [150, 40, 80], [70, 20, 100]),
     ("Ocean", 200.0, [5, 10, 30], [15, 45, 80], [5, 25, 50]),

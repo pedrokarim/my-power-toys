@@ -754,10 +754,8 @@ impl Settings {
                     );
                 }
 
-                if help_open {
-                    if let Some(help_card) = self.view_dependency_help_card(&m.id) {
-                        test_content = test_content.push(help_card);
-                    }
+                if help_open && let Some(help_card) = self.view_dependency_help_card(&m.id) {
+                    test_content = test_content.push(help_card);
                 }
 
                 let tests_card = card(test_content, ui);
@@ -969,10 +967,8 @@ impl Settings {
             ]
             .spacing(10);
 
-            if help_open {
-                if let Some(help_card) = self.view_dependency_help_card(&module.id) {
-                    card_content = card_content.push(help_card);
-                }
+            if help_open && let Some(help_card) = self.view_dependency_help_card(&module.id) {
+                card_content = card_content.push(help_card);
             }
 
             tests = tests.push(card(card_content, ui));

@@ -48,13 +48,11 @@ impl SearchIndex {
         let mut results = Vec::new();
 
         // Check if it's a calculator expression
-        if show_calculator {
-            if let Some(calc_result) = calculator::evaluate(&query) {
-                results.push(SearchResult::Calculation {
-                    expression: query.clone(),
-                    result: calc_result,
-                });
-            }
+        if show_calculator && let Some(calc_result) = calculator::evaluate(&query) {
+            results.push(SearchResult::Calculation {
+                expression: query.clone(),
+                result: calc_result,
+            });
         }
 
         // Search apps

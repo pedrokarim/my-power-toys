@@ -62,8 +62,10 @@ mod tests {
 
     #[test]
     fn active_layout_persists() {
-        let mut config = FancyZonesConfig::default();
-        config.active_layout = 2;
+        let config = FancyZonesConfig {
+            active_layout: 2,
+            ..FancyZonesConfig::default()
+        };
         let s = toml::to_string_pretty(&config).unwrap();
         let parsed: FancyZonesConfig = toml::from_str(&s).unwrap();
         assert_eq!(parsed.active_layout, 2);

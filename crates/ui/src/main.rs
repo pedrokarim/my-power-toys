@@ -15,13 +15,62 @@ use iced::{Color, Subscription, Task, Theme};
 use iced_fonts::BOOTSTRAP_FONT_BYTES;
 use message::*;
 use mpt_common::platform::DisplayServer;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 use translations::Language;
 use types::*;
 
 // ── State ───────────────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone)]
+struct ToastNotification {
+    kind: ToastKind,
+    title: String,
+    message: String,
+    created_at: Instant,
+    expires_at: Instant,
+}
+
+impl ToastNotification {
+    fn new(
+        kind: ToastKind,
+        title: impl Into<String>,
+        message: impl Into<String>,
+        duration: Duration,
+    ) -> Self {
+        let now = Instant::now();
+        Self {
+            kind,
+            title: title.into(),
+            message: message.into(),
+            created_at: now,
+            expires_at: now + duration,
+        }
+    }
+
+    fn remaining_progress(&self, now: Instant) -> f32 {
+        let total = self
+            .expires_at
+            .duration_since(self.created_at)
+            .as_secs_f32();
+        if total <= f32::EPSILON {
+            return 0.0;
+        }
+        let elapsed = now.saturating_duration_since(self.created_at).as_secs_f32();
+        (1.0 - elapsed / total).clamp(0.0, 1.0)
+    }
+}
+
+#[derive(Debug, Clone)]
+enum UpdateState {
+    Unknown,
+    Checking,
+    UpToDate,
+    Available { latest_version: String },
+    Updating { target_version: String },
+    Error(String),
+}
 
 struct Settings {
     modules: Vec<ModuleInfo>,
@@ -42,8 +91,10 @@ struct Settings {
     distro_name: String,
     package_manager: helpers::PackageManager,
     display_server: DisplayServer,
-    toast_message: Option<String>,
-    toast_until: Option<Instant>,
+    toast: Option<ToastNotification>,
+    toast_queue: VecDeque<ToastNotification>,
+    update_state: UpdateState,
+    update_dialog_open: bool,
 }
 
 // ── Update ──────────────────────────────────────────────────────────────────
@@ -71,8 +122,10 @@ impl Settings {
                 distro_name: helpers::detect_distro_name(),
                 package_manager: helpers::detect_package_manager(),
                 display_server: helpers::detect_display_server(),
-                toast_message: None,
-                toast_until: None,
+                toast: None,
+                toast_queue: VecDeque::new(),
+                update_state: UpdateState::Unknown,
+                update_dialog_open: false,
             },
             Task::perform(daemon::poll_daemon(), Message::DaemonState),
         )
@@ -123,9 +176,44 @@ impl Settings {
         }
     }
 
+    fn queue_toast(&mut self, kind: ToastKind, title: &str, message: &str) {
+        let mut duration = match kind {
+            ToastKind::Success => Duration::from_secs(4),
+            ToastKind::Error => Duration::from_secs(6),
+        };
+        if self.reduced_motion {
+            duration += Duration::from_secs(1);
+        }
+        let toast = ToastNotification::new(kind, title, message, duration);
+        if self.toast.is_none() {
+            self.toast = Some(toast);
+            return;
+        }
+
+        if self.toast_queue.len() >= 4 {
+            self.toast_queue.pop_front();
+        }
+        self.toast_queue.push_back(toast);
+    }
+
+    fn show_next_toast(&mut self) {
+        if self.toast.is_none() {
+            self.toast = self.toast_queue.pop_front();
+        }
+    }
+
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::NavigateTo(page) => self.page = page,
+            Message::NavigateTo(page) => {
+                let going_to_about = page == Page::About;
+                self.page = page;
+                if !going_to_about {
+                    self.update_dialog_open = false;
+                } else if matches!(self.update_state, UpdateState::Unknown) {
+                    self.update_state = UpdateState::Checking;
+                    return Task::perform(daemon::check_for_updates(), Message::UpdateCheckFinished);
+                }
+            }
             Message::ToggleModule(id, enabled) => {
                 if let Some(m) = self.modules.iter_mut().find(|m| m.id == id) {
                     m.running = enabled;
@@ -171,20 +259,30 @@ impl Settings {
             }
             Message::CopyInstallCommand(command) => {
                 let tr = translations::get(self.language);
-                let msg = match helpers::copy_to_clipboard(&command) {
-                    Ok(()) => tr.toast_command_copied.to_string(),
-                    Err(_) => tr.toast_copy_failed.to_string(),
-                };
-                self.toast_message = Some(msg);
-                self.toast_until = Some(Instant::now() + Duration::from_secs(3));
+                match helpers::copy_to_clipboard(&command) {
+                    Ok(()) => self.queue_toast(
+                        ToastKind::Success,
+                        tr.toast_success_title,
+                        tr.toast_command_copied,
+                    ),
+                    Err(_) => self.queue_toast(
+                        ToastKind::Error,
+                        tr.toast_error_title,
+                        tr.toast_copy_failed,
+                    ),
+                }
+            }
+            Message::DismissToast => {
+                self.toast = None;
+                self.show_next_toast();
             }
             Message::ToastTick => {
-                if let Some(until) = self.toast_until
-                    && Instant::now() >= until
+                if let Some(active) = self.toast.as_ref()
+                    && Instant::now() >= active.expires_at
                 {
-                    self.toast_message = None;
-                    self.toast_until = None;
+                    self.toast = None;
                 }
+                self.show_next_toast();
             }
             Message::SetThemeMode(mode) => self.theme_mode = mode,
             Message::SetLanguage(lang) => self.language = lang,
@@ -223,14 +321,75 @@ impl Settings {
                     persistence::save_ui_prefs(&self.visual_theme, &self.custom_image_history);
                 }
             }
+            Message::CheckForUpdates => {
+                self.update_dialog_open = false;
+                self.update_state = UpdateState::Checking;
+                return Task::perform(daemon::check_for_updates(), Message::UpdateCheckFinished);
+            }
+            Message::UpdateCheckFinished(result) => {
+                self.update_state = match result {
+                    UpdateCheckResult::UpToDate => UpdateState::UpToDate,
+                    UpdateCheckResult::Available(version) => UpdateState::Available {
+                        latest_version: version,
+                    },
+                    UpdateCheckResult::Error(err) => UpdateState::Error(err),
+                };
+                if !matches!(self.update_state, UpdateState::Available { .. }) {
+                    self.update_dialog_open = false;
+                }
+            }
+            Message::OpenUpdateDialog => {
+                if matches!(self.update_state, UpdateState::Available { .. }) {
+                    self.update_dialog_open = true;
+                }
+            }
+            Message::CloseUpdateDialog => {
+                self.update_dialog_open = false;
+            }
+            Message::ConfirmUpdateInstall => {
+                if let UpdateState::Available { latest_version } = &self.update_state {
+                    self.update_dialog_open = false;
+                    self.update_state = UpdateState::Updating {
+                        target_version: latest_version.clone(),
+                    };
+                    return Task::perform(
+                        daemon::perform_settings_update(),
+                        Message::UpdateInstallFinished,
+                    );
+                }
+            }
+            Message::UpdateInstallFinished(result) => {
+                let tr = translations::get(self.language);
+                match result {
+                    UpdateInstallResult::Updated(version) => {
+                        self.update_state = UpdateState::UpToDate;
+                        let msg = format!("{} v{version}", tr.toast_update_success);
+                        self.queue_toast(ToastKind::Success, tr.toast_success_title, &msg);
+                    }
+                    UpdateInstallResult::AlreadyUpToDate => {
+                        self.update_state = UpdateState::UpToDate;
+                        self.queue_toast(
+                            ToastKind::Success,
+                            tr.toast_success_title,
+                            tr.toast_update_already,
+                        );
+                    }
+                    UpdateInstallResult::Error(err) => {
+                        let message = format!("{}: {err}", tr.toast_update_failed);
+                        self.update_state = UpdateState::Error(err);
+                        self.queue_toast(ToastKind::Error, tr.toast_error_title, &message);
+                    }
+                }
+            }
         }
         Task::none()
     }
 
     fn subscription(&self) -> Subscription<Message> {
         let mut subs = vec![time::every(Duration::from_secs(3)).map(|_| Message::DaemonPoll)];
-        if self.toast_until.is_some() {
-            subs.push(time::every(Duration::from_millis(250)).map(|_| Message::ToastTick));
+        if self.toast.is_some() || !self.toast_queue.is_empty() {
+            let cadence = if self.reduced_motion { 200 } else { 80 };
+            subs.push(time::every(Duration::from_millis(cadence)).map(|_| Message::ToastTick));
         }
         if self.theme_mode == ThemeMode::System {
             subs.push(time::every(Duration::from_secs(2)).map(|_| Message::SystemThemeCheck));

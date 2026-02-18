@@ -74,6 +74,12 @@ pub fn thumbnails_dir() -> PathBuf {
 
 // ── Data models ─────────────────────────────────────────────────────────────
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ToastKind {
+    Success,
+    Error,
+}
+
 #[derive(Debug, Clone)]
 pub struct ModuleInfo {
     pub id: String,

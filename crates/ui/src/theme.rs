@@ -3,6 +3,7 @@
 //! When `glass` is true (image/gradient background active), surfaces become
 //! semi-transparent for a frosted-glass look.
 
+use crate::types::ToastKind;
 use iced::widget::{button, container};
 use iced::{Border, Color, Shadow, Theme, Vector};
 
@@ -188,6 +189,53 @@ pub fn card(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
     }
 }
 
+fn mix(base: Color, accent: Color, factor: f32) -> Color {
+    Color {
+        r: base.r * (1.0 - factor) + accent.r * factor,
+        g: base.g * (1.0 - factor) + accent.g * factor,
+        b: base.b * (1.0 - factor) + accent.b * factor,
+        a: 1.0,
+    }
+}
+
+/// Toast card with semantic tint and visible border.
+pub fn toast_card(kind: ToastKind, hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
+    move |theme| {
+        let palette = theme.extended_palette();
+        let base = if palette.is_dark {
+            DARK_SURFACE
+        } else {
+            palette.background.weak.color
+        };
+        let accent = match kind {
+            ToastKind::Success => green(),
+            ToastKind::Error => red(),
+        };
+        let mut bg = mix(base, accent, if palette.is_dark { 0.18 } else { 0.08 });
+        if glass {
+            bg.a = (GLASS_CARD + 0.12).min(0.94);
+        }
+        let border_color = if hc {
+            accent
+        } else {
+            Color {
+                a: if palette.is_dark { 0.50 } else { 0.32 },
+                ..accent
+            }
+        };
+        container::Style {
+            background: Some(bg.into()),
+            border: Border {
+                radius: 12.0.into(),
+                color: border_color,
+                width: if hc { 1.8 } else { 1.0 },
+            },
+            shadow: NO_SHADOW,
+            text_color: None,
+        }
+    }
+}
+
 /// Stat card with a thin border. Glass mode makes it semi-transparent.
 pub fn stat_card(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
     move |theme| {
@@ -318,6 +366,31 @@ pub fn nav_button(selected: bool) -> impl Fn(&Theme, button::Status) -> button::
             text_color: fg,
             border: Border {
                 radius: 8.0.into(),
+                color: Color::TRANSPARENT,
+                width: 0.0,
+            },
+            shadow: NO_SHADOW,
+        }
+    }
+}
+
+/// Compact close button used in toast cards.
+pub fn toast_close_button() -> impl Fn(&Theme, button::Status) -> button::Style {
+    move |theme, status| {
+        let palette = theme.extended_palette();
+        let hover_bg = if palette.is_dark {
+            DARK_ELEVATED
+        } else {
+            palette.background.strong.color
+        };
+        button::Style {
+            background: match status {
+                button::Status::Hovered => Some(hover_bg.into()),
+                _ => None,
+            },
+            text_color: palette.background.base.text,
+            border: Border {
+                radius: 6.0.into(),
                 color: Color::TRANSPARENT,
                 width: 0.0,
             },

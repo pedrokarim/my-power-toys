@@ -1,12 +1,14 @@
 use iced::gradient;
 use iced::widget::{
-    Space, button, column, container, horizontal_rule, image, row, scrollable, stack, text, toggler,
+    Space, button, column, container, horizontal_rule, image, progress_bar, row, scrollable, stack,
+    text, toggler,
 };
 use iced::{Alignment, Color, ContentFit, Element, Length, Padding, Theme};
 use iced_fonts::BOOTSTRAP_FONT;
 use iced_fonts::bootstrap::Bootstrap;
+use std::time::Instant;
 
-use crate::Settings;
+use crate::{Settings, UpdateState};
 use crate::helpers;
 use crate::message::Message;
 use crate::theme;
@@ -100,18 +102,164 @@ impl Settings {
             }
         };
 
+        let base = self.with_update_dialog_overlay(base);
         self.with_toast_overlay(base)
     }
 
+    fn with_update_dialog_overlay<'a>(&'a self, base: Element<'a, Message>) -> Element<'a, Message> {
+        if !self.update_dialog_open {
+            return base;
+        }
+
+        let target_version = match &self.update_state {
+            UpdateState::Available { latest_version } => latest_version.as_str(),
+            UpdateState::Updating { target_version } => target_version.as_str(),
+            _ => return base,
+        };
+
+        let tr = translations::get(self.language);
+        let ui = self.ui();
+        let current_version = format!("v{}", env!("CARGO_PKG_VERSION"));
+        let latest_version = format!("v{target_version}");
+
+        let cancel_button = button(
+            text(tr.update_dialog_cancel)
+                .size(ui.sz(12.0))
+                .font(ui.font()),
+        )
+        .padding(Padding::from([6.0, 12.0]))
+        .style(theme::seg_button(false))
+        .on_press(Message::CloseUpdateDialog);
+
+        let confirm_button = button(
+            text(tr.update_dialog_confirm)
+                .size(ui.sz(12.0))
+                .font(ui.font()),
+        )
+        .padding(Padding::from([6.0, 12.0]))
+        .style(theme::seg_button(true))
+        .on_press(Message::ConfirmUpdateInstall);
+
+        let dialog = container(
+            column![
+                text(tr.update_dialog_title)
+                    .size(ui.sz(18.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text(tr.update_dialog_body)
+                    .size(ui.sz(13.0))
+                    .font(ui.font())
+                    .color(theme::subtext1(ui.dark)),
+                info_row(tr.update_current_version, &current_version, ui),
+                info_row(tr.update_latest_version, &latest_version, ui),
+                row![
+                    Space::with_width(Length::Fill),
+                    cancel_button,
+                    confirm_button
+                ]
+                .spacing(8)
+                .align_y(Alignment::Center),
+            ]
+            .spacing(10),
+        )
+        .padding(ui.pad(16.0) as u16)
+        .width(ui.sz(460.0))
+        .style(theme::card(ui.contrast, ui.glass));
+
+        let backdrop = container(Space::new(0, 0))
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .style(|_: &Theme| container::Style {
+                background: Some(Color::from_rgba8(0, 0, 0, 0.55).into()),
+                border: iced::Border::default(),
+                shadow: iced::Shadow::default(),
+                text_color: None,
+            });
+
+        let overlay = container(dialog)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x(Length::Fill)
+            .center_y(Length::Fill)
+            .padding(Padding::from([24.0, 24.0]));
+
+        stack![base, backdrop, overlay]
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
+    }
+
     fn with_toast_overlay<'a>(&'a self, base: Element<'a, Message>) -> Element<'a, Message> {
-        let Some(msg) = self.toast_message.as_ref() else {
+        let Some(toast) = self.toast.as_ref() else {
             return base;
         };
 
         let ui = self.ui();
-        let toast = container(text(msg.clone()).size(ui.sz(12.0)).font(ui.font()))
-            .padding(Padding::from([8.0, 12.0]))
-            .style(theme::card(ui.contrast, ui.glass));
+        let progress = toast.remaining_progress(Instant::now());
+        let (icon, accent) = match toast.kind {
+            ToastKind::Success => (Bootstrap::CheckCircleFill, theme::green()),
+            ToastKind::Error => (Bootstrap::ExclamationCircleFill, theme::red()),
+        };
+
+        let mut header = row![
+            container(
+                text(icon.to_string())
+                    .font(BOOTSTRAP_FONT)
+                    .size(ui.sz(17.0))
+                    .color(accent)
+            )
+            .width(ui.sz(26.0))
+            .height(ui.sz(26.0))
+            .center_x(Length::Shrink)
+            .center_y(Length::Shrink),
+            column![
+                text(toast.title.clone())
+                    .size(ui.sz(13.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text(toast.message.clone())
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext1(ui.dark)),
+            ]
+            .spacing(2)
+            .width(Length::Fill),
+        ]
+        .spacing(10)
+        .align_y(Alignment::Start);
+
+        if !self.toast_queue.is_empty() {
+            header = header.push(
+                container(
+                    text(format!("+{}", self.toast_queue.len()))
+                        .size(ui.sz(10.0))
+                        .font(ui.font())
+                        .color(theme::subtext0(ui.dark)),
+                )
+                .padding(Padding::from([2.0, 7.0]))
+                .style(theme::kbd(ui.contrast, ui.glass)),
+            );
+        }
+
+        let close_button = button(text("x").size(ui.sz(12.0)).font(bold()))
+            .on_press(Message::DismissToast)
+            .padding(Padding::from([2.0, 7.0]))
+            .style(theme::toast_close_button());
+
+        header = header.push(close_button);
+
+        let toast = container(
+            column![
+                header,
+                progress_bar(0.0..=1.0, progress)
+                    .height(4)
+                    .width(Length::Fill),
+            ]
+            .spacing(10),
+        )
+        .padding(Padding::from([12.0, 14.0]))
+        .width(ui.sz(380.0))
+        .style(theme::toast_card(toast.kind, ui.contrast, ui.glass));
 
         let overlay = container(
             column![
@@ -126,8 +274,8 @@ impl Settings {
         .height(Length::Fill)
         .padding(Padding {
             top: 0.0,
-            right: 16.0,
-            bottom: 16.0,
+            right: 24.0,
+            bottom: 24.0,
             left: 0.0,
         });
 
@@ -478,9 +626,13 @@ impl Settings {
                             text(Bootstrap::InfoCircle.to_string())
                                 .font(BOOTSTRAP_FONT)
                                 .size(ui.sz(12.0)),
-                            text(if help_open { tr.deps_hide } else { tr.deps_help })
-                                .size(ui.sz(12.0))
-                                .font(ui.font()),
+                            text(if help_open {
+                                tr.deps_hide
+                            } else {
+                                tr.deps_help
+                            })
+                            .size(ui.sz(12.0))
+                            .font(ui.font()),
                         ]
                         .spacing(6)
                         .align_y(Alignment::Center),
@@ -872,6 +1024,58 @@ impl Settings {
     fn view_about(&self) -> Element<'_, Message> {
         let tr = translations::get(self.language);
         let ui = self.ui();
+        let (status_text, status_color, latest_version, error_detail, busy, can_install) =
+            match &self.update_state {
+                UpdateState::Unknown => (
+                    tr.update_not_checked.to_string(),
+                    theme::overlay0(ui.dark),
+                    None,
+                    None,
+                    false,
+                    false,
+                ),
+                UpdateState::Checking => (
+                    tr.update_checking.to_string(),
+                    theme::overlay0(ui.dark),
+                    None,
+                    None,
+                    true,
+                    false,
+                ),
+                UpdateState::UpToDate => (
+                    tr.update_up_to_date.to_string(),
+                    theme::green(),
+                    None,
+                    None,
+                    false,
+                    false,
+                ),
+                UpdateState::Available { latest_version } => (
+                    tr.update_available.to_string(),
+                    theme::blue(),
+                    Some(latest_version.clone()),
+                    None,
+                    false,
+                    true,
+                ),
+                UpdateState::Updating { target_version } => (
+                    tr.update_updating.to_string(),
+                    theme::yellow(),
+                    Some(target_version.clone()),
+                    None,
+                    true,
+                    false,
+                ),
+                UpdateState::Error(err) => (
+                    tr.update_error.to_string(),
+                    theme::red(),
+                    None,
+                    Some(err.clone()),
+                    false,
+                    false,
+                ),
+            };
+
         let logo = image(format!(
             "{}/assets/logo-200.png",
             env!("CARGO_MANIFEST_DIR").replace("/crates/ui", "")
@@ -939,7 +1143,76 @@ impl Settings {
             ui,
         );
 
-        column![header, Space::with_height(8), desc, info, tech]
+        let check_button = if busy {
+            button(text(tr.update_check).size(ui.sz(12.0)).font(ui.font()))
+                .padding(Padding::from([6.0, 12.0]))
+                .style(theme::seg_button(false))
+        } else {
+            button(text(tr.update_check).size(ui.sz(12.0)).font(ui.font()))
+                .padding(Padding::from([6.0, 12.0]))
+                .style(theme::seg_button(false))
+                .on_press(Message::CheckForUpdates)
+        };
+
+        let install_button = if can_install {
+            button(text(tr.update_install).size(ui.sz(12.0)).font(ui.font()))
+                .padding(Padding::from([6.0, 12.0]))
+                .style(theme::seg_button(true))
+                .on_press(Message::OpenUpdateDialog)
+        } else {
+            button(text(tr.update_install).size(ui.sz(12.0)).font(ui.font()))
+                .padding(Padding::from([6.0, 12.0]))
+                .style(theme::seg_button(false))
+        };
+
+        let mut update_content = column![
+            text(tr.update_section)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            info_row(
+                tr.update_current_version,
+                &format!("v{}", env!("CARGO_PKG_VERSION")),
+                ui,
+            ),
+            row![
+                text(tr.update_status)
+                    .size(ui.sz(13.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark))
+                    .width(120),
+                text(status_text).size(ui.sz(13.0)).font(ui.font()).color(status_color),
+            ]
+            .spacing(12),
+        ]
+        .spacing(8);
+
+        if let Some(version) = latest_version {
+            update_content = update_content.push(info_row(
+                tr.update_latest_version,
+                &format!("v{version}"),
+                ui,
+            ));
+        }
+
+        if let Some(err) = error_detail {
+            update_content = update_content.push(
+                text(err)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            );
+        }
+
+        update_content = update_content.push(
+            row![check_button, install_button]
+                .spacing(8)
+                .align_y(Alignment::Center),
+        );
+
+        let update_card = card(update_content, ui);
+
+        column![header, Space::with_height(8), desc, info, tech, update_card]
             .spacing(12)
             .width(Length::Fill)
             .into()

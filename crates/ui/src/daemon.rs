@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
 use mpt_common::ipc;
+use tokio::task;
 
-use crate::message::DaemonStateResult;
+use crate::message::{DaemonStateResult, UpdateCheckResult, UpdateInstallResult};
 
 /// Check daemon status and fetch module list via D-Bus.
 pub async fn poll_daemon() -> DaemonStateResult {
@@ -112,4 +113,33 @@ pub async fn pick_image_file() -> Option<PathBuf> {
         .pick_file()
         .await?;
     Some(handle.path().to_path_buf())
+}
+
+pub async fn check_for_updates() -> UpdateCheckResult {
+    let result = task::spawn_blocking(mpt_common::updater::check_for_update).await;
+    match result {
+        Ok(Ok(Some(info))) => UpdateCheckResult::Available(info.latest_version),
+        Ok(Ok(None)) => UpdateCheckResult::UpToDate,
+        Ok(Err(e)) => UpdateCheckResult::Error(e.to_string()),
+        Err(e) => UpdateCheckResult::Error(format!("update check task failed: {e}")),
+    }
+}
+
+pub async fn perform_settings_update() -> UpdateInstallResult {
+    let result = task::spawn_blocking(|| {
+        match mpt_common::updater::check_for_update() {
+            Ok(Some(_)) => match mpt_common::updater::perform_update("mpt-settings") {
+                Ok(version) => UpdateInstallResult::Updated(version),
+                Err(e) => UpdateInstallResult::Error(e.to_string()),
+            },
+            Ok(None) => UpdateInstallResult::AlreadyUpToDate,
+            Err(e) => UpdateInstallResult::Error(e.to_string()),
+        }
+    })
+    .await;
+
+    match result {
+        Ok(outcome) => outcome,
+        Err(e) => UpdateInstallResult::Error(format!("update task failed: {e}")),
+    }
 }

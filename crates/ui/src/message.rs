@@ -13,6 +13,7 @@ pub enum Message {
     ToggleDependencyHelp(String),
     CloseDependencyHelp,
     CopyInstallCommand(String),
+    DismissToast,
     ToastTick,
     SetThemeMode(ThemeMode),
     SetLanguage(Language),
@@ -27,10 +28,30 @@ pub enum Message {
     SetVisualTheme(VisualTheme),
     PickCustomImage,
     CustomImagePicked(Option<PathBuf>),
+    CheckForUpdates,
+    UpdateCheckFinished(UpdateCheckResult),
+    OpenUpdateDialog,
+    CloseUpdateDialog,
+    ConfirmUpdateInstall,
+    UpdateInstallFinished(UpdateInstallResult),
 }
 
 #[derive(Debug, Clone)]
 pub struct DaemonStateResult {
     pub connected: bool,
     pub modules: Vec<(String, String, bool)>,
+}
+
+#[derive(Debug, Clone)]
+pub enum UpdateCheckResult {
+    UpToDate,
+    Available(String),
+    Error(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum UpdateInstallResult {
+    Updated(String),
+    AlreadyUpToDate,
+    Error(String),
 }

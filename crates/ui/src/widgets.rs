@@ -112,6 +112,22 @@ pub fn sidebar_badge_button(
         .into()
 }
 
+pub fn key_cap<'a>(label: &str, active: bool, ui: Ui) -> Element<'a, Message> {
+    container(
+        text(label.to_string())
+            .size(ui.sz(12.0))
+            .font(if active { bold() } else { ui.font() })
+            .color(if active {
+                Color::WHITE
+            } else {
+                theme::subtext1(ui.dark)
+            }),
+    )
+    .padding(Padding::from([6.0, 12.0]))
+    .style(theme::key_cap(active))
+    .into()
+}
+
 pub fn seg_button(label: &str, active: bool, msg: Message, ui: Ui) -> Element<'static, Message> {
     button(text(label.to_string()).size(ui.sz(11.0)).font(ui.font()))
         .on_press(msg)

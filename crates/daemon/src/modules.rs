@@ -1,4 +1,5 @@
 use anyhow::{Result, bail};
+use mpt_common::config::DaemonConfig;
 use mpt_common::module::PowerModule;
 use std::collections::HashMap;
 use tracing::info;
@@ -108,6 +109,28 @@ impl ModuleRegistry {
             .values()
             .map(|m| (m.id(), m.name(), m.is_running()))
             .collect()
+    }
+
+    pub fn hotkey_bindings(&self, config: &DaemonConfig) -> Vec<(String, String)> {
+        let mut bindings = Vec::new();
+
+        for module in self.modules.values() {
+            let configured = config
+                .modules
+                .get(module.id())
+                .and_then(|entry| entry.hotkey.as_deref())
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(str::to_string);
+
+            let hotkey = configured.or_else(|| module.default_hotkey().map(|hk| hk.to_string()));
+            if let Some(hotkey) = hotkey {
+                bindings.push((module.id().to_string(), hotkey));
+            }
+        }
+
+        bindings.sort_by(|a, b| a.0.cmp(&b.0));
+        bindings
     }
 
     pub fn trigger_hotkey(&mut self, id: &str) -> Result<()> {

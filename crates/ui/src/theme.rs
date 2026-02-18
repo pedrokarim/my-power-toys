@@ -312,6 +312,41 @@ pub fn kbd(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
     }
 }
 
+/// Key cap indicator for the hotkey test. Active = blue, inactive = dim.
+pub fn key_cap(active: bool) -> impl Fn(&Theme) -> container::Style {
+    move |theme| {
+        let palette = theme.extended_palette();
+        let (bg, border_color) = if active {
+            (
+                palette.primary.weak.color,
+                palette.primary.base.color,
+            )
+        } else {
+            let base = if palette.is_dark {
+                DARK_ELEVATED
+            } else {
+                palette.background.strong.color
+            };
+            let bc = if palette.is_dark {
+                DARK_BORDER
+            } else {
+                palette.secondary.weak.color
+            };
+            (base, bc)
+        };
+        container::Style {
+            background: Some(bg.into()),
+            border: Border {
+                radius: 6.0.into(),
+                color: border_color,
+                width: if active { 2.0 } else { 1.0 },
+            },
+            shadow: NO_SHADOW,
+            text_color: None,
+        }
+    }
+}
+
 /// Colored icon badge (rounded square with accent background, like PowerToys).
 pub fn icon_badge(accent: Color) -> impl Fn(&Theme) -> container::Style {
     move |theme| {

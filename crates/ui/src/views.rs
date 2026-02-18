@@ -8,7 +8,6 @@ use iced_fonts::BOOTSTRAP_FONT;
 use iced_fonts::bootstrap::Bootstrap;
 use std::time::Instant;
 
-use crate::{Settings, UpdateState};
 use crate::helpers;
 use crate::message::Message;
 use crate::theme;
@@ -16,6 +15,7 @@ use crate::translations;
 use crate::translations::Language;
 use crate::types::*;
 use crate::widgets::*;
+use crate::{Settings, UpdateState};
 
 impl Settings {
     // ── Root view ───────────────────────────────────────────────────────────
@@ -106,7 +106,10 @@ impl Settings {
         self.with_toast_overlay(base)
     }
 
-    fn with_update_dialog_overlay<'a>(&'a self, base: Element<'a, Message>) -> Element<'a, Message> {
+    fn with_update_dialog_overlay<'a>(
+        &'a self,
+        base: Element<'a, Message>,
+    ) -> Element<'a, Message> {
         if !self.update_dialog_open {
             return base;
         }
@@ -712,6 +715,91 @@ impl Settings {
     fn view_tests(&self) -> Element<'_, Message> {
         let tr = translations::get(self.language);
         let ui = self.ui();
+        let keys_under_test = self.collect_test_keys();
+
+        let mut keys_rows = column![].spacing(6);
+        if keys_under_test.is_empty() {
+            keys_rows = keys_rows.push(
+                text(tr.tests_no_keys)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            );
+        } else {
+            for chunk in keys_under_test.chunks(8) {
+                let mut line = row![].spacing(6);
+                for key in chunk {
+                    let active = self.test_active_keys.iter().any(|k| k == key);
+                    line = line.push(key_cap(key, active, ui));
+                }
+                keys_rows = keys_rows.push(line);
+            }
+        }
+
+        let active_keys = if self.test_active_keys.is_empty() {
+            "-".to_string()
+        } else {
+            self.test_active_keys.join(" + ")
+        };
+
+        let test_toggle_btn = if self.hotkey_test_active {
+            button(
+                row![
+                    text(Bootstrap::StopCircle.to_string())
+                        .font(BOOTSTRAP_FONT)
+                        .size(ui.sz(12.0)),
+                    text(tr.tests_stop_btn).size(ui.sz(11.0)).font(ui.font()),
+                ]
+                .spacing(6)
+                .align_y(Alignment::Center),
+            )
+            .padding(Padding::from([5.0, 10.0]))
+            .style(theme::seg_button(true))
+            .on_press(Message::StopHotkeyTest)
+        } else {
+            button(
+                row![
+                    text(Bootstrap::PlayCircle.to_string())
+                        .font(BOOTSTRAP_FONT)
+                        .size(ui.sz(12.0)),
+                    text(tr.tests_start_btn).size(ui.sz(11.0)).font(ui.font()),
+                ]
+                .spacing(6)
+                .align_y(Alignment::Center),
+            )
+            .padding(Padding::from([5.0, 10.0]))
+            .style(theme::seg_button(false))
+            .on_press(Message::StartHotkeyTest)
+        };
+
+        let keys_card = card(
+            column![
+                row![
+                    text(tr.tests_keys_title)
+                        .size(ui.sz(16.0))
+                        .font(bold())
+                        .color(ui.heading()),
+                    Space::with_width(Length::Fill),
+                    test_toggle_btn,
+                ]
+                .align_y(Alignment::Center),
+                text(tr.tests_keys_desc)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                keys_rows,
+                text(format!("{}: {}", tr.tests_active_keys, active_keys))
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(if self.hotkey_test_active {
+                        theme::blue()
+                    } else {
+                        theme::subtext1(ui.dark)
+                    }),
+            ]
+            .spacing(8),
+            ui,
+        );
 
         let mut tests = column![].spacing(8);
         let mut has_shortcut = false;
@@ -830,6 +918,19 @@ impl Settings {
                 .color(theme::red())
         };
 
+        let wayland_hint: Option<Element<'_, Message>> =
+            if self.display_server == mpt_common::platform::DisplayServer::Wayland {
+                Some(
+                    text(tr.tests_wayland_hint)
+                        .size(ui.sz(12.0))
+                        .font(ui.font())
+                        .color(theme::yellow())
+                        .into(),
+                )
+            } else {
+                None
+            };
+
         let body: Element<'_, Message> = if has_shortcut {
             tests.into()
         } else {
@@ -840,7 +941,7 @@ impl Settings {
                 .into()
         };
 
-        column![
+        let mut content = column![
             text(tr.tests_title)
                 .size(ui.sz(28.0))
                 .font(bold())
@@ -850,12 +951,88 @@ impl Settings {
                 .font(ui.font())
                 .color(theme::subtext1(ui.dark)),
             daemon_hint,
-            Space::with_height(4),
-            body,
         ]
-        .spacing(12)
-        .width(Length::Fill)
-        .into()
+        .spacing(12);
+
+        if let Some(hint) = wayland_hint {
+            content = content.push(hint);
+        }
+
+        content = content
+            .push(keys_card)
+            .push(Space::with_height(4))
+            .push(body);
+
+        content.width(Length::Fill).into()
+    }
+
+    fn collect_test_keys(&self) -> Vec<String> {
+        let mut keys: Vec<String> = Vec::new();
+        for hotkey in self.modules.iter().filter_map(|m| m.hotkey.as_deref()) {
+            for token in Self::parse_hotkey_tokens(hotkey) {
+                if !keys.contains(&token) {
+                    keys.push(token);
+                }
+            }
+        }
+        keys.sort_by(|a, b| Self::test_key_sort(a).cmp(&Self::test_key_sort(b)));
+        keys
+    }
+
+    fn parse_hotkey_tokens(hotkey: &str) -> Vec<String> {
+        let trimmed = hotkey.trim();
+        if trimmed.is_empty() {
+            return vec![];
+        }
+
+        let mut parts = Vec::new();
+        let lower = trimmed.to_lowercase();
+        if let Some(_rest) = lower.strip_prefix("hold ") {
+            // e.g. "Hold Super"
+            let original = trimmed[5..].trim();
+            parts.push(Self::normalize_test_key(original));
+        } else {
+            for part in trimmed.split('+') {
+                parts.push(Self::normalize_test_key(part));
+            }
+        }
+
+        let mut uniq = Vec::new();
+        for p in parts {
+            if !p.is_empty() && !uniq.contains(&p) {
+                uniq.push(p);
+            }
+        }
+        uniq
+    }
+
+    fn normalize_test_key(raw: &str) -> String {
+        let token = raw.trim();
+        if token.is_empty() {
+            return String::new();
+        }
+
+        let lower = token.to_lowercase();
+        match lower.as_str() {
+            "control" | "ctrl" => "Ctrl".to_string(),
+            "super" | "meta" | "win" => "Super".to_string(),
+            "alt" => "Alt".to_string(),
+            "shift" => "Shift".to_string(),
+            "space" => "Space".to_string(),
+            _ if token.len() == 1 => token.to_uppercase(),
+            _ => token.to_string(),
+        }
+    }
+
+    fn test_key_sort(key: &str) -> (u8, String) {
+        let rank = match key {
+            "Super" => 0,
+            "Ctrl" => 1,
+            "Alt" => 2,
+            "Shift" => 3,
+            _ => 10,
+        };
+        (rank, key.to_lowercase())
     }
 
     fn has_dependency_help(&self, module_id: &str) -> bool {
@@ -1181,7 +1358,10 @@ impl Settings {
                     .font(ui.font())
                     .color(theme::subtext0(ui.dark))
                     .width(120),
-                text(status_text).size(ui.sz(13.0)).font(ui.font()).color(status_color),
+                text(status_text)
+                    .size(ui.sz(13.0))
+                    .font(ui.font())
+                    .color(status_color),
             ]
             .spacing(12),
         ]

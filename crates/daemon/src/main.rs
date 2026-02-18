@@ -1,4 +1,5 @@
 mod dbus;
+mod hotkeys;
 mod modules;
 mod tray;
 
@@ -69,6 +70,19 @@ async fn main() -> Result<()> {
     }
 
     let registry = Arc::new(Mutex::new(registry));
+
+    if ds == platform::DisplayServer::X11 {
+        let bindings = {
+            let reg = registry.lock().unwrap();
+            reg.hotkey_bindings(&config)
+        };
+        hotkeys::spawn_x11_hotkey_listener(bindings, Arc::clone(&registry));
+    } else {
+        warn!("Global hotkeys are currently available only on X11 sessions.");
+        warn!(
+            "Detected {ds:?}. On Ubuntu Wayland, shortcuts may require session-level bindings or X11 login."
+        );
+    }
 
     // Start D-Bus server in background
     let dbus_registry = Arc::clone(&registry);

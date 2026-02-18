@@ -126,15 +126,13 @@ pub async fn check_for_updates() -> UpdateCheckResult {
 }
 
 pub async fn perform_settings_update() -> UpdateInstallResult {
-    let result = task::spawn_blocking(|| {
-        match mpt_common::updater::check_for_update() {
-            Ok(Some(_)) => match mpt_common::updater::perform_update("mpt-settings") {
-                Ok(version) => UpdateInstallResult::Updated(version),
-                Err(e) => UpdateInstallResult::Error(e.to_string()),
-            },
-            Ok(None) => UpdateInstallResult::AlreadyUpToDate,
+    let result = task::spawn_blocking(|| match mpt_common::updater::check_for_update() {
+        Ok(Some(_)) => match mpt_common::updater::perform_update("mpt-settings") {
+            Ok(version) => UpdateInstallResult::Updated(version),
             Err(e) => UpdateInstallResult::Error(e.to_string()),
-        }
+        },
+        Ok(None) => UpdateInstallResult::AlreadyUpToDate,
+        Err(e) => UpdateInstallResult::Error(e.to_string()),
     })
     .await;
 

@@ -17,6 +17,7 @@ use message::*;
 use mpt_common::platform::DisplayServer;
 use std::collections::{HashMap, VecDeque};
 use std::path::PathBuf;
+use std::sync::mpsc as std_mpsc;
 use std::time::{Duration, Instant};
 use translations::Language;
 use types::*;
@@ -87,6 +88,10 @@ struct Settings {
     visual_theme: VisualTheme,
     custom_image_history: Vec<PathBuf>,
     shortcut_test_results: HashMap<String, String>,
+    hotkey_test_active: bool,
+    test_active_keys: Vec<String>,
+    /// Receiver for global keyboard events from the rdev listener thread.
+    hotkey_test_rx: Option<std_mpsc::Receiver<(String, bool)>>,
     dependency_help_for: Option<String>,
     distro_name: String,
     package_manager: helpers::PackageManager,
@@ -118,6 +123,9 @@ impl Settings {
                 visual_theme,
                 custom_image_history,
                 shortcut_test_results: HashMap::new(),
+                hotkey_test_active: false,
+                test_active_keys: Vec::new(),
+                hotkey_test_rx: None,
                 dependency_help_for: None,
                 distro_name: helpers::detect_distro_name(),
                 package_manager: helpers::detect_package_manager(),
@@ -206,12 +214,19 @@ impl Settings {
         match message {
             Message::NavigateTo(page) => {
                 let going_to_about = page == Page::About;
+                if page != Page::Tests {
+                    self.hotkey_test_active = false;
+                    self.test_active_keys.clear();
+                }
                 self.page = page;
                 if !going_to_about {
                     self.update_dialog_open = false;
                 } else if matches!(self.update_state, UpdateState::Unknown) {
                     self.update_state = UpdateState::Checking;
-                    return Task::perform(daemon::check_for_updates(), Message::UpdateCheckFinished);
+                    return Task::perform(
+                        daemon::check_for_updates(),
+                        Message::UpdateCheckFinished,
+                    );
                 }
             }
             Message::ToggleModule(id, enabled) => {
@@ -246,6 +261,50 @@ impl Settings {
             }
             Message::TriggerHotkeyTestResult(id, result) => {
                 self.shortcut_test_results.insert(id, result);
+            }
+            Message::StartHotkeyTest => {
+                self.hotkey_test_active = true;
+                self.test_active_keys.clear();
+                if self.hotkey_test_rx.is_none() {
+                    let (tx, rx) = std_mpsc::channel();
+                    self.hotkey_test_rx = Some(rx);
+                    std::thread::spawn(move || {
+                        let _ = rdev::listen(move |event| {
+                            let pair = match event.event_type {
+                                rdev::EventType::KeyPress(key) => {
+                                    rdev_key_name(key).map(|n| (n, true))
+                                }
+                                rdev::EventType::KeyRelease(key) => {
+                                    rdev_key_name(key).map(|n| (n, false))
+                                }
+                                _ => None,
+                            };
+                            if let Some(p) = pair {
+                                let _ = tx.send(p);
+                            }
+                        });
+                    });
+                }
+            }
+            Message::StopHotkeyTest => {
+                self.hotkey_test_active = false;
+                self.test_active_keys.clear();
+            }
+            Message::PollKeyboardEvents => {
+                if let Some(rx) = &self.hotkey_test_rx {
+                    while let Ok((name, pressed)) = rx.try_recv() {
+                        if !self.hotkey_test_active {
+                            continue;
+                        }
+                        if pressed {
+                            if !self.test_active_keys.contains(&name) {
+                                self.test_active_keys.push(name);
+                            }
+                        } else {
+                            self.test_active_keys.retain(|k| k != &name);
+                        }
+                    }
+                }
             }
             Message::ToggleDependencyHelp(id) => {
                 if self.dependency_help_for.as_deref() == Some(id.as_str()) {
@@ -394,7 +453,89 @@ impl Settings {
         if self.theme_mode == ThemeMode::System {
             subs.push(time::every(Duration::from_secs(2)).map(|_| Message::SystemThemeCheck));
         }
+        if self.hotkey_test_active && self.hotkey_test_rx.is_some() {
+            subs.push(
+                time::every(Duration::from_millis(20)).map(|_| Message::PollKeyboardEvents),
+            );
+        }
         Subscription::batch(subs)
+    }
+}
+
+// ── Keyboard helpers (rdev) ─────────────────────────────────────────────────
+
+fn rdev_key_name(key: rdev::Key) -> Option<String> {
+    use rdev::Key::*;
+    match key {
+        ShiftLeft | ShiftRight => Some("Shift".into()),
+        ControlLeft | ControlRight => Some("Ctrl".into()),
+        Alt => Some("Alt".into()),
+        AltGr => Some("AltGr".into()),
+        MetaLeft | MetaRight => Some("Super".into()),
+        Space => Some("Space".into()),
+        Tab => Some("Tab".into()),
+        Return => Some("Enter".into()),
+        Escape => Some("Escape".into()),
+        UpArrow => Some("Up".into()),
+        DownArrow => Some("Down".into()),
+        LeftArrow => Some("Left".into()),
+        RightArrow => Some("Right".into()),
+        Backspace => Some("Backspace".into()),
+        Delete => Some("Delete".into()),
+        Home => Some("Home".into()),
+        End => Some("End".into()),
+        PageUp => Some("PageUp".into()),
+        PageDown => Some("PageDown".into()),
+        CapsLock => Some("CapsLock".into()),
+        F1 => Some("F1".into()),
+        F2 => Some("F2".into()),
+        F3 => Some("F3".into()),
+        F4 => Some("F4".into()),
+        F5 => Some("F5".into()),
+        F6 => Some("F6".into()),
+        F7 => Some("F7".into()),
+        F8 => Some("F8".into()),
+        F9 => Some("F9".into()),
+        F10 => Some("F10".into()),
+        F11 => Some("F11".into()),
+        F12 => Some("F12".into()),
+        KeyA => Some("A".into()),
+        KeyB => Some("B".into()),
+        KeyC => Some("C".into()),
+        KeyD => Some("D".into()),
+        KeyE => Some("E".into()),
+        KeyF => Some("F".into()),
+        KeyG => Some("G".into()),
+        KeyH => Some("H".into()),
+        KeyI => Some("I".into()),
+        KeyJ => Some("J".into()),
+        KeyK => Some("K".into()),
+        KeyL => Some("L".into()),
+        KeyM => Some("M".into()),
+        KeyN => Some("N".into()),
+        KeyO => Some("O".into()),
+        KeyP => Some("P".into()),
+        KeyQ => Some("Q".into()),
+        KeyR => Some("R".into()),
+        KeyS => Some("S".into()),
+        KeyT => Some("T".into()),
+        KeyU => Some("U".into()),
+        KeyV => Some("V".into()),
+        KeyW => Some("W".into()),
+        KeyX => Some("X".into()),
+        KeyY => Some("Y".into()),
+        KeyZ => Some("Z".into()),
+        Num0 => Some("0".into()),
+        Num1 => Some("1".into()),
+        Num2 => Some("2".into()),
+        Num3 => Some("3".into()),
+        Num4 => Some("4".into()),
+        Num5 => Some("5".into()),
+        Num6 => Some("6".into()),
+        Num7 => Some("7".into()),
+        Num8 => Some("8".into()),
+        Num9 => Some("9".into()),
+        _ => None,
     }
 }
 

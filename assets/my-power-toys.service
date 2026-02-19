@@ -9,6 +9,8 @@ Type=simple
 ExecStart=%h/.local/bin/mpt-daemon
 Restart=on-failure
 RestartSec=5
+StartLimitBurst=3
+StartLimitIntervalSec=30
 
 [Install]
 WantedBy=graphical-session.target

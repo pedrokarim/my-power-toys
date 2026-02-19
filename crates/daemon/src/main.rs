@@ -60,12 +60,15 @@ async fn main() -> Result<()> {
     let mut registry = modules::ModuleRegistry::new();
     registry.register_defaults();
 
-    // Enable modules based on config
-    for (id, entry) in &config.modules {
-        if entry.enabled
-            && let Err(e) = registry.start_module(id)
-        {
-            warn!("Failed to start module '{id}': {e}");
+    // Start modules: if a module is in the config, respect its `enabled` flag;
+    // if it's not in the config, start it by default.
+    let module_ids: Vec<&str> = registry.list_modules().iter().map(|(id, _, _)| *id).collect();
+    for id in module_ids {
+        let enabled = config.modules.get(id).map_or(true, |entry| entry.enabled);
+        if enabled {
+            if let Err(e) = registry.start_module(id) {
+                warn!("Failed to start module '{id}': {e}");
+            }
         }
     }
 

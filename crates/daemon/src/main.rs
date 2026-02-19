@@ -62,13 +62,15 @@ async fn main() -> Result<()> {
 
     // Start modules: if a module is in the config, respect its `enabled` flag;
     // if it's not in the config, start it by default.
-    let module_ids: Vec<&str> = registry.list_modules().iter().map(|(id, _, _)| *id).collect();
+    let module_ids: Vec<&str> = registry
+        .list_modules()
+        .iter()
+        .map(|(id, _, _)| *id)
+        .collect();
     for id in module_ids {
-        let enabled = config.modules.get(id).map_or(true, |entry| entry.enabled);
-        if enabled {
-            if let Err(e) = registry.start_module(id) {
-                warn!("Failed to start module '{id}': {e}");
-            }
+        let enabled = config.modules.get(id).is_none_or(|entry| entry.enabled);
+        if enabled && let Err(e) = registry.start_module(id) {
+            warn!("Failed to start module '{id}': {e}");
         }
     }
 

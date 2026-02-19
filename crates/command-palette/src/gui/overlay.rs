@@ -1,9 +1,9 @@
 use egui::{self, RichText, Shadow};
 
+use crate::CommandPaletteConfig;
 use crate::gui::theme;
 use crate::providers::{PaletteResult, ResultAction, ResultIcon, SystemCmd};
 use crate::search::SearchEngine;
-use crate::CommandPaletteConfig;
 
 struct PaletteApp {
     query: String,
@@ -30,10 +30,8 @@ impl PaletteApp {
     }
 
     fn draw_search_bar(&mut self, ui: &mut egui::Ui) {
-        let frame = egui::Frame::NONE.inner_margin(egui::Margin::symmetric(
-            theme::INNER_PADDING as i8,
-            12,
-        ));
+        let frame =
+            egui::Frame::NONE.inner_margin(egui::Margin::symmetric(theme::INNER_PADDING as i8, 12));
 
         frame.show(ui, |ui| {
             ui.horizontal(|ui| {
@@ -113,16 +111,13 @@ impl PaletteApp {
                         });
 
                         // Provider tag (right side)
-                        ui.with_layout(
-                            egui::Layout::right_to_left(egui::Align::Center),
-                            |ui| {
-                                ui.label(
-                                    RichText::new(result.provider_tag)
-                                        .size(theme::FONT_TAG)
-                                        .color(theme::TEXT_TAG),
-                                );
-                            },
-                        );
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            ui.label(
+                                RichText::new(result.provider_tag)
+                                    .size(theme::FONT_TAG)
+                                    .color(theme::TEXT_TAG),
+                            );
+                        });
                     });
                 })
                 .response;
@@ -146,9 +141,7 @@ impl eframe::App for PaletteApp {
             let screen = ctx.screen_rect();
             let x = (screen.width() - theme::WINDOW_WIDTH) / 2.0;
             let y = screen.height() * 0.25;
-            ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition(
-                [x, y].into(),
-            ));
+            ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition([x, y].into()));
             self.first_frame = false;
         }
 
@@ -172,12 +165,10 @@ impl eframe::App for PaletteApp {
             }
         });
 
-        if activate {
-            if let Some(result) = self.results.get(self.selected_index) {
-                self.engine.record_activation(result);
-                execute_action(&result.action);
-                self.should_close = true;
-            }
+        if activate && let Some(result) = self.results.get(self.selected_index) {
+            self.engine.record_activation(result);
+            execute_action(&result.action);
+            self.should_close = true;
         }
 
         // Close on focus loss
@@ -207,10 +198,7 @@ impl eframe::App for PaletteApp {
                     ui.painter().rect_filled(
                         egui::Rect::from_min_size(
                             egui::pos2(theme::INNER_PADDING, ui.cursor().min.y),
-                            egui::vec2(
-                                theme::WINDOW_WIDTH - theme::INNER_PADDING * 2.0,
-                                1.0,
-                            ),
+                            egui::vec2(theme::WINDOW_WIDTH - theme::INNER_PADDING * 2.0, 1.0),
                         ),
                         0.0,
                         theme::SEPARATOR,
@@ -276,13 +264,13 @@ fn setup_visuals(ctx: &egui::Context) {
 
 fn icon_char(icon: &ResultIcon) -> &'static str {
     match icon {
-        ResultIcon::Named(_) => "\u{25A0}",     // filled square fallback
+        ResultIcon::Named(_) => "\u{25A0}", // filled square fallback
         ResultIcon::Emoji(_) => "\u{25A0}",
-        ResultIcon::BuiltinApp => "\u{25B6}",   // play triangle
-        ResultIcon::BuiltinCalc => "\u{2261}",  // identical to
-        ResultIcon::BuiltinWeb => "\u{1F310}",  // globe
+        ResultIcon::BuiltinApp => "\u{25B6}",  // play triangle
+        ResultIcon::BuiltinCalc => "\u{2261}", // identical to
+        ResultIcon::BuiltinWeb => "\u{1F310}", // globe
         ResultIcon::BuiltinSystem => "\u{2699}", // gear
-        ResultIcon::BuiltinFile => "\u{1F4C4}",  // document
+        ResultIcon::BuiltinFile => "\u{1F4C4}", // document
         ResultIcon::BuiltinTerminal => ">_",
         ResultIcon::BuiltinSettings => "\u{2692}", // hammer/wrench
     }
@@ -335,9 +323,7 @@ fn execute_action(action: &ResultAction) {
                 SystemCmd::Hibernate => &["systemctl", "hibernate"],
             };
             if let Some((program, rest)) = args.split_first() {
-                let _ = std::process::Command::new(program)
-                    .args(rest)
-                    .spawn();
+                let _ = std::process::Command::new(program).args(rest).spawn();
             }
         }
         ResultAction::OpenSettings(cmd) => {

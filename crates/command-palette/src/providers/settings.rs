@@ -59,6 +59,7 @@ const SETTINGS: &[SettingsEntry] = &[
     },
 ];
 
+#[derive(Default)]
 pub struct SettingsProvider;
 
 impl SettingsProvider {
@@ -84,10 +85,7 @@ impl Provider for SettingsProvider {
         let query = ctx.stripped_query.trim().to_lowercase();
 
         if query.is_empty() {
-            return SETTINGS
-                .iter()
-                .map(|e| to_result(e, 50.0))
-                .collect();
+            return SETTINGS.iter().map(|e| to_result(e, 50.0)).collect();
         }
 
         SETTINGS

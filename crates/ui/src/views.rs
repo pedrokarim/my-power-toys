@@ -176,9 +176,7 @@ impl Settings {
                     info_row(tr.update_current_version, &current_version, ui),
                     info_row(tr.update_latest_version, &latest, ui),
                     Space::with_height(4),
-                    progress_bar(0.0..=1.0, pulse)
-                        .height(6)
-                        .width(Length::Fill),
+                    progress_bar(0.0..=1.0, pulse).height(6).width(Length::Fill),
                 ]
                 .spacing(10)
                 .into()
@@ -200,9 +198,7 @@ impl Settings {
                     .align_y(Alignment::Center),
                     info_row(tr.update_latest_version, &latest, ui),
                     Space::with_height(4),
-                    progress_bar(0.0..=1.0, 1.0)
-                        .height(6)
-                        .width(Length::Fill),
+                    progress_bar(0.0..=1.0, 1.0).height(6).width(Length::Fill),
                 ]
                 .spacing(10)
                 .into()
@@ -340,9 +336,14 @@ impl Settings {
         let tr = translations::get(self.language);
         let ui = self.ui();
 
-        let logo = image(assets_dir().join("icons/icon-64.png").to_string_lossy().to_string())
-            .width(40)
-            .height(40);
+        let logo = image(
+            assets_dir()
+                .join("icons/icon-64.png")
+                .to_string_lossy()
+                .to_string(),
+        )
+        .width(40)
+        .height(40);
 
         let header = container(
             row![
@@ -481,14 +482,10 @@ impl Settings {
 
         if !self.daemon_connected {
             status = status.push(
-                button(
-                    text(tr.start_daemon)
-                        .size(ui.sz(11.0))
-                        .font(ui.font()),
-                )
-                .on_press(Message::StartDaemon)
-                .padding(Padding::from([4.0, 10.0]))
-                .style(theme::seg_button(false)),
+                button(text(tr.start_daemon).size(ui.sz(11.0)).font(ui.font()))
+                    .on_press(Message::StartDaemon)
+                    .padding(Padding::from([4.0, 10.0]))
+                    .style(theme::seg_button(false)),
             );
         }
 
@@ -1148,10 +1145,22 @@ impl Settings {
 
         let semantic_colors = row![
             column![
-                text("overlay0").size(ui.sz(11.0)).font(ui.font()).color(theme::overlay0(ui.dark)),
-                text("subtext0").size(ui.sz(11.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
-                text("subtext1").size(ui.sz(11.0)).font(ui.font()).color(theme::subtext1(ui.dark)),
-                text("heading").size(ui.sz(11.0)).font(ui.font()).color(ui.heading()),
+                text("overlay0")
+                    .size(ui.sz(11.0))
+                    .font(ui.font())
+                    .color(theme::overlay0(ui.dark)),
+                text("subtext0")
+                    .size(ui.sz(11.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                text("subtext1")
+                    .size(ui.sz(11.0))
+                    .font(ui.font())
+                    .color(theme::subtext1(ui.dark)),
+                text("heading")
+                    .size(ui.sz(11.0))
+                    .font(ui.font())
+                    .color(ui.heading()),
             ]
             .spacing(4),
         ];
@@ -1184,15 +1193,25 @@ impl Settings {
                     .size(ui.sz(16.0))
                     .font(bold())
                     .color(ui.heading()),
-                text("Heading 28px").size(ui.sz(28.0)).font(bold()).color(ui.heading()),
-                text("Title 16px bold").size(ui.sz(16.0)).font(bold()).color(ui.heading()),
+                text("Heading 28px")
+                    .size(ui.sz(28.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text("Title 16px bold")
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
                 text("Body 14px").size(ui.sz(14.0)).font(ui.font()),
                 text("Body 13px").size(ui.sz(13.0)).font(ui.font()),
-                text("Caption 12px").size(ui.sz(12.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
-                text("Small 10px").size(ui.sz(10.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
-                text("Bold variant")
-                    .size(ui.sz(14.0))
-                    .font(bold()),
+                text("Caption 12px")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                text("Small 10px")
+                    .size(ui.sz(10.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                text("Bold variant").size(ui.sz(14.0)).font(bold()),
             ]
             .spacing(6),
             ui,
@@ -1358,9 +1377,7 @@ impl Settings {
         // ── 6. Controls (toggler, info rows, progress bar) ──────────────
         let toggle_row = row![
             column![
-                text(tr.ds_sample_label)
-                    .size(ui.sz(14.0))
-                    .font(ui.font()),
+                text(tr.ds_sample_label).size(ui.sz(14.0)).font(ui.font()),
                 text("Toggle description")
                     .size(ui.sz(12.0))
                     .font(ui.font())
@@ -1375,9 +1392,7 @@ impl Settings {
 
         let toggle_row_off = row![
             column![
-                text("Disabled option")
-                    .size(ui.sz(14.0))
-                    .font(ui.font()),
+                text("Disabled option").size(ui.sz(14.0)).font(ui.font()),
                 text("This one is off")
                     .size(ui.sz(12.0))
                     .font(ui.font())
@@ -1399,17 +1414,32 @@ impl Settings {
 
         let progress_bars = column![
             row![
-                text("25%").size(ui.sz(11.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
+                text("25%")
+                    .size(ui.sz(11.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
                 progress_bar(0.0..=1.0, 0.25).height(4).width(Length::Fill),
-            ].spacing(8).align_y(Alignment::Center),
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
             row![
-                text("60%").size(ui.sz(11.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
+                text("60%")
+                    .size(ui.sz(11.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
                 progress_bar(0.0..=1.0, 0.60).height(4).width(Length::Fill),
-            ].spacing(8).align_y(Alignment::Center),
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
             row![
-                text("100%").size(ui.sz(11.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
+                text("100%")
+                    .size(ui.sz(11.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
                 progress_bar(0.0..=1.0, 1.0).height(4).width(Length::Fill),
-            ].spacing(8).align_y(Alignment::Center),
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
         ]
         .spacing(6);
 
@@ -1751,9 +1781,14 @@ impl Settings {
                 ),
             };
 
-        let logo = image(assets_dir().join("logo-200.png").to_string_lossy().to_string())
-            .width(80)
-            .height(80);
+        let logo = image(
+            assets_dir()
+                .join("logo-200.png")
+                .to_string_lossy()
+                .to_string(),
+        )
+        .width(80)
+        .height(80);
 
         let header = row![
             logo,
@@ -1881,17 +1916,11 @@ impl Settings {
 
         if matches!(self.update_state, UpdateState::Updating { .. }) {
             let pulse = 1.0 - (self.update_progress - 1.0).abs();
-            update_content = update_content.push(
-                progress_bar(0.0..=1.0, pulse)
-                    .height(6)
-                    .width(Length::Fill),
-            );
+            update_content =
+                update_content.push(progress_bar(0.0..=1.0, pulse).height(6).width(Length::Fill));
         } else if matches!(self.update_state, UpdateState::Restarting { .. }) {
-            update_content = update_content.push(
-                progress_bar(0.0..=1.0, 1.0)
-                    .height(6)
-                    .width(Length::Fill),
-            );
+            update_content =
+                update_content.push(progress_bar(0.0..=1.0, 1.0).height(6).width(Length::Fill));
         }
 
         update_content = update_content.push(

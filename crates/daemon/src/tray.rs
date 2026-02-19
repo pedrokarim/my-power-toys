@@ -105,13 +105,17 @@ impl Tray for MptTray {
                 icon_name: "preferences-system".into(),
                 activate: Box::new(|_tray: &mut Self| {
                     info!("Opening settings UI");
-                    if let Err(e) = std::process::Command::new("mpt-ui")
+                    let bin = std::env::current_exe()
+                        .ok()
+                        .and_then(|p| p.parent().map(|d| d.join("mpt-settings")))
+                        .unwrap_or_else(|| "mpt-settings".into());
+                    if let Err(e) = std::process::Command::new(&bin)
                         .stdin(std::process::Stdio::null())
                         .stdout(std::process::Stdio::null())
                         .stderr(std::process::Stdio::null())
                         .spawn()
                     {
-                        tracing::warn!("Failed to launch mpt-ui: {e}");
+                        tracing::warn!("Failed to launch {}: {e}", bin.display());
                     }
                 }),
                 ..Default::default()

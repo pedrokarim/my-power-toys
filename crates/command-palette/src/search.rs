@@ -1,6 +1,6 @@
+use crate::CommandPaletteConfig;
 use crate::frecency::FrecencyStore;
 use crate::providers::{PaletteResult, Provider, QueryContext};
-use crate::CommandPaletteConfig;
 
 pub struct SearchEngine {
     providers: Vec<Box<dyn Provider>>,
@@ -89,8 +89,11 @@ impl SearchEngine {
             all_results.extend(results);
         }
 
-        all_results
-            .sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        all_results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         all_results.truncate(self.config.max_results);
 
         all_results

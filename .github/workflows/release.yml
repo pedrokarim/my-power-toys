@@ -47,9 +47,10 @@ jobs:
           cp target/release/mpt-ctl dist/
           cp target/release/mpt-settings dist/
           cp target/release/mpt-color-picker dist/
+          cp target/release/mpt-command-palette dist/
           cp -r assets dist/assets
           rm -f dist/assets/*.desktop dist/assets/*.service dist/assets/main-screen-app.png
-          tar czf "my-power-toys-${{ steps.version.outputs.VERSION }}-x86_64-unknown-linux-gnu.tar.gz" -C dist mpt-daemon mpt-ctl mpt-settings mpt-color-picker assets
+          tar czf "my-power-toys-${{ steps.version.outputs.VERSION }}-x86_64-unknown-linux-gnu.tar.gz" -C dist mpt-daemon mpt-ctl mpt-settings mpt-color-picker mpt-command-palette assets
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

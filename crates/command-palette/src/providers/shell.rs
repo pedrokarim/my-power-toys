@@ -1,5 +1,6 @@
 use super::{PaletteResult, Provider, QueryContext, ResultAction, ResultIcon};
 
+#[derive(Default)]
 pub struct ShellProvider;
 
 impl ShellProvider {

@@ -46,6 +46,7 @@ const SYSTEM_COMMANDS: &[SystemEntry] = &[
     },
 ];
 
+#[derive(Default)]
 pub struct SystemProvider;
 
 impl SystemProvider {

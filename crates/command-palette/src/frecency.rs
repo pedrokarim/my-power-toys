@@ -20,12 +20,11 @@ impl FrecencyStore {
 
     pub fn load() -> Self {
         let path = frecency_path();
-        if path.exists() {
-            if let Ok(data) = std::fs::read_to_string(&path) {
-                if let Ok(store) = serde_json::from_str(&data) {
-                    return store;
-                }
-            }
+        if path.exists()
+            && let Ok(data) = std::fs::read_to_string(&path)
+            && let Ok(store) = serde_json::from_str(&data)
+        {
+            return store;
         }
         Self::new()
     }
@@ -42,13 +41,10 @@ impl FrecencyStore {
 
     pub fn record_launch(&mut self, id: &str) {
         let now = now_secs();
-        let entry = self
-            .entries
-            .entry(id.to_string())
-            .or_insert(FrecencyEntry {
-                launch_count: 0,
-                last_launch: now,
-            });
+        let entry = self.entries.entry(id.to_string()).or_insert(FrecencyEntry {
+            launch_count: 0,
+            last_launch: now,
+        });
         entry.launch_count += 1;
         entry.last_launch = now;
     }

@@ -2,13 +2,14 @@ use mpt_app_launcher::desktop::{self, DesktopEntry};
 
 use super::{PaletteResult, Provider, QueryContext, ResultAction, ResultIcon};
 
+#[derive(Default)]
 pub struct AppsProvider {
     apps: Vec<DesktopEntry>,
 }
 
 impl AppsProvider {
     pub fn new() -> Self {
-        Self { apps: Vec::new() }
+        Self::default()
     }
 }
 
@@ -78,10 +79,7 @@ impl Provider for AppsProvider {
 
     fn initialize(&mut self) -> anyhow::Result<()> {
         self.apps = desktop::scan_desktop_entries();
-        tracing::info!(
-            "Command Palette: indexed {} applications",
-            self.apps.len()
-        );
+        tracing::info!("Command Palette: indexed {} applications", self.apps.len());
         Ok(())
     }
 }
@@ -98,20 +96,20 @@ fn match_score(app: &DesktopEntry, query: &str) -> Option<f64> {
     if name_lower.contains(query) {
         return Some(60.0);
     }
-    if let Some(ref gn) = app.generic_name {
-        if gn.to_lowercase().contains(query) {
-            return Some(40.0);
-        }
+    if let Some(ref gn) = app.generic_name
+        && gn.to_lowercase().contains(query)
+    {
+        return Some(40.0);
     }
     for keyword in &app.keywords {
         if keyword.to_lowercase().contains(query) {
             return Some(30.0);
         }
     }
-    if let Some(ref comment) = app.comment {
-        if comment.to_lowercase().contains(query) {
-            return Some(20.0);
-        }
+    if let Some(ref comment) = app.comment
+        && comment.to_lowercase().contains(query)
+    {
+        return Some(20.0);
     }
     for cat in &app.categories {
         if cat.to_lowercase().contains(query) {

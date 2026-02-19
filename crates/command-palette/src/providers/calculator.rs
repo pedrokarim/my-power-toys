@@ -2,6 +2,7 @@ use mpt_app_launcher::calculator;
 
 use super::{PaletteResult, Provider, QueryContext, ResultAction, ResultIcon};
 
+#[derive(Default)]
 pub struct CalculatorProvider;
 
 impl CalculatorProvider {

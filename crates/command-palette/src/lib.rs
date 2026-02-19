@@ -1,8 +1,8 @@
-pub mod providers;
-pub mod search;
 pub mod frecency;
 #[cfg(feature = "gui")]
 pub mod gui;
+pub mod providers;
+pub mod search;
 
 use anyhow::Result;
 use mpt_common::hotkey::{Hotkey, Modifier};
@@ -104,8 +104,7 @@ pub struct CommandPalette {
 
 impl CommandPalette {
     pub fn new() -> Self {
-        let config =
-            mpt_common::config::load_module_config("command-palette").unwrap_or_default();
+        let config = mpt_common::config::load_module_config("command-palette").unwrap_or_default();
         Self {
             running: false,
             config,

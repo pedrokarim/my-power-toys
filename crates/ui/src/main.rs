@@ -465,9 +465,13 @@ impl Settings {
                 std::process::exit(0);
             }
             Message::StartDaemon => {
+                let bin = std::env::current_exe()
+                    .ok()
+                    .and_then(|p| p.parent().map(|d| d.join("mpt-daemon")))
+                    .unwrap_or_else(|| "mpt-daemon".into());
                 return Task::perform(
-                    async {
-                        std::process::Command::new("mpt-daemon")
+                    async move {
+                        std::process::Command::new(&bin)
                             .stdin(std::process::Stdio::null())
                             .stdout(std::process::Stdio::null())
                             .stderr(std::process::Stdio::null())

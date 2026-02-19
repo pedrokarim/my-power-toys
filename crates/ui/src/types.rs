@@ -53,20 +53,32 @@ pub const BUILTIN_BACKGROUNDS: &[(&str, &str)] = &[
     ("Orbital Ring", "cyberpunk.jpg"),
 ];
 
-pub fn backgrounds_dir() -> PathBuf {
+/// Root assets directory: installed data dir first, then dev fallback.
+pub fn assets_dir() -> PathBuf {
     if let Some(data) = dirs::data_dir() {
-        let user_dir = data.join("my-power-toys").join("backgrounds");
-        if user_dir.is_dir() {
-            return user_dir;
+        let installed = data.join("my-power-toys").join("assets");
+        if installed.is_dir() {
+            return installed;
         }
     }
+    // Dev fallback
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap()
         .parent()
         .unwrap()
         .join("assets")
-        .join("backgrounds")
+}
+
+pub fn backgrounds_dir() -> PathBuf {
+    // Legacy user-override directory (backward compat)
+    if let Some(data) = dirs::data_dir() {
+        let user_dir = data.join("my-power-toys").join("backgrounds");
+        if user_dir.is_dir() {
+            return user_dir;
+        }
+    }
+    assets_dir().join("backgrounds")
 }
 
 pub fn thumbnails_dir() -> PathBuf {

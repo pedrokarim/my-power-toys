@@ -93,6 +93,17 @@ impl ModuleRegistry {
         module.stop()
     }
 
+    pub fn start_all(&mut self) {
+        for (id, module) in &mut self.modules {
+            if !module.is_running() {
+                info!("Starting module: {} ({id})", module.name());
+                if let Err(e) = module.start() {
+                    tracing::warn!("Error starting '{id}': {e}");
+                }
+            }
+        }
+    }
+
     pub fn stop_all(&mut self) {
         for (id, module) in &mut self.modules {
             if module.is_running() {

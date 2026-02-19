@@ -9,7 +9,8 @@ pub(super) static CN: Tr = Tr {
     tests: "测试",
 
     daemon_connected: "守护进程已连接",
-    daemon_not_connected: "守护进程未连接 — 请启动 mpt-daemon",
+    daemon_not_connected: "守护进程未连接",
+    start_daemon: "启动守护进程",
     total: "总计",
     active: "活跃",
     inactive: "未活跃",

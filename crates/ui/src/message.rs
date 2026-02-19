@@ -39,6 +39,8 @@ pub enum Message {
     UpdateInstallFinished(UpdateInstallResult),
     UpdateProgressTick,
     RestartApp,
+    StartDaemon,
+    StartDaemonResult(Result<(), String>),
     // Module settings
     SetColorPickerFormat(String),
     SetTextExtractorLang(String),

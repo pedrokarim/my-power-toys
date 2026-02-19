@@ -9,7 +9,8 @@ pub(super) static FR: Tr = Tr {
     tests: "Tests",
 
     daemon_connected: "Daemon connecté",
-    daemon_not_connected: "Daemon non connecté — lancez mpt-daemon",
+    daemon_not_connected: "Daemon non connecté",
+    start_daemon: "Lancer le daemon",
     total: "Total",
     active: "Actifs",
     inactive: "Inactifs",

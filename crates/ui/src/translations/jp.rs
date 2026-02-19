@@ -9,7 +9,8 @@ pub(super) static JP: Tr = Tr {
     tests: "テスト",
 
     daemon_connected: "デーモン接続済み",
-    daemon_not_connected: "デーモン未接続 — mpt-daemonを起動してください",
+    daemon_not_connected: "デーモン未接続",
+    start_daemon: "デーモンを起動",
     total: "合計",
     active: "有効",
     inactive: "無効",

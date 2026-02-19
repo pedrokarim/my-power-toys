@@ -5,6 +5,7 @@ set -euo pipefail
 
 REPO="pedrokarim/my-power-toys"
 INSTALL_DIR="$HOME/.local/bin"
+ASSETS_DIR="$HOME/.local/share/my-power-toys/assets"
 ICON_DIR="$HOME/.local/share/icons/hicolor/128x128/apps"
 AUTOSTART_DIR="$HOME/.config/autostart"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
@@ -64,6 +65,21 @@ for bin in mpt-daemon mpt-ctl mpt-settings; do
         echo "    Installed $bin"
     fi
 done
+
+# Install assets
+echo "==> Installing assets to $ASSETS_DIR..."
+if [ -d "$TMPDIR/assets" ]; then
+    mkdir -p "$ASSETS_DIR"
+    cp -r "$TMPDIR/assets/icons" "$ASSETS_DIR/"
+    cp -r "$TMPDIR/assets/banners" "$ASSETS_DIR/"
+    cp -r "$TMPDIR/assets/backgrounds" "$ASSETS_DIR/"
+    cp -f "$TMPDIR/assets/logo-200.png" "$ASSETS_DIR/" 2>/dev/null || true
+    cp -f "$TMPDIR/assets/logo.png" "$ASSETS_DIR/" 2>/dev/null || true
+    echo "    Assets installed"
+else
+    echo "    WARNING: No assets directory found in archive."
+    echo "    The UI may not display images correctly."
+fi
 
 # Check PATH
 case ":$PATH:" in

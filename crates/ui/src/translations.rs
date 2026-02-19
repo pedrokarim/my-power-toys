@@ -27,6 +27,7 @@ pub struct Tr {
     // Dashboard
     pub daemon_connected: &'static str,
     pub daemon_not_connected: &'static str,
+    pub start_daemon: &'static str,
     pub total: &'static str,
     pub active: &'static str,
     pub inactive: &'static str,

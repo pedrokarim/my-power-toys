@@ -340,12 +340,9 @@ impl Settings {
         let tr = translations::get(self.language);
         let ui = self.ui();
 
-        let logo = image(format!(
-            "{}/assets/icons/icon-64.png",
-            env!("CARGO_MANIFEST_DIR").replace("/crates/ui", "")
-        ))
-        .width(40)
-        .height(40);
+        let logo = image(assets_dir().join("icons/icon-64.png").to_string_lossy().to_string())
+            .width(40)
+            .height(40);
 
         let header = container(
             row![
@@ -472,7 +469,7 @@ impl Settings {
             (theme::red(), tr.daemon_not_connected)
         };
 
-        let status = row![
+        let mut status = row![
             text("\u{25cf}").size(ui.sz(10.0)).color(dot_col),
             text(status_txt)
                 .size(ui.sz(13.0))
@@ -481,6 +478,19 @@ impl Settings {
         ]
         .spacing(6)
         .align_y(Alignment::Center);
+
+        if !self.daemon_connected {
+            status = status.push(
+                button(
+                    text(tr.start_daemon)
+                        .size(ui.sz(11.0))
+                        .font(ui.font()),
+                )
+                .on_press(Message::StartDaemon)
+                .padding(Padding::from([4.0, 10.0]))
+                .style(theme::seg_button(false)),
+            );
+        }
 
         let stats = row![
             stat_card(tr.total, &total.to_string(), theme::blue(), ui),
@@ -570,15 +580,11 @@ impl Settings {
         match module {
             Some(m) => {
                 // Banner image
-                let banner_path = format!(
-                    "{}/assets/banners/{}-banner.png",
-                    env!("CARGO_MANIFEST_DIR").replace("/crates/ui", ""),
-                    id
-                );
-                let has_banner = std::path::Path::new(&banner_path).exists();
+                let banner_path = assets_dir().join(format!("banners/{}-banner.png", id));
+                let has_banner = banner_path.exists();
 
                 let banner_hero = if has_banner {
-                    let bg = image(&banner_path)
+                    let bg = image(banner_path.to_string_lossy().to_string())
                         .content_fit(ContentFit::Cover)
                         .width(Length::Fill)
                         .height(Length::Fill);
@@ -1745,12 +1751,9 @@ impl Settings {
                 ),
             };
 
-        let logo = image(format!(
-            "{}/assets/logo-200.png",
-            env!("CARGO_MANIFEST_DIR").replace("/crates/ui", "")
-        ))
-        .width(80)
-        .height(80);
+        let logo = image(assets_dir().join("logo-200.png").to_string_lossy().to_string())
+            .width(80)
+            .height(80);
 
         let header = row![
             logo,

@@ -464,6 +464,30 @@ impl Settings {
                 }
                 std::process::exit(0);
             }
+            Message::StartDaemon => {
+                return Task::perform(
+                    async {
+                        std::process::Command::new("mpt-daemon")
+                            .stdin(std::process::Stdio::null())
+                            .stdout(std::process::Stdio::null())
+                            .stderr(std::process::Stdio::null())
+                            .spawn()
+                            .map(|_| ())
+                            .map_err(|e| e.to_string())
+                    },
+                    Message::StartDaemonResult,
+                );
+            }
+            Message::StartDaemonResult(result) => {
+                let tr = translations::get(self.language);
+                if let Err(err) = result {
+                    self.queue_toast(
+                        ToastKind::Error,
+                        tr.toast_error_title,
+                        &format!("mpt-daemon: {err}"),
+                    );
+                }
+            }
             // Module settings
             Message::SetColorPickerFormat(fmt) => {
                 self.module_configs.color_picker.format = fmt;

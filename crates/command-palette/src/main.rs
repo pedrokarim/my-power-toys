@@ -1,4 +1,5 @@
-use std::fs;
+use std::fs::{self, OpenOptions};
+use std::io::Write;
 use std::path::PathBuf;
 use tracing::info;
 
@@ -10,23 +11,38 @@ fn main() {
         )
         .init();
 
-    // Prevent multiple instances
+    // Prevent multiple instances using atomic lock file creation
     let lock_path = lock_file_path();
+
+    // Check if an existing instance is still alive
     if lock_path.exists() {
         if let Ok(pid_str) = fs::read_to_string(&lock_path)
             && let Ok(pid) = pid_str.trim().parse::<u32>()
+            && std::path::Path::new(&format!("/proc/{pid}")).exists()
         {
-            let proc_path = format!("/proc/{pid}");
-            if std::path::Path::new(&proc_path).exists() {
-                info!("Another instance is already running (pid={pid}), exiting");
-                std::process::exit(0);
-            }
+            info!("Another instance is already running (pid={pid}), exiting");
+            std::process::exit(0);
         }
+        // Stale lock file, remove it
         let _ = fs::remove_file(&lock_path);
     }
 
-    // Write our PID
-    let _ = fs::write(&lock_path, std::process::id().to_string());
+    // Atomically create the lock file (fails if another process beat us to it)
+    let lock_result = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&lock_path);
+
+    match lock_result {
+        Ok(mut file) => {
+            let _ = file.write_all(std::process::id().to_string().as_bytes());
+        }
+        Err(_) => {
+            // Another process created the lock between our check and create
+            info!("Lock file contention, another instance likely starting, exiting");
+            std::process::exit(0);
+        }
+    }
 
     // Ensure lock file is cleaned up on exit
     let lock_path_cleanup = lock_path.clone();

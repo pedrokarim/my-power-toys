@@ -3,11 +3,15 @@ use anyhow::{Context, Result, anyhow, bail};
 use mpt_common::hotkey::{Hotkey, Modifier};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::time::Instant;
 use tracing::{debug, info, warn};
 use x11rb::connection::Connection;
 use x11rb::protocol::Event;
 use x11rb::protocol::xproto::{ConnectionExt, GrabMode, ModMask, Window};
 use x11rb::rust_connection::RustConnection;
+
+/// Minimum interval between two hotkey activations for the same module (ms).
+const HOTKEY_COOLDOWN_MS: u128 = 500;
 
 const MOD_SHIFT: u16 = 1 << 0;
 const MOD_LOCK: u16 = 1 << 1;
@@ -104,6 +108,9 @@ fn run_x11_hotkey_listener(
     conn.flush().context("failed to flush X11 hotkey grabs")?;
     info!("Global X11 hotkeys active: {registered_count} binding(s)");
 
+    // Track last activation time per module to debounce key-repeat events
+    let mut last_activation: HashMap<String, Instant> = HashMap::new();
+
     loop {
         let event = conn
             .wait_for_event()
@@ -112,6 +119,19 @@ fn run_x11_hotkey_listener(
             let keycode = event.detail;
             let state = normalize_mod_state(u16::from(event.state));
             if let Some(binding) = triggers.get(&(keycode, state)).cloned() {
+                // Debounce: skip if the same module was activated too recently
+                let now = Instant::now();
+                if let Some(last) = last_activation.get(&binding.module_id)
+                    && now.duration_since(*last).as_millis() < HOTKEY_COOLDOWN_MS
+                {
+                    debug!(
+                        "Hotkey '{}' for '{}' suppressed (cooldown)",
+                        binding.display_hotkey, binding.module_id
+                    );
+                    continue;
+                }
+                last_activation.insert(binding.module_id.clone(), now);
+
                 debug!(
                     "Global hotkey pressed: '{}' -> {}",
                     binding.display_hotkey, binding.module_id

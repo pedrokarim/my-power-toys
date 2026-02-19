@@ -137,10 +137,12 @@ WantedBy=graphical-session.target
 SYSTEMD
 systemctl --user daemon-reload 2>/dev/null || true
 
-# Enable and start daemon automatically
+# Enable and (re)start daemon automatically
 echo "==> Enabling and starting daemon..."
-if systemctl --user enable --now my-power-toys.service 2>/dev/null; then
-    echo "    Daemon started via systemd"
+if systemctl --user enable my-power-toys.service 2>/dev/null; then
+    # Restart to pick up the new binary (start alone won't replace a running daemon)
+    systemctl --user restart my-power-toys.service 2>/dev/null
+    echo "    Daemon (re)started via systemd"
 else
     echo "    WARNING: Could not enable systemd service."
     echo "    The daemon will still autostart at login via desktop autostart."

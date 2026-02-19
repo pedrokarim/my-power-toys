@@ -14,7 +14,7 @@ mpt-common = { path = "../common" }
 mpt-always-on-top = { path = "../always-on-top" }
 mpt-awake = { path = "../awake" }
 mpt-paste-plain = { path = "../paste-plain" }
-mpt-color-picker = { path = "../color-picker" }
+mpt-color-picker = { path = "../color-picker", default-features = false }
 mpt-hosts-editor = { path = "../hosts-editor" }
 mpt-bulk-rename = { path = "../bulk-rename" }
 mpt-image-resizer = { path = "../image-resizer" }
@@ -26,6 +26,7 @@ mpt-shortcut-guide = { path = "../shortcut-guide" }
 mpt-app-launcher = { path = "../app-launcher" }
 mpt-fancy-zones = { path = "../fancy-zones" }
 mpt-peek = { path = "../peek" }
+mpt-command-palette = { path = "../command-palette", default-features = false }
 serde = { workspace = true }
 toml = { workspace = true }
 anyhow = { workspace = true }

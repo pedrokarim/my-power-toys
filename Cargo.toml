@@ -21,6 +21,7 @@ members = [
     "crates/hosts-editor",
     "crates/app-launcher",
     "crates/fancy-zones",
+    "crates/command-palette",
 ]
 
 [workspace.package]

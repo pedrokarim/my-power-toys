@@ -7,16 +7,23 @@ use serde::{Deserialize, Serialize};
 pub struct ColorPickerConf {
     #[serde(default = "default_hex")]
     pub format: String,
+    #[serde(default = "default_pick_and_edit")]
+    pub behavior: String,
 }
 
 fn default_hex() -> String {
     "hex".into()
 }
 
+fn default_pick_and_edit() -> String {
+    "pick-and-edit".into()
+}
+
 impl Default for ColorPickerConf {
     fn default() -> Self {
         Self {
             format: default_hex(),
+            behavior: default_pick_and_edit(),
         }
     }
 }
@@ -195,6 +202,32 @@ impl Default for PeekConf {
     }
 }
 
+// ── Command Palette ──────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CommandPaletteConf {
+    #[serde(default = "default_max_results")]
+    pub max_results: usize,
+    #[serde(default = "default_google")]
+    pub search_engine: String,
+    #[serde(default = "default_true")]
+    pub show_provider_tags: bool,
+}
+
+fn default_google() -> String {
+    "google".into()
+}
+
+impl Default for CommandPaletteConf {
+    fn default() -> Self {
+        Self {
+            max_results: default_max_results(),
+            search_engine: default_google(),
+            show_provider_tags: true,
+        }
+    }
+}
+
 // ── Aggregate ────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone)]
@@ -206,6 +239,7 @@ pub struct ModuleConfigs {
     pub app_launcher: AppLauncherConf,
     pub fancy_zones: FancyZonesConf,
     pub peek: PeekConf,
+    pub command_palette: CommandPaletteConf,
 }
 
 impl ModuleConfigs {
@@ -218,6 +252,7 @@ impl ModuleConfigs {
             app_launcher: load_module_config("app-launcher").unwrap_or_default(),
             fancy_zones: load_module_config("fancy-zones").unwrap_or_default(),
             peek: load_module_config("peek").unwrap_or_default(),
+            command_palette: load_module_config("command-palette").unwrap_or_default(),
         }
     }
 
@@ -230,6 +265,7 @@ impl ModuleConfigs {
             "app-launcher" => save_module_config("app-launcher", &self.app_launcher),
             "fancy-zones" => save_module_config("fancy-zones", &self.fancy_zones),
             "peek" => save_module_config("peek", &self.peek),
+            "command-palette" => save_module_config("command-palette", &self.command_palette),
             _ => Ok(()),
         };
     }

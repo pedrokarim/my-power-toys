@@ -4,7 +4,7 @@ pub mod frecency;
 pub mod search;
 
 use anyhow::Result;
-use mpt_common::hotkey::{Hotkey, Modifier};
+use mpt_common::hotkey::Hotkey;
 use mpt_common::module::PowerModule;
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -76,7 +76,8 @@ impl PowerModule for AppLauncher {
     }
 
     fn default_hotkey(&self) -> Option<Hotkey> {
-        Some(Hotkey::new(vec![Modifier::Alt], "Space"))
+        // Superseded by Command Palette (Alt+Space)
+        None
     }
 
     fn start(&mut self) -> Result<()> {

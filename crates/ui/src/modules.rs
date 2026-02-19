@@ -119,7 +119,7 @@ pub fn default_module_list() -> Vec<ModuleInfo> {
             description: "Quick app launcher with search and calculator".into(),
             icon: Bootstrap::Search,
             accent: theme::rosewater(),
-            hotkey: Some("Alt+Space".into()),
+            hotkey: None,
             running: false,
         },
         ModuleInfo {
@@ -138,6 +138,15 @@ pub fn default_module_list() -> Vec<ModuleInfo> {
             icon: Bootstrap::Eye,
             accent: theme::maroon(),
             hotkey: Some("Ctrl+Space".into()),
+            running: false,
+        },
+        ModuleInfo {
+            id: "command-palette".into(),
+            name: "Command Palette".into(),
+            description: "Spotlight-like search: apps, calculator, web, commands".into(),
+            icon: Bootstrap::Terminal,
+            accent: theme::lavender(),
+            hotkey: Some("Alt+Space".into()),
             running: false,
         },
     ]

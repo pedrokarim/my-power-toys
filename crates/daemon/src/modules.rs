@@ -62,6 +62,9 @@ impl ModuleRegistry {
         let peek = mpt_peek::Peek::new();
         self.modules.insert(peek.id(), Box::new(peek));
 
+        let palette = mpt_command_palette::CommandPalette::new();
+        self.modules.insert(palette.id(), Box::new(palette));
+
         info!("Registered {} module(s)", self.modules.len());
     }
 

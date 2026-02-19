@@ -37,6 +37,8 @@ pub enum Message {
     CloseUpdateDialog,
     ConfirmUpdateInstall,
     UpdateInstallFinished(UpdateInstallResult),
+    UpdateProgressTick,
+    RestartApp,
     // Module settings
     SetColorPickerFormat(String),
     SetTextExtractorLang(String),

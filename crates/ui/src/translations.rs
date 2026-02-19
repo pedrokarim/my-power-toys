@@ -93,7 +93,6 @@ pub struct Tr {
     pub toast_error_title: &'static str,
     pub toast_command_copied: &'static str,
     pub toast_copy_failed: &'static str,
-    pub toast_update_success: &'static str,
     pub toast_update_already: &'static str,
     pub toast_update_failed: &'static str,
 
@@ -117,11 +116,23 @@ pub struct Tr {
     pub update_dialog_body: &'static str,
     pub update_dialog_cancel: &'static str,
     pub update_dialog_confirm: &'static str,
+    pub update_dialog_downloading: &'static str,
+    pub update_restarting: &'static str,
     pub tech_stack: &'static str,
     pub author: &'static str,
     pub license: &'static str,
     pub repo: &'static str,
     pub prog_lang: &'static str,
+
+    // Design System (Tests page only)
+    pub design_system: &'static str,
+    pub ds_colors: &'static str,
+    pub ds_typography: &'static str,
+    pub ds_buttons: &'static str,
+    pub ds_cards: &'static str,
+    pub ds_badges: &'static str,
+    pub ds_inputs: &'static str,
+    pub ds_sample_label: &'static str,
 
     // Module settings labels
     pub ms_no_settings: &'static str,

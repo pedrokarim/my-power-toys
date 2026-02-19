@@ -71,6 +71,7 @@ enum UpdateState {
     UpToDate,
     Available { latest_version: String },
     Updating { target_version: String },
+    Restarting { new_version: String },
     Error(String),
 }
 
@@ -101,6 +102,7 @@ struct Settings {
     toast_queue: VecDeque<ToastNotification>,
     update_state: UpdateState,
     update_dialog_open: bool,
+    update_progress: f32,
     module_configs: module_settings::ModuleConfigs,
 }
 
@@ -136,6 +138,7 @@ impl Settings {
                 toast_queue: VecDeque::new(),
                 update_state: UpdateState::Unknown,
                 update_dialog_open: false,
+                update_progress: 0.0,
                 module_configs: module_settings::ModuleConfigs::load_all(),
             },
             Task::perform(daemon::poll_daemon(), Message::DaemonState),
@@ -410,7 +413,7 @@ impl Settings {
             }
             Message::ConfirmUpdateInstall => {
                 if let UpdateState::Available { latest_version } = &self.update_state {
-                    self.update_dialog_open = false;
+                    self.update_progress = 0.0;
                     self.update_state = UpdateState::Updating {
                         target_version: latest_version.clone(),
                     };
@@ -424,12 +427,17 @@ impl Settings {
                 let tr = translations::get(self.language);
                 match result {
                     UpdateInstallResult::Updated(version) => {
-                        self.update_state = UpdateState::UpToDate;
-                        let msg = format!("{} v{version}", tr.toast_update_success);
-                        self.queue_toast(ToastKind::Success, tr.toast_success_title, &msg);
+                        self.update_state = UpdateState::Restarting {
+                            new_version: version,
+                        };
+                        return Task::perform(
+                            async { tokio::time::sleep(Duration::from_millis(1500)).await },
+                            |_| Message::RestartApp,
+                        );
                     }
                     UpdateInstallResult::AlreadyUpToDate => {
                         self.update_state = UpdateState::UpToDate;
+                        self.update_dialog_open = false;
                         self.queue_toast(
                             ToastKind::Success,
                             tr.toast_success_title,
@@ -439,9 +447,22 @@ impl Settings {
                     UpdateInstallResult::Error(err) => {
                         let message = format!("{}: {err}", tr.toast_update_failed);
                         self.update_state = UpdateState::Error(err);
+                        self.update_dialog_open = false;
                         self.queue_toast(ToastKind::Error, tr.toast_error_title, &message);
                     }
                 }
+            }
+            Message::UpdateProgressTick => {
+                self.update_progress += 0.02;
+                if self.update_progress > 2.0 {
+                    self.update_progress = 0.0;
+                }
+            }
+            Message::RestartApp => {
+                if let Ok(exe) = std::env::current_exe() {
+                    let _ = std::process::Command::new(exe).spawn();
+                }
+                std::process::exit(0);
             }
             // Module settings
             Message::SetColorPickerFormat(fmt) => {
@@ -511,6 +532,15 @@ impl Settings {
         }
         if self.hotkey_test_active && self.hotkey_test_rx.is_some() {
             subs.push(time::every(Duration::from_millis(20)).map(|_| Message::PollKeyboardEvents));
+        }
+        if matches!(
+            self.update_state,
+            UpdateState::Updating { .. } | UpdateState::Restarting { .. }
+        ) {
+            let cadence = if self.reduced_motion { 100 } else { 50 };
+            subs.push(
+                time::every(Duration::from_millis(cadence)).map(|_| Message::UpdateProgressTick),
+            );
         }
         Subscription::batch(subs)
     }

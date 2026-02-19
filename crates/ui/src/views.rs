@@ -114,60 +114,106 @@ impl Settings {
             return base;
         }
 
-        let target_version = match &self.update_state {
-            UpdateState::Available { latest_version } => latest_version.as_str(),
-            UpdateState::Updating { target_version } => target_version.as_str(),
-            _ => return base,
-        };
-
         let tr = translations::get(self.language);
         let ui = self.ui();
         let current_version = format!("v{}", env!("CARGO_PKG_VERSION"));
-        let latest_version = format!("v{target_version}");
 
-        let cancel_button = button(
-            text(tr.update_dialog_cancel)
-                .size(ui.sz(12.0))
-                .font(ui.font()),
-        )
-        .padding(Padding::from([6.0, 12.0]))
-        .style(theme::seg_button(false))
-        .on_press(Message::CloseUpdateDialog);
+        let dialog_content: Element<'a, Message> = match &self.update_state {
+            UpdateState::Available { latest_version } => {
+                let latest = format!("v{latest_version}");
+                let cancel_button = button(
+                    text(tr.update_dialog_cancel)
+                        .size(ui.sz(12.0))
+                        .font(ui.font()),
+                )
+                .padding(Padding::from([6.0, 12.0]))
+                .style(theme::seg_button(false))
+                .on_press(Message::CloseUpdateDialog);
 
-        let confirm_button = button(
-            text(tr.update_dialog_confirm)
-                .size(ui.sz(12.0))
-                .font(ui.font()),
-        )
-        .padding(Padding::from([6.0, 12.0]))
-        .style(theme::seg_button(true))
-        .on_press(Message::ConfirmUpdateInstall);
+                let confirm_button = button(
+                    text(tr.update_dialog_confirm)
+                        .size(ui.sz(12.0))
+                        .font(ui.font()),
+                )
+                .padding(Padding::from([6.0, 12.0]))
+                .style(theme::seg_button(true))
+                .on_press(Message::ConfirmUpdateInstall);
 
-        let dialog = container(
-            column![
-                text(tr.update_dialog_title)
-                    .size(ui.sz(18.0))
-                    .font(bold())
-                    .color(ui.heading()),
-                text(tr.update_dialog_body)
-                    .size(ui.sz(13.0))
-                    .font(ui.font())
-                    .color(theme::subtext1(ui.dark)),
-                info_row(tr.update_current_version, &current_version, ui),
-                info_row(tr.update_latest_version, &latest_version, ui),
-                row![
-                    Space::with_width(Length::Fill),
-                    cancel_button,
-                    confirm_button
+                column![
+                    text(tr.update_dialog_title)
+                        .size(ui.sz(18.0))
+                        .font(bold())
+                        .color(ui.heading()),
+                    text(tr.update_dialog_body)
+                        .size(ui.sz(13.0))
+                        .font(ui.font())
+                        .color(theme::subtext1(ui.dark)),
+                    info_row(tr.update_current_version, &current_version, ui),
+                    info_row(tr.update_latest_version, &latest, ui),
+                    row![
+                        Space::with_width(Length::Fill),
+                        cancel_button,
+                        confirm_button
+                    ]
+                    .spacing(8)
+                    .align_y(Alignment::Center),
                 ]
-                .spacing(8)
-                .align_y(Alignment::Center),
-            ]
-            .spacing(10),
-        )
-        .padding(ui.pad(16.0) as u16)
-        .width(ui.sz(460.0))
-        .style(theme::card(ui.contrast, ui.glass));
+                .spacing(10)
+                .into()
+            }
+            UpdateState::Updating { target_version } => {
+                let latest = format!("v{target_version}");
+                let pulse = 1.0 - (self.update_progress - 1.0).abs();
+                column![
+                    text(tr.update_dialog_title)
+                        .size(ui.sz(18.0))
+                        .font(bold())
+                        .color(ui.heading()),
+                    text(tr.update_dialog_downloading)
+                        .size(ui.sz(13.0))
+                        .font(ui.font())
+                        .color(theme::subtext1(ui.dark)),
+                    info_row(tr.update_current_version, &current_version, ui),
+                    info_row(tr.update_latest_version, &latest, ui),
+                    Space::with_height(4),
+                    progress_bar(0.0..=1.0, pulse)
+                        .height(6)
+                        .width(Length::Fill),
+                ]
+                .spacing(10)
+                .into()
+            }
+            UpdateState::Restarting { new_version } => {
+                let latest = format!("v{new_version}");
+                column![
+                    row![
+                        text(Bootstrap::CheckCircleFill.to_string())
+                            .font(BOOTSTRAP_FONT)
+                            .size(ui.sz(22.0))
+                            .color(theme::green()),
+                        text(tr.update_restarting)
+                            .size(ui.sz(18.0))
+                            .font(bold())
+                            .color(ui.heading()),
+                    ]
+                    .spacing(10)
+                    .align_y(Alignment::Center),
+                    info_row(tr.update_latest_version, &latest, ui),
+                    Space::with_height(4),
+                    progress_bar(0.0..=1.0, 1.0)
+                        .height(6)
+                        .width(Length::Fill),
+                ]
+                .spacing(10)
+                .into()
+            }
+            _ => return base,
+        };
+
+        let dialog = container(dialog_content)
+            .padding(ui.pad(16.0) as u16)
+            .width(ui.sz(460.0))
+            .style(theme::card(ui.contrast, ui.glass));
 
         let backdrop = container(Space::new(0, 0))
             .width(Length::Fill)
@@ -1029,9 +1075,379 @@ impl Settings {
         content = content
             .push(keys_card)
             .push(Space::with_height(4))
-            .push(body);
+            .push(body)
+            .push(Space::with_height(16))
+            .push(self.view_design_system());
 
         content.width(Length::Fill).into()
+    }
+
+    // ── Design System showcase (Tests page only) ─────────────────────────
+
+    fn view_design_system(&self) -> Element<'_, Message> {
+        let tr = translations::get(self.language);
+        let ui = self.ui();
+
+        // ── Section header ───────────────────────────────────────────────
+        let header = column![
+            horizontal_rule(1),
+            Space::with_height(8),
+            text(tr.design_system)
+                .size(ui.sz(28.0))
+                .font(bold())
+                .color(ui.heading()),
+            text("Visual reference for every UI primitive used in the app.")
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+        ]
+        .spacing(4);
+
+        // ── 1. Color palette ─────────────────────────────────────────────
+        let colors: Vec<(&str, Color)> = vec![
+            ("Green", theme::green()),
+            ("Red", theme::red()),
+            ("Blue", theme::blue()),
+            ("Mauve", theme::mauve()),
+            ("Pink", theme::pink()),
+            ("Teal", theme::teal()),
+            ("Yellow", theme::yellow()),
+            ("Peach", theme::peach()),
+            ("Sky", theme::sky()),
+            ("Lavender", theme::lavender()),
+            ("Flamingo", theme::flamingo()),
+            ("Rosewater", theme::rosewater()),
+            ("Maroon", theme::maroon()),
+            ("Sapphire", theme::sapphire()),
+        ];
+
+        let mut color_row = row![].spacing(8);
+        for (name, color) in &colors {
+            let swatch = container(Space::new(0, 0))
+                .width(ui.sz(36.0))
+                .height(ui.sz(36.0))
+                .style(theme::color_swatch(*color));
+            color_row = color_row.push(
+                column![
+                    swatch,
+                    text(name.to_string())
+                        .size(ui.sz(10.0))
+                        .font(ui.font())
+                        .color(theme::subtext0(ui.dark)),
+                ]
+                .spacing(4)
+                .align_x(Alignment::Center),
+            );
+        }
+
+        let semantic_colors = row![
+            column![
+                text("overlay0").size(ui.sz(11.0)).font(ui.font()).color(theme::overlay0(ui.dark)),
+                text("subtext0").size(ui.sz(11.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
+                text("subtext1").size(ui.sz(11.0)).font(ui.font()).color(theme::subtext1(ui.dark)),
+                text("heading").size(ui.sz(11.0)).font(ui.font()).color(ui.heading()),
+            ]
+            .spacing(4),
+        ];
+
+        let colors_card = card(
+            column![
+                text(tr.ds_colors)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text("Catppuccin accent palette")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                color_row,
+                text("Semantic text colors")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                semantic_colors,
+            ]
+            .spacing(10),
+            ui,
+        );
+
+        // ── 2. Typography ────────────────────────────────────────────────
+        let typo_card = card(
+            column![
+                text(tr.ds_typography)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text("Heading 28px").size(ui.sz(28.0)).font(bold()).color(ui.heading()),
+                text("Title 16px bold").size(ui.sz(16.0)).font(bold()).color(ui.heading()),
+                text("Body 14px").size(ui.sz(14.0)).font(ui.font()),
+                text("Body 13px").size(ui.sz(13.0)).font(ui.font()),
+                text("Caption 12px").size(ui.sz(12.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
+                text("Small 10px").size(ui.sz(10.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
+                text("Bold variant")
+                    .size(ui.sz(14.0))
+                    .font(bold()),
+            ]
+            .spacing(6),
+            ui,
+        );
+
+        // ── 3. Buttons ──────────────────────────────────────────────────
+        let btn_active = button(text("Active").size(ui.sz(11.0)).font(ui.font()))
+            .padding(Padding::from([5.0, 10.0]))
+            .style(theme::seg_button(true));
+
+        let btn_inactive = button(text("Inactive").size(ui.sz(11.0)).font(ui.font()))
+            .padding(Padding::from([5.0, 10.0]))
+            .style(theme::seg_button(false));
+
+        let btn_nav_sel = button(
+            row![
+                text(Bootstrap::HouseDoor.to_string())
+                    .font(BOOTSTRAP_FONT)
+                    .size(ui.sz(14.0))
+                    .color(theme::blue()),
+                text("Selected nav").size(ui.sz(13.0)).font(ui.font()),
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
+        )
+        .width(ui.sz(180.0))
+        .padding(Padding::from([8.0, 12.0]))
+        .style(theme::nav_button(true));
+
+        let btn_nav_idle = button(
+            row![
+                text(Bootstrap::Gear.to_string())
+                    .font(BOOTSTRAP_FONT)
+                    .size(ui.sz(14.0))
+                    .color(theme::overlay0(ui.dark)),
+                text("Idle nav").size(ui.sz(13.0)).font(ui.font()),
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
+        )
+        .width(ui.sz(180.0))
+        .padding(Padding::from([8.0, 12.0]))
+        .style(theme::nav_button(false));
+
+        let buttons_card = card(
+            column![
+                text(tr.ds_buttons)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text("Segmented buttons")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                row![btn_active, btn_inactive].spacing(8),
+                text("Navigation buttons")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                row![btn_nav_sel, btn_nav_idle].spacing(8),
+            ]
+            .spacing(10),
+            ui,
+        );
+
+        // ── 4. Cards ────────────────────────────────────────────────────
+        let normal_card = card(
+            column![
+                text("Standard card")
+                    .size(ui.sz(14.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text("theme::card — rounded corners, dark surface background")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            ]
+            .spacing(4),
+            ui,
+        );
+
+        let stat_example = row![
+            stat_card("Total", "15", theme::blue(), ui),
+            stat_card("Active", "8", theme::green(), ui),
+            stat_card("Errors", "2", theme::red(), ui),
+        ]
+        .spacing(8);
+
+        let cards_card = card(
+            column![
+                text(tr.ds_cards)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text("Standard card")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                normal_card,
+                text("Stat cards")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                stat_example,
+            ]
+            .spacing(10),
+            ui,
+        );
+
+        // ── 5. Badges & key caps ────────────────────────────────────────
+        let badge_row = row![
+            icon_badge(Bootstrap::Palette, theme::blue(), ui.sz(16.0)),
+            icon_badge(Bootstrap::Lightning, theme::yellow(), ui.sz(16.0)),
+            icon_badge(Bootstrap::Shield, theme::green(), ui.sz(16.0)),
+            icon_badge(Bootstrap::Bug, theme::red(), ui.sz(16.0)),
+            icon_badge(Bootstrap::Star, theme::mauve(), ui.sz(16.0)),
+        ]
+        .spacing(8);
+
+        let kbd_row = row![
+            kbd("Ctrl", ui),
+            kbd("Alt", ui),
+            kbd("Shift", ui),
+            kbd("Super", ui),
+            kbd("F1", ui),
+        ]
+        .spacing(6);
+
+        let keycap_row = row![
+            key_cap("A", true, ui),
+            key_cap("B", false, ui),
+            key_cap("C", true, ui),
+            key_cap("D", false, ui),
+        ]
+        .spacing(6);
+
+        let badges_card = card(
+            column![
+                text(tr.ds_badges)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text("Icon badges")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                badge_row,
+                text("Keyboard shortcut badges")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                kbd_row,
+                text("Key caps (active / inactive)")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                keycap_row,
+            ]
+            .spacing(10),
+            ui,
+        );
+
+        // ── 6. Controls (toggler, info rows, progress bar) ──────────────
+        let toggle_row = row![
+            column![
+                text(tr.ds_sample_label)
+                    .size(ui.sz(14.0))
+                    .font(ui.font()),
+                text("Toggle description")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            ]
+            .spacing(2)
+            .width(Length::Fill),
+            toggler(true).size(ui.sz(22.0)),
+        ]
+        .spacing(12)
+        .align_y(Alignment::Center);
+
+        let toggle_row_off = row![
+            column![
+                text("Disabled option")
+                    .size(ui.sz(14.0))
+                    .font(ui.font()),
+                text("This one is off")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            ]
+            .spacing(2)
+            .width(Length::Fill),
+            toggler(false).size(ui.sz(22.0)),
+        ]
+        .spacing(12)
+        .align_y(Alignment::Center);
+
+        let info_rows = column![
+            info_row("Author", "Ahmed Karim", ui),
+            info_row("License", "GPL-3.0", ui),
+            info_row("Framework", "iced (Rust)", ui),
+        ]
+        .spacing(8);
+
+        let progress_bars = column![
+            row![
+                text("25%").size(ui.sz(11.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
+                progress_bar(0.0..=1.0, 0.25).height(4).width(Length::Fill),
+            ].spacing(8).align_y(Alignment::Center),
+            row![
+                text("60%").size(ui.sz(11.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
+                progress_bar(0.0..=1.0, 0.60).height(4).width(Length::Fill),
+            ].spacing(8).align_y(Alignment::Center),
+            row![
+                text("100%").size(ui.sz(11.0)).font(ui.font()).color(theme::subtext0(ui.dark)),
+                progress_bar(0.0..=1.0, 1.0).height(4).width(Length::Fill),
+            ].spacing(8).align_y(Alignment::Center),
+        ]
+        .spacing(6);
+
+        let controls_card = card(
+            column![
+                text(tr.ds_inputs)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text("Togglers")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                toggle_row,
+                toggle_row_off,
+                horizontal_rule(1),
+                text("Info rows")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                info_rows,
+                horizontal_rule(1),
+                text("Progress bars")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                progress_bars,
+            ]
+            .spacing(10),
+            ui,
+        );
+
+        column![
+            header,
+            colors_card,
+            typo_card,
+            buttons_card,
+            cards_card,
+            badges_card,
+            controls_card,
+        ]
+        .spacing(12)
+        .width(Length::Fill)
+        .into()
     }
 
     fn collect_test_keys(&self) -> Vec<String> {
@@ -1311,6 +1727,14 @@ impl Settings {
                     true,
                     false,
                 ),
+                UpdateState::Restarting { new_version } => (
+                    tr.update_restarting.to_string(),
+                    theme::green(),
+                    Some(new_version.clone()),
+                    None,
+                    true,
+                    false,
+                ),
                 UpdateState::Error(err) => (
                     tr.update_error.to_string(),
                     theme::red(),
@@ -1449,6 +1873,21 @@ impl Settings {
                     .size(ui.sz(12.0))
                     .font(ui.font())
                     .color(theme::subtext0(ui.dark)),
+            );
+        }
+
+        if matches!(self.update_state, UpdateState::Updating { .. }) {
+            let pulse = 1.0 - (self.update_progress - 1.0).abs();
+            update_content = update_content.push(
+                progress_bar(0.0..=1.0, pulse)
+                    .height(6)
+                    .width(Length::Fill),
+            );
+        } else if matches!(self.update_state, UpdateState::Restarting { .. }) {
+            update_content = update_content.push(
+                progress_bar(0.0..=1.0, 1.0)
+                    .height(6)
+                    .width(Length::Fill),
             );
         }
 

@@ -129,11 +129,16 @@ pub fn key_cap<'a>(label: &str, active: bool, ui: Ui) -> Element<'a, Message> {
 }
 
 pub fn seg_button(label: &str, active: bool, msg: Message, ui: Ui) -> Element<'static, Message> {
-    button(text(label.to_string()).size(ui.sz(11.0)).font(ui.font()))
-        .on_press(msg)
-        .padding(Padding::from([5.0, 10.0]))
-        .style(theme::seg_button(active))
-        .into()
+    let h = ui.sz(11.0) + 10.0; // text size + vertical breathing room
+    button(
+        container(text(label.to_string()).size(ui.sz(11.0)).font(ui.font()))
+            .center_y(h)
+            .center_x(Length::Shrink),
+    )
+    .on_press(msg)
+    .padding(Padding::from([0.0, 10.0]))
+    .style(theme::seg_button(active))
+    .into()
 }
 
 pub fn info_row<'a>(label: &str, value: &str, ui: Ui) -> Element<'a, Message> {

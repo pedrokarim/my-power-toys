@@ -209,7 +209,7 @@ impl Settings {
         let dialog = container(dialog_content)
             .padding(ui.pad(16.0) as u16)
             .width(ui.sz(460.0))
-            .style(theme::card(ui.contrast, ui.glass));
+            .style(theme::card(ui.contrast, false));
 
         let backdrop = container(Space::new(0, 0))
             .width(Length::Fill)

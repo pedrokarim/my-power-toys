@@ -376,10 +376,15 @@ pub fn nav_button(selected: bool) -> impl Fn(&Theme, button::Status) -> button::
     move |theme, status| {
         let palette = theme.extended_palette();
         let (bg, fg) = if selected {
-            (
-                Some(palette.primary.weak.color.into()),
-                palette.primary.base.text,
-            )
+            if palette.is_dark {
+                let bg = mix(DARK_ELEVATED, palette.primary.base.color, 0.35);
+                (Some(bg.into()), palette.background.base.text)
+            } else {
+                (
+                    Some(palette.primary.weak.color.into()),
+                    palette.primary.base.text,
+                )
+            }
         } else {
             match status {
                 button::Status::Hovered => {
@@ -456,10 +461,16 @@ pub fn seg_button(active: bool) -> impl Fn(&Theme, button::Status) -> button::St
     move |theme, status| {
         let palette = theme.extended_palette();
         let (bg, fg) = if active {
-            (
-                Some(palette.primary.weak.color.into()),
-                palette.primary.base.text,
-            )
+            if palette.is_dark {
+                // Dark-mode: tinted accent background + light text
+                let bg = mix(DARK_ELEVATED, palette.primary.base.color, 0.35);
+                (Some(bg.into()), palette.background.base.text)
+            } else {
+                (
+                    Some(palette.primary.weak.color.into()),
+                    palette.primary.base.text,
+                )
+            }
         } else {
             match status {
                 button::Status::Hovered => {
@@ -470,7 +481,14 @@ pub fn seg_button(active: bool) -> impl Fn(&Theme, button::Status) -> button::St
                     };
                     (Some(hover_bg.into()), palette.background.base.text)
                 }
-                _ => (None, palette.secondary.weak.text),
+                _ => (
+                    None,
+                    if palette.is_dark {
+                        subtext0(true)
+                    } else {
+                        palette.secondary.weak.text
+                    },
+                ),
             }
         };
         button::Style {

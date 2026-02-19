@@ -59,7 +59,7 @@ tar xzf "$TMPDIR/release.tar.gz" -C "$TMPDIR"
 # Install binaries
 echo "==> Installing binaries to $INSTALL_DIR..."
 mkdir -p "$INSTALL_DIR"
-for bin in mpt-daemon mpt-ctl mpt-settings; do
+for bin in mpt-daemon mpt-ctl mpt-settings mpt-color-picker; do
     if [ -f "$TMPDIR/$bin" ]; then
         install -m 755 "$TMPDIR/$bin" "$INSTALL_DIR/$bin"
         echo "    Installed $bin"

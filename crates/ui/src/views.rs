@@ -2591,9 +2591,7 @@ impl Settings {
             let fmt_row: Element<'a, Message> = container(
                 row![
                     column![
-                        text(entry.label.clone())
-                            .size(ui.sz(14.0))
-                            .font(ui.font()),
+                        text(entry.label.clone()).size(ui.sz(14.0)).font(ui.font()),
                         text(example.to_string())
                             .size(ui.sz(12.0))
                             .font(ui.font())

@@ -80,8 +80,8 @@ impl EditorApp {
                 let max_swatches = 8;
                 let diameter = theme::HISTORY_SWATCH_DIAMETER;
                 for entry in self.history.entries.iter().take(max_swatches) {
-                    let (rect, response) =
-                        ui.allocate_exact_size(egui::vec2(diameter, diameter), egui::Sense::click());
+                    let (rect, response) = ui
+                        .allocate_exact_size(egui::vec2(diameter, diameter), egui::Sense::click());
                     let center = rect.center();
                     let radius = diameter / 2.0;
 
@@ -99,8 +99,11 @@ impl EditorApp {
                         theme::SEPARATOR
                     };
                     let ring_width = if is_current { 2.0 } else { 1.0 };
-                    ui.painter()
-                        .circle_stroke(center, radius, egui::Stroke::new(ring_width, ring_color));
+                    ui.painter().circle_stroke(
+                        center,
+                        radius,
+                        egui::Stroke::new(ring_width, ring_color),
+                    );
 
                     if response.clicked() {
                         clicked_color = Some(entry.color);
@@ -176,7 +179,9 @@ impl EditorApp {
                     0.0,
                     egui::Color32::from_white_alpha(180),
                 );
-                response.clone().on_hover_text(shade.format(ColorFormat::Hex));
+                response
+                    .clone()
+                    .on_hover_text(shade.format(ColorFormat::Hex));
             }
             if response.clicked() {
                 clicked_color = Some(*shade);
@@ -190,8 +195,10 @@ impl EditorApp {
 
     fn draw_gradient_strip(&self, ui: &mut egui::Ui, available_height: f32) -> Option<Color> {
         let strip_width = theme::GRADIENT_STRIP_WIDTH;
-        let (rect, _) =
-            ui.allocate_exact_size(egui::vec2(strip_width, available_height), egui::Sense::hover());
+        let (rect, _) = ui.allocate_exact_size(
+            egui::vec2(strip_width, available_height),
+            egui::Sense::hover(),
+        );
 
         let (h, s, _) = self.current_color.to_hsl();
         let h_f = h as f64;
@@ -264,12 +271,20 @@ impl EditorApp {
         None
     }
 
-    fn draw_format_card(&mut self, ui: &mut egui::Ui, format: ColorFormat, label: &str, value: &str) {
+    fn draw_format_card(
+        &mut self,
+        ui: &mut egui::Ui,
+        format: ColorFormat,
+        label: &str,
+        value: &str,
+    ) {
         let card_height = theme::CARD_HEIGHT;
         let available_width = ui.available_width();
 
-        let (card_rect, _) =
-            ui.allocate_exact_size(egui::vec2(available_width, card_height), egui::Sense::hover());
+        let (card_rect, _) = ui.allocate_exact_size(
+            egui::vec2(available_width, card_height),
+            egui::Sense::hover(),
+        );
 
         // Card background
         ui.painter()
@@ -332,14 +347,22 @@ impl EditorApp {
             egui::pos2(card_rect.right() - 24.0, card_rect.center().y),
             egui::vec2(copy_size, copy_size),
         );
-        let copy_resp = ui.interact(copy_rect, egui::Id::new(("copy", label)), egui::Sense::click());
+        let copy_resp = ui.interact(
+            copy_rect,
+            egui::Id::new(("copy", label)),
+            egui::Sense::click(),
+        );
 
         let is_just_copied = self
             .copied_feedback
             .as_ref()
             .is_some_and(|(f, t)| *f == format && t.elapsed().as_millis() < 1000);
 
-        let copy_icon = if is_just_copied { "\u{2713}" } else { "\u{2398}" };
+        let copy_icon = if is_just_copied {
+            "\u{2713}"
+        } else {
+            "\u{2398}"
+        };
         let copy_color = if is_just_copied {
             egui::Color32::from_rgb(100, 200, 100)
         } else if copy_resp.hovered() {
@@ -349,8 +372,7 @@ impl EditorApp {
         };
 
         if copy_resp.hovered() {
-            ui.painter()
-                .rect_filled(copy_rect, 4.0, theme::BG_HOVER);
+            ui.painter().rect_filled(copy_rect, 4.0, theme::BG_HOVER);
         }
 
         let copy_galley = ui.painter().layout_no_wrap(
@@ -359,8 +381,7 @@ impl EditorApp {
             copy_color,
         );
         let copy_text_pos = copy_rect.center() - copy_galley.size() / 2.0;
-        ui.painter()
-            .galley(copy_text_pos, copy_galley, copy_color);
+        ui.painter().galley(copy_text_pos, copy_galley, copy_color);
 
         if copy_resp.clicked() {
             let _ = copy_to_clipboard(value);

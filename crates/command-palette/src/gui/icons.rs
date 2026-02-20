@@ -11,6 +11,12 @@ pub struct IconCache {
     theme_dirs: Vec<PathBuf>,
 }
 
+impl Default for IconCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IconCache {
     pub fn new() -> Self {
         let theme_dirs = build_theme_dirs();
@@ -26,10 +32,10 @@ impl IconCache {
     pub fn get(&mut self, ctx: &Context, name: &str) -> Option<egui::ImageSource<'_>> {
         if !self.textures.contains_key(name) {
             // Resolve path lazily
-            if !self.resolved.contains_key(name) {
-                if let Some(path) = self.find_icon_path(name) {
-                    self.resolved.insert(name.to_string(), path);
-                }
+            if !self.resolved.contains_key(name)
+                && let Some(path) = self.find_icon_path(name)
+            {
+                self.resolved.insert(name.to_string(), path);
             }
             let tex = self
                 .resolved
@@ -77,7 +83,10 @@ impl IconCache {
 
             // Scalable directory (e.g., scalable/apps/firefox.svg)
             for ext in &extensions {
-                let path = dir.join("scalable").join("apps").join(format!("{name}.{ext}"));
+                let path = dir
+                    .join("scalable")
+                    .join("apps")
+                    .join(format!("{name}.{ext}"));
                 if path.exists() {
                     return Some(path);
                 }
@@ -199,11 +208,7 @@ fn load_png(ctx: &Context, name: &str, path: &Path) -> Option<TextureHandle> {
     let pixels = rgba.into_raw();
 
     let color_image = ColorImage::from_rgba_unmultiplied(size, &pixels);
-    Some(ctx.load_texture(
-        format!("icon-{name}"),
-        color_image,
-        TextureOptions::LINEAR,
-    ))
+    Some(ctx.load_texture(format!("icon-{name}"), color_image, TextureOptions::LINEAR))
 }
 
 fn load_svg(ctx: &Context, name: &str, path: &Path) -> Option<TextureHandle> {
@@ -226,11 +231,7 @@ fn load_svg(ctx: &Context, name: &str, path: &Path) -> Option<TextureHandle> {
 
     let pixels = pixmap.data().to_vec();
     let color_image = ColorImage::from_rgba_unmultiplied([size as usize, size as usize], &pixels);
-    Some(ctx.load_texture(
-        format!("icon-{name}"),
-        color_image,
-        TextureOptions::LINEAR,
-    ))
+    Some(ctx.load_texture(format!("icon-{name}"), color_image, TextureOptions::LINEAR))
 }
 
 /// Size to use when displaying icons via ui.image().

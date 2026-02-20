@@ -91,14 +91,11 @@ impl PaletteApp {
                     ui.horizontal(|ui| {
                         // Icon — try loading real app icon, fall back to text
                         let mut icon_drawn = false;
-                        if let ResultIcon::Named(name) = &self.results[i].icon {
-                            if let Some(source) = self.icon_cache.get(&ctx, name) {
-                                ui.add(
-                                    egui::Image::new(source)
-                                        .fit_to_exact_size(icons::icon_size()),
-                                );
-                                icon_drawn = true;
-                            }
+                        if let ResultIcon::Named(name) = &self.results[i].icon
+                            && let Some(source) = self.icon_cache.get(&ctx, name)
+                        {
+                            ui.add(egui::Image::new(source).fit_to_exact_size(icons::icon_size()));
+                            icon_drawn = true;
                         }
                         if !icon_drawn {
                             ui.label(
@@ -157,14 +154,12 @@ impl eframe::App for PaletteApp {
         self.frame_count = self.frame_count.saturating_add(1);
 
         // Center on screen once monitor size is available
-        if self.frame_count <= 5 {
-            if let Some(monitor) = ctx.input(|i| i.viewport().monitor_size) {
-                let x = (monitor.x - theme::WINDOW_WIDTH) / 2.0;
-                let y = monitor.y * 0.25;
-                ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition(
-                    [x, y].into(),
-                ));
-            }
+        if self.frame_count <= 5
+            && let Some(monitor) = ctx.input(|i| i.viewport().monitor_size)
+        {
+            let x = (monitor.x - theme::WINDOW_WIDTH) / 2.0;
+            let y = monitor.y * 0.25;
+            ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition([x, y].into()));
         }
 
         // Key handling

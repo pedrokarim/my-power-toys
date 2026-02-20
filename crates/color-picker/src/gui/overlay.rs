@@ -408,12 +408,7 @@ fn x11_configure_overlay(width: u32, height: u32) {
 
         // Resize to span all monitors
         let _ = Command::new("xdotool")
-            .args([
-                "windowsize",
-                wid,
-                &width.to_string(),
-                &height.to_string(),
-            ])
+            .args(["windowsize", wid, &width.to_string(), &height.to_string()])
             .status();
 
         // Position at top-left of virtual desktop

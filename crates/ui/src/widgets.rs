@@ -139,15 +139,11 @@ pub fn key_cap<'a>(label: &str, active: bool, ui: Ui) -> Element<'a, Message> {
 }
 
 pub fn seg_button(label: &str, active: bool, msg: Message, ui: Ui) -> Element<'static, Message> {
-    button(
-        text(label.to_string())
-            .size(ui.sz(12.0))
-            .font(ui.font()),
-    )
-    .on_press(msg)
-    .padding(Padding::from([8.0, 20.0]))
-    .style(theme::seg_button(active))
-    .into()
+    button(text(label.to_string()).size(ui.sz(12.0)).font(ui.font()))
+        .on_press(msg)
+        .padding(Padding::from([8.0, 20.0]))
+        .style(theme::seg_button(active))
+        .into()
 }
 
 pub fn info_row<'a>(label: &str, value: &str, ui: Ui) -> Element<'a, Message> {

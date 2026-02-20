@@ -190,10 +190,7 @@ fn crop_to_active_monitor(screenshot: &RgbaImage) -> Result<RgbaImage> {
         }
         Err(e) => {
             warn!("Could not get cursor position ({e}), using primary monitor");
-            scaled
-                .iter()
-                .find(|m| m.is_primary)
-                .or(scaled.first())
+            scaled.iter().find(|m| m.is_primary).or(scaled.first())
         }
     }
     .ok_or_else(|| anyhow::anyhow!("no monitor found"))?
@@ -227,7 +224,11 @@ fn scale_monitors_to_screenshot(monitors: &[Monitor], screenshot: &RgbaImage) ->
     let min_x = monitors.iter().map(|m| m.x).min().unwrap();
     let min_y = monitors.iter().map(|m| m.y).min().unwrap();
     let max_x = monitors.iter().map(|m| m.x + m.width as i32).max().unwrap();
-    let max_y = monitors.iter().map(|m| m.y + m.height as i32).max().unwrap();
+    let max_y = monitors
+        .iter()
+        .map(|m| m.y + m.height as i32)
+        .max()
+        .unwrap();
 
     let bbox_w = (max_x - min_x) as f64;
     let bbox_h = (max_y - min_y) as f64;
@@ -252,11 +253,7 @@ fn scale_monitors_to_screenshot(monitors: &[Monitor], screenshot: &RgbaImage) ->
 }
 
 /// Scale cursor coordinates using the same transform as monitors.
-fn scale_cursor(
-    cursor: (i32, i32),
-    monitors: &[Monitor],
-    screenshot: &RgbaImage,
-) -> (i32, i32) {
+fn scale_cursor(cursor: (i32, i32), monitors: &[Monitor], screenshot: &RgbaImage) -> (i32, i32) {
     if monitors.is_empty() {
         return cursor;
     }
@@ -264,7 +261,11 @@ fn scale_cursor(
     let min_x = monitors.iter().map(|m| m.x).min().unwrap();
     let min_y = monitors.iter().map(|m| m.y).min().unwrap();
     let max_x = monitors.iter().map(|m| m.x + m.width as i32).max().unwrap();
-    let max_y = monitors.iter().map(|m| m.y + m.height as i32).max().unwrap();
+    let max_y = monitors
+        .iter()
+        .map(|m| m.y + m.height as i32)
+        .max()
+        .unwrap();
 
     let bbox_w = (max_x - min_x) as f64;
     let bbox_h = (max_y - min_y) as f64;
@@ -288,24 +289,24 @@ fn scale_cursor(
 
 fn detect_monitors() -> Result<Vec<Monitor>> {
     // Try xrandr (X11 and most Wayland via XWayland)
-    if let Ok(monitors) = parse_xrandr() {
-        if monitors.len() > 1 {
-            return Ok(monitors);
-        }
+    if let Ok(monitors) = parse_xrandr()
+        && monitors.len() > 1
+    {
+        return Ok(monitors);
     }
 
     // Try hyprctl (Hyprland)
-    if let Ok(monitors) = parse_hyprctl_monitors() {
-        if monitors.len() > 1 {
-            return Ok(monitors);
-        }
+    if let Ok(monitors) = parse_hyprctl_monitors()
+        && monitors.len() > 1
+    {
+        return Ok(monitors);
     }
 
     // Try wlr-randr (wlroots compositors: Sway, etc.)
-    if let Ok(monitors) = parse_wlr_randr() {
-        if monitors.len() > 1 {
-            return Ok(monitors);
-        }
+    if let Ok(monitors) = parse_wlr_randr()
+        && monitors.len() > 1
+    {
+        return Ok(monitors);
     }
 
     anyhow::bail!("could not detect multiple monitors")
@@ -425,36 +426,33 @@ fn parse_wlr_randr() -> Result<Vec<Monitor>> {
         }
 
         // Current mode: "1920x1080 px, 60.000000 Hz (preferred, current)"
-        if enabled && trimmed.contains("(current)") {
-            if let Some(res) = trimmed.split_whitespace().next() {
-                if let Some((w, h)) = res.split_once('x') {
-                    current_w = w.parse().ok();
-                    current_h = h.parse().ok();
-                }
-            }
+        if enabled
+            && trimmed.contains("(current)")
+            && let Some(res) = trimmed.split_whitespace().next()
+            && let Some((w, h)) = res.split_once('x')
+        {
+            current_w = w.parse().ok();
+            current_h = h.parse().ok();
         }
 
         // Position: "Position: 1920,0"
-        if enabled {
-            if let Some(pos) = trimmed.strip_prefix("Position:") {
-                let pos = pos.trim();
-                if let Some((x_str, y_str)) = pos.split_once(',') {
-                    if let (Some(w), Some(h), Ok(x), Ok(y)) = (
-                        current_w,
-                        current_h,
-                        x_str.trim().parse::<i32>(),
-                        y_str.trim().parse::<i32>(),
-                    ) {
-                        monitors.push(Monitor {
-                            x,
-                            y,
-                            width: w,
-                            height: h,
-                            is_primary: monitors.is_empty(),
-                        });
-                    }
-                }
-            }
+        if enabled
+            && let Some(pos) = trimmed.strip_prefix("Position:")
+            && let Some((x_str, y_str)) = pos.trim().split_once(',')
+            && let (Some(w), Some(h), Ok(x), Ok(y)) = (
+                current_w,
+                current_h,
+                x_str.trim().parse::<i32>(),
+                y_str.trim().parse::<i32>(),
+            )
+        {
+            monitors.push(Monitor {
+                x,
+                y,
+                width: w,
+                height: h,
+                is_primary: monitors.is_empty(),
+            });
         }
     }
 
@@ -544,14 +542,13 @@ fn cursor_via_sway() -> Result<(i32, i32)> {
 
     // JSON array of seats, each with a "cursor" object: {"x": 960.0, "y": 540.0}
     let json: serde_json::Value = serde_json::from_slice(&output.stdout)?;
-    if let Some(arr) = json.as_array() {
-        if let Some(seat) = arr.first() {
-            if let Some(cursor) = seat.get("cursor") {
-                let x = cursor.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                let y = cursor.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                return Ok((x.round() as i32, y.round() as i32));
-            }
-        }
+    if let Some(arr) = json.as_array()
+        && let Some(seat) = arr.first()
+        && let Some(cursor) = seat.get("cursor")
+    {
+        let x = cursor.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        let y = cursor.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        return Ok((x.round() as i32, y.round() as i32));
     }
 
     anyhow::bail!("could not parse sway cursor position")
@@ -579,17 +576,16 @@ fn cursor_via_gnome_shell() -> Result<(i32, i32)> {
 
     // Output: (true, 'X,Y')
     let stdout = String::from_utf8_lossy(&output.stdout);
-    if let Some(start) = stdout.find('\'') {
-        if let Some(end) = stdout.rfind('\'') {
-            if end > start {
-                let inner = &stdout[start + 1..end];
-                let parts: Vec<&str> = inner.split(',').collect();
-                if parts.len() >= 2 {
-                    let x: i32 = parts[0].trim().parse()?;
-                    let y: i32 = parts[1].trim().parse()?;
-                    return Ok((x, y));
-                }
-            }
+    if let Some(start) = stdout.find('\'')
+        && let Some(end) = stdout.rfind('\'')
+        && end > start
+    {
+        let inner = &stdout[start + 1..end];
+        let parts: Vec<&str> = inner.split(',').collect();
+        if parts.len() >= 2 {
+            let x: i32 = parts[0].trim().parse()?;
+            let y: i32 = parts[1].trim().parse()?;
+            return Ok((x, y));
         }
     }
 

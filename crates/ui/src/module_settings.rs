@@ -12,11 +12,31 @@ pub struct ColorFormatEntry {
 
 fn default_formats() -> Vec<ColorFormatEntry> {
     vec![
-        ColorFormatEntry { id: "hex".into(), label: "HEX".into(), enabled: true },
-        ColorFormatEntry { id: "rgb".into(), label: "RGB".into(), enabled: true },
-        ColorFormatEntry { id: "hsl".into(), label: "HSL".into(), enabled: true },
-        ColorFormatEntry { id: "hsv".into(), label: "HSV".into(), enabled: true },
-        ColorFormatEntry { id: "cmyk".into(), label: "CMYK".into(), enabled: true },
+        ColorFormatEntry {
+            id: "hex".into(),
+            label: "HEX".into(),
+            enabled: true,
+        },
+        ColorFormatEntry {
+            id: "rgb".into(),
+            label: "RGB".into(),
+            enabled: true,
+        },
+        ColorFormatEntry {
+            id: "hsl".into(),
+            label: "HSL".into(),
+            enabled: true,
+        },
+        ColorFormatEntry {
+            id: "hsv".into(),
+            label: "HSV".into(),
+            enabled: true,
+        },
+        ColorFormatEntry {
+            id: "cmyk".into(),
+            label: "CMYK".into(),
+            enabled: true,
+        },
     ]
 }
 

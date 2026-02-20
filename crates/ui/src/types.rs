@@ -110,6 +110,7 @@ pub enum Page {
     Module(String),
     Preferences,
     Tests,
+    DesignSystem,
     About,
 }
 

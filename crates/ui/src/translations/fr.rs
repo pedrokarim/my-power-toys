@@ -111,6 +111,11 @@ pub(super) static FR: Tr = Tr {
     ds_badges: "Badges",
     ds_inputs: "Contrôles",
     ds_sample_label: "Exemple de label",
+    ds_toasts: "Toasts",
+    ds_dialogs: "Dialogues",
+    ds_demo_toast_success: "Ceci est un toast de succès de démonstration.",
+    ds_demo_toast_error: "Ceci est un toast d'erreur de démonstration.",
+    ds_trigger_btn: "Déclencher",
 
     ms_no_settings: "Aucun paramètre configurable pour ce module.",
     ms_format: "Format",

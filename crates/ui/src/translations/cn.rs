@@ -111,6 +111,11 @@ pub(super) static CN: Tr = Tr {
     ds_badges: "徽章",
     ds_inputs: "控件",
     ds_sample_label: "示例标签",
+    ds_toasts: "提示消息",
+    ds_dialogs: "对话框",
+    ds_demo_toast_success: "这是一个演示成功提示消息。",
+    ds_demo_toast_error: "这是一个演示错误提示消息。",
+    ds_trigger_btn: "触发",
 
     ms_no_settings: "此模块没有可配置的设置。",
     ms_format: "格式",

@@ -15,7 +15,7 @@ use crate::translations;
 use crate::translations::Language;
 use crate::types::*;
 use crate::widgets::*;
-use crate::{Settings, UpdateState};
+use crate::{DemoDialogPhase, Settings, UpdateState};
 
 impl Settings {
     // ── Root view ───────────────────────────────────────────────────────────
@@ -103,6 +103,7 @@ impl Settings {
         };
 
         let base = self.with_update_dialog_overlay(base);
+        let base = self.with_demo_dialog_overlay(base);
         self.with_toast_overlay(base)
     }
 
@@ -204,6 +205,125 @@ impl Settings {
                 .into()
             }
             _ => return base,
+        };
+
+        let dialog = container(dialog_content)
+            .padding(ui.pad(16.0) as u16)
+            .width(ui.sz(460.0))
+            .style(theme::card(ui.contrast, false));
+
+        let backdrop = container(Space::new(0, 0))
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .style(|_: &Theme| container::Style {
+                background: Some(Color::from_rgba8(0, 0, 0, 0.55).into()),
+                border: iced::Border::default(),
+                shadow: iced::Shadow::default(),
+                text_color: None,
+            });
+
+        let overlay = container(dialog)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x(Length::Fill)
+            .center_y(Length::Fill)
+            .padding(Padding::from([24.0, 24.0]));
+
+        stack![base, backdrop, overlay]
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
+    }
+
+    fn with_demo_dialog_overlay<'a>(&'a self, base: Element<'a, Message>) -> Element<'a, Message> {
+        if !self.demo_dialog_open {
+            return base;
+        }
+
+        let tr = translations::get(self.language);
+        let ui = self.ui();
+        let current_version = format!("v{}", env!("CARGO_PKG_VERSION"));
+
+        let dialog_content: Element<'a, Message> = match self.demo_dialog_phase {
+            DemoDialogPhase::Available => {
+                let cancel_button = button(
+                    text(tr.update_dialog_cancel)
+                        .size(ui.sz(12.0))
+                        .font(ui.font()),
+                )
+                .padding(Padding::from([6.0, 12.0]))
+                .style(theme::seg_button(false))
+                .on_press(Message::CloseDemoDialog);
+
+                let confirm_button = button(
+                    text(tr.update_dialog_confirm)
+                        .size(ui.sz(12.0))
+                        .font(ui.font()),
+                )
+                .padding(Padding::from([6.0, 12.0]))
+                .style(theme::seg_button(true))
+                .on_press(Message::DemoDialogConfirm);
+
+                column![
+                    text(tr.update_dialog_title)
+                        .size(ui.sz(18.0))
+                        .font(bold())
+                        .color(ui.heading()),
+                    text(tr.update_dialog_body)
+                        .size(ui.sz(13.0))
+                        .font(ui.font())
+                        .color(theme::subtext1(ui.dark)),
+                    info_row(tr.update_current_version, &current_version, ui),
+                    info_row(tr.update_latest_version, "v99.0.0", ui),
+                    row![
+                        Space::with_width(Length::Fill),
+                        cancel_button,
+                        confirm_button
+                    ]
+                    .spacing(8)
+                    .align_y(Alignment::Center),
+                ]
+                .spacing(10)
+                .into()
+            }
+            DemoDialogPhase::Updating => {
+                let pulse = 1.0 - (self.demo_dialog_progress - 1.0).abs();
+                column![
+                    text(tr.update_dialog_title)
+                        .size(ui.sz(18.0))
+                        .font(bold())
+                        .color(ui.heading()),
+                    text(tr.update_dialog_downloading)
+                        .size(ui.sz(13.0))
+                        .font(ui.font())
+                        .color(theme::subtext1(ui.dark)),
+                    info_row(tr.update_current_version, &current_version, ui),
+                    info_row(tr.update_latest_version, "v99.0.0", ui),
+                    Space::with_height(4),
+                    progress_bar(0.0..=1.0, pulse).height(6).width(Length::Fill),
+                ]
+                .spacing(10)
+                .into()
+            }
+            DemoDialogPhase::Restarting => column![
+                row![
+                    text(Bootstrap::CheckCircleFill.to_string())
+                        .font(BOOTSTRAP_FONT)
+                        .size(ui.sz(22.0))
+                        .color(theme::green()),
+                    text(tr.update_restarting)
+                        .size(ui.sz(18.0))
+                        .font(bold())
+                        .color(ui.heading()),
+                ]
+                .spacing(10)
+                .align_y(Alignment::Center),
+                info_row(tr.update_latest_version, "v99.0.0", ui),
+                Space::with_height(4),
+                progress_bar(0.0..=1.0, 1.0).height(6).width(Length::Fill),
+            ]
+            .spacing(10)
+            .into(),
         };
 
         let dialog = container(dialog_content)
@@ -417,6 +537,13 @@ impl Settings {
             ui,
         ));
         nav = nav.push(sidebar_icon_button(
+            Bootstrap::Palette,
+            tr.design_system,
+            self.page == Page::DesignSystem,
+            Message::NavigateTo(Page::DesignSystem),
+            ui,
+        ));
+        nav = nav.push(sidebar_icon_button(
             Bootstrap::InfoCircle,
             tr.about,
             self.page == Page::About,
@@ -444,6 +571,7 @@ impl Settings {
             Page::Module(id) => self.view_module(id),
             Page::Preferences => self.view_preferences(),
             Page::Tests => self.view_tests(),
+            Page::DesignSystem => self.view_design_system(),
             Page::About => self.view_about(),
         };
         container(scrollable(
@@ -1078,23 +1206,19 @@ impl Settings {
         content = content
             .push(keys_card)
             .push(Space::with_height(4))
-            .push(body)
-            .push(Space::with_height(16))
-            .push(self.view_design_system());
+            .push(body);
 
         content.width(Length::Fill).into()
     }
 
-    // ── Design System showcase (Tests page only) ─────────────────────────
+    // ── Design System ──────────────────────────────────────────────────────
 
     fn view_design_system(&self) -> Element<'_, Message> {
         let tr = translations::get(self.language);
         let ui = self.ui();
 
-        // ── Section header ───────────────────────────────────────────────
+        // ── Page header ──────────────────────────────────────────────────
         let header = column![
-            horizontal_rule(1),
-            Space::with_height(8),
             text(tr.design_system)
                 .size(ui.sz(28.0))
                 .font(bold())
@@ -1472,6 +1596,90 @@ impl Settings {
             ui,
         );
 
+        // ── 7. Toasts ────────────────────────────────────────────────────
+        let trigger_success_btn = button(
+            row![
+                text(Bootstrap::CheckCircleFill.to_string())
+                    .font(BOOTSTRAP_FONT)
+                    .size(ui.sz(12.0))
+                    .color(theme::green()),
+                text(tr.ds_trigger_btn).size(ui.sz(11.0)).font(ui.font()),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding(Padding::from([5.0, 10.0]))
+        .style(theme::seg_button(false))
+        .on_press(Message::DemoToast(ToastKind::Success));
+
+        let trigger_error_btn = button(
+            row![
+                text(Bootstrap::ExclamationCircleFill.to_string())
+                    .font(BOOTSTRAP_FONT)
+                    .size(ui.sz(12.0))
+                    .color(theme::red()),
+                text(tr.ds_trigger_btn).size(ui.sz(11.0)).font(ui.font()),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding(Padding::from([5.0, 10.0]))
+        .style(theme::seg_button(false))
+        .on_press(Message::DemoToast(ToastKind::Error));
+
+        let toasts_card = card(
+            column![
+                text(tr.ds_toasts)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text("Success toast — appears bottom-right with progress bar")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                trigger_success_btn,
+                text("Error toast — same layout, red accent")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                trigger_error_btn,
+            ]
+            .spacing(10),
+            ui,
+        );
+
+        // ── 8. Dialogs ──────────────────────────────────────────────────
+        let trigger_dialog_btn = button(
+            row![
+                text(Bootstrap::WindowStack.to_string())
+                    .font(BOOTSTRAP_FONT)
+                    .size(ui.sz(12.0))
+                    .color(theme::blue()),
+                text(tr.ds_trigger_btn).size(ui.sz(11.0)).font(ui.font()),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding(Padding::from([5.0, 10.0]))
+        .style(theme::seg_button(false))
+        .on_press(Message::OpenDemoDialog);
+
+        let dialogs_card = card(
+            column![
+                text(tr.ds_dialogs)
+                    .size(ui.sz(16.0))
+                    .font(bold())
+                    .color(ui.heading()),
+                text("Update dialog — cycles through: Available → Updating → Restarting")
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                trigger_dialog_btn,
+            ]
+            .spacing(10),
+            ui,
+        );
+
         column![
             header,
             colors_card,
@@ -1480,6 +1688,8 @@ impl Settings {
             cards_card,
             badges_card,
             controls_card,
+            toasts_card,
+            dialogs_card,
         ]
         .spacing(12)
         .width(Length::Fill)

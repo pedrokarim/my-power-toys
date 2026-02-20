@@ -1,7 +1,7 @@
 use egui::{self, RichText, Shadow};
 
 use crate::CommandPaletteConfig;
-use crate::gui::theme;
+use crate::gui::{icons, theme};
 use crate::providers::{PaletteResult, ResultAction, ResultIcon, SystemCmd};
 use crate::search::SearchEngine;
 
@@ -10,8 +10,10 @@ struct PaletteApp {
     results: Vec<PaletteResult>,
     selected_index: usize,
     engine: SearchEngine,
+    icon_cache: icons::IconCache,
     should_close: bool,
-    first_frame: bool,
+    frame_count: u32,
+    had_focus: bool,
 }
 
 impl PaletteApp {
@@ -24,8 +26,10 @@ impl PaletteApp {
             results: Vec::new(),
             selected_index: 0,
             engine,
+            icon_cache: icons::IconCache::new(),
             should_close: false,
-            first_frame: true,
+            frame_count: 0,
+            had_focus: false,
         }
     }
 
@@ -66,9 +70,9 @@ impl PaletteApp {
 
     fn draw_results(&mut self, ui: &mut egui::Ui) {
         let visible_count = self.results.len().min(theme::MAX_VISIBLE_RESULTS);
+        let ctx = ui.ctx().clone();
 
         for i in 0..visible_count {
-            let result = &self.results[i];
             let is_selected = i == self.selected_index;
 
             let bg_color = if is_selected {
@@ -85,23 +89,34 @@ impl PaletteApp {
                 .show(ui, |ui| {
                     ui.set_min_height(theme::RESULT_ROW_HEIGHT - 12.0);
                     ui.horizontal(|ui| {
-                        // Icon
-                        let icon_text = icon_char(&result.icon);
-                        ui.label(
-                            RichText::new(icon_text)
-                                .size(theme::FONT_ICON)
-                                .color(theme::ACCENT),
-                        );
+                        // Icon — try loading real app icon, fall back to text
+                        let mut icon_drawn = false;
+                        if let ResultIcon::Named(name) = &self.results[i].icon {
+                            if let Some(source) = self.icon_cache.get(&ctx, name) {
+                                ui.add(
+                                    egui::Image::new(source)
+                                        .fit_to_exact_size(icons::icon_size()),
+                                );
+                                icon_drawn = true;
+                            }
+                        }
+                        if !icon_drawn {
+                            ui.label(
+                                RichText::new(icon_char(&self.results[i].icon))
+                                    .size(theme::FONT_ICON)
+                                    .color(theme::ACCENT),
+                            );
+                        }
                         ui.add_space(10.0);
 
                         // Title + subtitle
                         ui.vertical(|ui| {
                             ui.label(
-                                RichText::new(&result.title)
+                                RichText::new(&self.results[i].title)
                                     .size(theme::FONT_TITLE)
                                     .color(theme::TEXT_PRIMARY),
                             );
-                            if let Some(ref sub) = result.subtitle {
+                            if let Some(ref sub) = self.results[i].subtitle {
                                 ui.label(
                                     RichText::new(sub)
                                         .size(theme::FONT_SUBTITLE)
@@ -113,7 +128,7 @@ impl PaletteApp {
                         // Provider tag (right side)
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             ui.label(
-                                RichText::new(result.provider_tag)
+                                RichText::new(self.results[i].provider_tag)
                                     .size(theme::FONT_TAG)
                                     .color(theme::TEXT_TAG),
                             );
@@ -125,9 +140,8 @@ impl PaletteApp {
             // Handle click on result row
             if resp.interact(egui::Sense::click()).clicked() {
                 self.selected_index = i;
-                let result = &self.results[i];
-                self.engine.record_activation(result);
-                execute_action(&result.action);
+                self.engine.record_activation(&self.results[i]);
+                execute_action(&self.results[i].action);
                 self.should_close = true;
             }
         }
@@ -135,14 +149,22 @@ impl PaletteApp {
 }
 
 impl eframe::App for PaletteApp {
+    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
+        [0.0, 0.0, 0.0, 0.0] // fully transparent so rounded corners are visible
+    }
+
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // First frame: center on screen
-        if self.first_frame {
-            let screen = ctx.screen_rect();
-            let x = (screen.width() - theme::WINDOW_WIDTH) / 2.0;
-            let y = screen.height() * 0.25;
-            ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition([x, y].into()));
-            self.first_frame = false;
+        self.frame_count = self.frame_count.saturating_add(1);
+
+        // Center on screen once monitor size is available
+        if self.frame_count <= 5 {
+            if let Some(monitor) = ctx.input(|i| i.viewport().monitor_size) {
+                let x = (monitor.x - theme::WINDOW_WIDTH) / 2.0;
+                let y = monitor.y * 0.25;
+                ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition(
+                    [x, y].into(),
+                ));
+            }
         }
 
         // Key handling
@@ -171,24 +193,22 @@ impl eframe::App for PaletteApp {
             self.should_close = true;
         }
 
-        // Close on focus loss
+        // Close on focus loss (only after window has gained focus at least once)
         let has_focus = ctx.input(|i| i.focused);
-        if !has_focus && !self.first_frame {
+        if has_focus {
+            self.had_focus = true;
+        }
+        if !has_focus && self.had_focus {
             self.should_close = true;
         }
 
-        // Main panel
+        // Main panel — glassmorphism style
         egui::CentralPanel::default()
             .frame(
                 egui::Frame::NONE
                     .fill(theme::BG_PRIMARY)
                     .corner_radius(theme::CORNER_RADIUS)
-                    .shadow(Shadow {
-                        spread: 8,
-                        blur: 20,
-                        color: egui::Color32::from_black_alpha(100),
-                        offset: [0, 4],
-                    }),
+                    .stroke(egui::Stroke::new(1.0, theme::BORDER)),
             )
             .show(ctx, |ui| {
                 self.draw_search_bar(ui);
@@ -206,14 +226,40 @@ impl eframe::App for PaletteApp {
                     ui.add_space(2.0);
 
                     self.draw_results(ui);
+                } else if !self.query.is_empty() {
+                    // Thin separator
+                    ui.painter().rect_filled(
+                        egui::Rect::from_min_size(
+                            egui::pos2(theme::INNER_PADDING, ui.cursor().min.y),
+                            egui::vec2(theme::WINDOW_WIDTH - theme::INNER_PADDING * 2.0, 1.0),
+                        ),
+                        0.0,
+                        theme::SEPARATOR,
+                    );
+                    ui.add_space(2.0);
+
+                    let frame = egui::Frame::NONE
+                        .inner_margin(egui::Margin::symmetric(theme::INNER_PADDING as i8, 12));
+                    frame.show(ui, |ui| {
+                        ui.centered_and_justified(|ui| {
+                            ui.label(
+                                RichText::new("No matching results")
+                                    .size(theme::FONT_TITLE)
+                                    .color(theme::TEXT_HINT),
+                            );
+                        });
+                    });
                 }
             });
 
         // Dynamic window resize
         let result_count = self.results.len().min(theme::MAX_VISIBLE_RESULTS);
+        let no_results = self.results.is_empty() && !self.query.is_empty();
         let target_height = theme::SEARCH_BAR_HEIGHT
             + if result_count > 0 {
                 4.0 + (result_count as f32 * theme::RESULT_ROW_HEIGHT) + 8.0
+            } else if no_results {
+                4.0 + theme::RESULT_ROW_HEIGHT + 8.0
             } else {
                 0.0
             };
@@ -254,11 +300,12 @@ pub fn run_palette(config: CommandPaletteConfig) {
 
 fn setup_visuals(ctx: &egui::Context) {
     let mut visuals = egui::Visuals::dark();
-    visuals.window_fill = theme::BG_PRIMARY;
-    visuals.panel_fill = theme::BG_PRIMARY;
+    // Transparent panel so the Frame's rounded fill is the only visible background
+    visuals.window_fill = egui::Color32::TRANSPARENT;
+    visuals.panel_fill = egui::Color32::TRANSPARENT;
     visuals.window_shadow = Shadow::NONE;
     visuals.window_stroke = egui::Stroke::NONE;
-    visuals.widgets.noninteractive.bg_fill = theme::BG_PRIMARY;
+    visuals.widgets.noninteractive.bg_fill = egui::Color32::TRANSPARENT;
     ctx.set_visuals(visuals);
 }
 

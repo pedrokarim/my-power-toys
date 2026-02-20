@@ -125,7 +125,7 @@ pub struct Tr {
     pub repo: &'static str,
     pub prog_lang: &'static str,
 
-    // Design System (Tests page only)
+    // Design System
     pub design_system: &'static str,
     pub ds_colors: &'static str,
     pub ds_typography: &'static str,
@@ -134,6 +134,11 @@ pub struct Tr {
     pub ds_badges: &'static str,
     pub ds_inputs: &'static str,
     pub ds_sample_label: &'static str,
+    pub ds_toasts: &'static str,
+    pub ds_dialogs: &'static str,
+    pub ds_demo_toast_success: &'static str,
+    pub ds_demo_toast_error: &'static str,
+    pub ds_trigger_btn: &'static str,
 
     // Module settings labels
     pub ms_no_settings: &'static str,

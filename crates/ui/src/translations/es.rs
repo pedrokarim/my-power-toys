@@ -111,6 +111,11 @@ pub(super) static ES: Tr = Tr {
     ds_badges: "Insignias",
     ds_inputs: "Controles",
     ds_sample_label: "Ejemplo de etiqueta",
+    ds_toasts: "Toasts",
+    ds_dialogs: "Diálogos",
+    ds_demo_toast_success: "Esta es una notificación de éxito de demostración.",
+    ds_demo_toast_error: "Esta es una notificación de error de demostración.",
+    ds_trigger_btn: "Activar",
 
     ms_no_settings: "No hay ajustes configurables para este módulo.",
     ms_format: "Formato",

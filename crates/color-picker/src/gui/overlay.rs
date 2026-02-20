@@ -331,11 +331,38 @@ pub fn run_overlay(screenshot: RgbaImage) -> Option<Color> {
     let result = Arc::new(Mutex::new(None));
     let result_clone = result.clone();
 
+    let img_w = screenshot.width() as f32;
+    let img_h = screenshot.height() as f32;
+    let on_x11 = std::env::var("WAYLAND_DISPLAY").is_err() && std::env::var("DISPLAY").is_ok();
+
+    // On X11, spawn a helper thread that sets override_redirect on our window
+    // so it can span all monitors (the WM normally constrains to one).
+    if on_x11 {
+        let w = screenshot.width();
+        let h = screenshot.height();
+        std::thread::spawn(move || {
+            x11_configure_overlay(w, h);
+        });
+    }
+
     let native_options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_fullscreen(true)
-            .with_decorations(false)
-            .with_always_on_top(),
+        viewport: if on_x11 {
+            // On X11: borderless window sized to the full virtual desktop.
+            // The override_redirect thread will ensure the WM doesn't constrain it.
+            egui::ViewportBuilder::default()
+                .with_decorations(false)
+                .with_always_on_top()
+                .with_position(egui::pos2(0.0, 0.0))
+                .with_inner_size(egui::vec2(img_w, img_h))
+                .with_resizable(false)
+        } else {
+            // On Wayland: fullscreen on the current monitor.
+            // The screenshot is already cropped to the active monitor.
+            egui::ViewportBuilder::default()
+                .with_fullscreen(true)
+                .with_decorations(false)
+                .with_always_on_top()
+        },
         ..Default::default()
     };
 
@@ -346,4 +373,59 @@ pub fn run_overlay(screenshot: RgbaImage) -> Option<Color> {
     );
 
     result.lock().unwrap().take()
+}
+
+/// On X11, find our overlay window and set override_redirect so it can span
+/// all monitors without being constrained by the window manager.
+fn x11_configure_overlay(width: u32, height: u32) {
+    use std::process::Command;
+    use std::thread;
+    use std::time::Duration;
+
+    for _ in 0..100 {
+        thread::sleep(Duration::from_millis(30));
+
+        let Ok(output) = Command::new("xdotool")
+            .args(["search", "--name", "Color Picker"])
+            .output()
+        else {
+            return; // xdotool not available, skip
+        };
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let Some(wid) = stdout.lines().last() else {
+            continue;
+        };
+        let wid = wid.trim();
+        if wid.is_empty() {
+            continue;
+        }
+
+        // Set override_redirect to bypass WM per-monitor constraints
+        let _ = Command::new("xdotool")
+            .args(["set_window", "--overrideredirect", "1", wid])
+            .status();
+
+        // Resize to span all monitors
+        let _ = Command::new("xdotool")
+            .args([
+                "windowsize",
+                wid,
+                &width.to_string(),
+                &height.to_string(),
+            ])
+            .status();
+
+        // Position at top-left of virtual desktop
+        let _ = Command::new("xdotool")
+            .args(["windowmove", wid, "0", "0"])
+            .status();
+
+        // Raise and give focus so we receive keyboard/mouse input
+        let _ = Command::new("xdotool")
+            .args(["windowactivate", "--sync", wid])
+            .status();
+
+        return;
+    }
 }

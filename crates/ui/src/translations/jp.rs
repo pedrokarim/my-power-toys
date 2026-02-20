@@ -111,6 +111,11 @@ pub(super) static JP: Tr = Tr {
     ds_badges: "バッジ",
     ds_inputs: "コントロール",
     ds_sample_label: "サンプルラベル",
+    ds_toasts: "トースト",
+    ds_dialogs: "ダイアログ",
+    ds_demo_toast_success: "これはデモの成功トースト通知です。",
+    ds_demo_toast_error: "これはデモのエラートースト通知です。",
+    ds_trigger_btn: "実行",
 
     ms_no_settings: "このモジュールには設定項目がありません。",
     ms_format: "フォーマット",

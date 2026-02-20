@@ -143,7 +143,7 @@ impl Color {
             .collect()
     }
 
-    fn from_hsl(h: f64, s: f64, l: f64) -> Self {
+    pub fn from_hsl(h: f64, s: f64, l: f64) -> Self {
         if s.abs() < f64::EPSILON {
             let v = (l * 255.0).round() as u8;
             return Self::new(v, v, v);

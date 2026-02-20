@@ -75,6 +75,13 @@ enum UpdateState {
     Error(String),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum DemoDialogPhase {
+    Available,
+    Updating,
+    Restarting,
+}
+
 struct Settings {
     modules: Vec<ModuleInfo>,
     page: Page,
@@ -104,6 +111,9 @@ struct Settings {
     update_dialog_open: bool,
     update_progress: f32,
     module_configs: module_settings::ModuleConfigs,
+    demo_dialog_open: bool,
+    demo_dialog_phase: DemoDialogPhase,
+    demo_dialog_progress: f32,
 }
 
 // ── Update ──────────────────────────────────────────────────────────────────
@@ -140,6 +150,9 @@ impl Settings {
                 update_dialog_open: false,
                 update_progress: 0.0,
                 module_configs: module_settings::ModuleConfigs::load_all(),
+                demo_dialog_open: false,
+                demo_dialog_phase: DemoDialogPhase::Available,
+                demo_dialog_progress: 0.0,
             },
             Task::perform(daemon::poll_daemon(), Message::DaemonState),
         )
@@ -457,6 +470,12 @@ impl Settings {
                 if self.update_progress > 2.0 {
                     self.update_progress = 0.0;
                 }
+                if self.demo_dialog_open {
+                    self.demo_dialog_progress += 0.02;
+                    if self.demo_dialog_progress > 2.0 {
+                        self.demo_dialog_progress = 0.0;
+                    }
+                }
             }
             Message::RestartApp => {
                 if let Ok(exe) = std::env::current_exe() {
@@ -545,6 +564,54 @@ impl Settings {
                 self.module_configs.peek.max_dir_entries = n;
                 self.module_configs.save("peek");
             }
+            Message::DemoToast(kind) => {
+                let tr = translations::get(self.language);
+                match kind {
+                    ToastKind::Success => {
+                        self.queue_toast(
+                            ToastKind::Success,
+                            tr.toast_success_title,
+                            tr.ds_demo_toast_success,
+                        );
+                    }
+                    ToastKind::Error => {
+                        self.queue_toast(
+                            ToastKind::Error,
+                            tr.toast_error_title,
+                            tr.ds_demo_toast_error,
+                        );
+                    }
+                }
+            }
+            Message::OpenDemoDialog => {
+                self.demo_dialog_open = true;
+                self.demo_dialog_phase = DemoDialogPhase::Available;
+                self.demo_dialog_progress = 0.0;
+            }
+            Message::CloseDemoDialog => {
+                self.demo_dialog_open = false;
+            }
+            Message::DemoDialogConfirm => match self.demo_dialog_phase {
+                DemoDialogPhase::Available => {
+                    self.demo_dialog_phase = DemoDialogPhase::Updating;
+                    self.demo_dialog_progress = 0.0;
+                    return Task::perform(
+                        async { tokio::time::sleep(Duration::from_millis(3000)).await },
+                        |_| Message::DemoDialogConfirm,
+                    );
+                }
+                DemoDialogPhase::Updating => {
+                    self.demo_dialog_phase = DemoDialogPhase::Restarting;
+                    self.demo_dialog_progress = 0.0;
+                    return Task::perform(
+                        async { tokio::time::sleep(Duration::from_millis(2000)).await },
+                        |_| Message::CloseDemoDialog,
+                    );
+                }
+                DemoDialogPhase::Restarting => {
+                    self.demo_dialog_open = false;
+                }
+            },
         }
         Task::none()
     }
@@ -561,10 +628,15 @@ impl Settings {
         if self.hotkey_test_active && self.hotkey_test_rx.is_some() {
             subs.push(time::every(Duration::from_millis(20)).map(|_| Message::PollKeyboardEvents));
         }
-        if matches!(
+        let needs_progress_tick = matches!(
             self.update_state,
             UpdateState::Updating { .. } | UpdateState::Restarting { .. }
-        ) {
+        ) || (self.demo_dialog_open
+            && matches!(
+                self.demo_dialog_phase,
+                DemoDialogPhase::Updating | DemoDialogPhase::Restarting
+            ));
+        if needs_progress_tick {
             let cadence = if self.reduced_motion { 100 } else { 50 };
             subs.push(
                 time::every(Duration::from_millis(cadence)).map(|_| Message::UpdateProgressTick),

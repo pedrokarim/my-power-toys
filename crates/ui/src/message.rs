@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use crate::translations::Language;
-use crate::types::{FontSize, Page, ThemeMode, VisualTheme};
+use crate::types::{FontSize, Page, ThemeMode, ToastKind, VisualTheme};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -55,6 +55,10 @@ pub enum Message {
     SetFancyZonesGap(u32),
     SetPeekPreviewLines(usize),
     SetPeekDirEntries(usize),
+    DemoToast(ToastKind),
+    OpenDemoDialog,
+    CloseDemoDialog,
+    DemoDialogConfirm,
 }
 
 #[derive(Debug, Clone)]

@@ -516,6 +516,26 @@ impl Settings {
                 self.module_configs.color_picker.format = fmt;
                 self.module_configs.save("color-picker");
             }
+            Message::SetColorPickerBehavior(behavior) => {
+                self.module_configs.color_picker.behavior = behavior;
+                self.module_configs.save("color-picker");
+            }
+            Message::ToggleColorPickerShowName(v) => {
+                self.module_configs.color_picker.show_color_name = v;
+                self.module_configs.save("color-picker");
+            }
+            Message::ToggleColorFormat(id, enabled) => {
+                if let Some(entry) = self
+                    .module_configs
+                    .color_picker
+                    .formats
+                    .iter_mut()
+                    .find(|e| e.id == id)
+                {
+                    entry.enabled = enabled;
+                }
+                self.module_configs.save("color-picker");
+            }
             Message::SetTextExtractorLang(lang) => {
                 self.module_configs.text_extractor.language = lang;
                 self.module_configs.save("text-extractor");

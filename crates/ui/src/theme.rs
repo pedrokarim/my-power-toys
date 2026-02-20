@@ -312,6 +312,23 @@ pub fn kbd(hc: bool, glass: bool) -> impl Fn(&Theme) -> container::Style {
     }
 }
 
+/// Keyboard shortcut key badge (blue, like PowerToys).
+pub fn kbd_key() -> impl Fn(&Theme) -> container::Style {
+    move |theme| {
+        let palette = theme.extended_palette();
+        container::Style {
+            background: Some(palette.primary.base.color.into()),
+            border: Border {
+                radius: 6.0.into(),
+                color: palette.primary.strong.color,
+                width: 0.0,
+            },
+            shadow: NO_SHADOW,
+            text_color: None,
+        }
+    }
+}
+
 /// Key cap indicator for the hotkey test. Active = blue, inactive = dim.
 pub fn key_cap(active: bool) -> impl Fn(&Theme) -> container::Style {
     move |theme| {

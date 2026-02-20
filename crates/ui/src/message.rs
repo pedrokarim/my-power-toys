@@ -43,6 +43,9 @@ pub enum Message {
     StartDaemonResult(Result<(), String>),
     // Module settings
     SetColorPickerFormat(String),
+    SetColorPickerBehavior(String),
+    ToggleColorPickerShowName(bool),
+    ToggleColorFormat(String, bool),
     SetTextExtractorLang(String),
     SetImageResizerPreset(String),
     SetImageResizerFormat(String),

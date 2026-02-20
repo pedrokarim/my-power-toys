@@ -2557,13 +2557,109 @@ impl Settings {
 
     fn settings_color_picker<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
         let cfg = &self.module_configs.color_picker;
+
+        // Example color for format previews (moccasin / ffe4b5)
+        let examples: &[(&str, &str)] = &[
+            ("hex", "#FFE4B5"),
+            ("rgb", "rgb(255, 228, 181)"),
+            ("hsl", "hsl(38, 100%, 85%)"),
+            ("hsv", "hsv(38, 29%, 100%)"),
+            ("cmyk", "cmyk(0%, 11%, 29%, 0%)"),
+        ];
+
+        // Build format rows
+        let mut format_rows = column![
+            text(tr.ms_cp_formats)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(ui.heading()),
+            text(tr.ms_cp_formats_desc)
+                .size(ui.sz(12.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+        ]
+        .spacing(8);
+
+        for entry in &cfg.formats {
+            let example = examples
+                .iter()
+                .find(|(id, _)| *id == entry.id)
+                .map(|(_, ex)| *ex)
+                .unwrap_or("");
+            let id = entry.id.clone();
+            let enabled = entry.enabled;
+            let fmt_row: Element<'a, Message> = container(
+                row![
+                    column![
+                        text(entry.label.clone())
+                            .size(ui.sz(14.0))
+                            .font(ui.font()),
+                        text(example.to_string())
+                            .size(ui.sz(12.0))
+                            .font(ui.font())
+                            .color(theme::subtext0(ui.dark)),
+                    ]
+                    .spacing(2)
+                    .width(Length::Fill),
+                    toggler(enabled)
+                        .on_toggle(move |v| Message::ToggleColorFormat(id.clone(), v))
+                        .size(ui.sz(22.0)),
+                ]
+                .spacing(12)
+                .align_y(Alignment::Center),
+            )
+            .padding(Padding::from([8.0, 12.0]))
+            .style(theme::card(ui.contrast, ui.glass))
+            .into();
+            format_rows = format_rows.push(fmt_row);
+        }
+
         column![
             text(tr.module_settings)
                 .size(ui.sz(16.0))
                 .font(bold())
                 .color(ui.heading()),
-            text(tr.ms_format)
-                .size(ui.sz(13.0))
+            // Activation behavior
+            text(tr.ms_cp_behavior)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(ui.heading()),
+            text(tr.ms_cp_behavior_desc)
+                .size(ui.sz(12.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        tr.ms_cp_open_editor,
+                        cfg.behavior == "editor-only",
+                        Message::SetColorPickerBehavior("editor-only".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_cp_pick_first,
+                        cfg.behavior == "pick-and-close",
+                        Message::SetColorPickerBehavior("pick-and-close".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_cp_pick_and_edit,
+                        cfg.behavior == "pick-and-edit",
+                        Message::SetColorPickerBehavior("pick-and-edit".into()),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+            Space::with_height(8),
+            // Default color format
+            text(tr.ms_cp_default_format)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(ui.heading()),
+            text(tr.ms_cp_default_format_desc)
+                .size(ui.sz(12.0))
                 .font(ui.font())
                 .color(theme::subtext0(ui.dark)),
             container(
@@ -2586,10 +2682,34 @@ impl Settings {
                         Message::SetColorPickerFormat("hsl".into()),
                         ui
                     ),
+                    seg_button(
+                        "HSV",
+                        cfg.format == "hsv",
+                        Message::SetColorPickerFormat("hsv".into()),
+                        ui
+                    ),
+                    seg_button(
+                        "CMYK",
+                        cfg.format == "cmyk",
+                        Message::SetColorPickerFormat("cmyk".into()),
+                        ui
+                    ),
                 ]
                 .spacing(2),
             )
             .style(theme::segmented_control),
+            Space::with_height(8),
+            // Show color name
+            pref_toggle(
+                tr.ms_cp_show_name,
+                tr.ms_cp_show_name_desc,
+                cfg.show_color_name,
+                Message::ToggleColorPickerShowName,
+                ui
+            ),
+            Space::with_height(8),
+            // Color formats list
+            format_rows,
         ]
         .spacing(8)
         .into()

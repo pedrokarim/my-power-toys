@@ -16,6 +16,7 @@ pub enum ColorFormat {
     Rgb,
     Hsl,
     Hsv,
+    Cmyk,
 }
 
 impl Color {
@@ -46,6 +47,10 @@ impl Color {
             ColorFormat::Hsv => {
                 let (h, s, v) = self.to_hsv();
                 format!("hsv({h}, {s}%, {v}%)")
+            }
+            ColorFormat::Cmyk => {
+                let (c, m, y, k) = self.to_cmyk();
+                format!("cmyk({c}%, {m}%, {y}%, {k}%)")
             }
         }
     }
@@ -119,6 +124,27 @@ impl Color {
         };
 
         ((h * 60.0) as u16, (s * 100.0) as u8, (v * 100.0) as u8)
+    }
+
+    pub fn to_cmyk(self) -> (u8, u8, u8, u8) {
+        let r = self.r as f64 / 255.0;
+        let g = self.g as f64 / 255.0;
+        let b = self.b as f64 / 255.0;
+
+        let k = 1.0 - r.max(g).max(b);
+        if (1.0 - k).abs() < f64::EPSILON {
+            return (0, 0, 0, 100);
+        }
+        let c = (1.0 - r - k) / (1.0 - k);
+        let m = (1.0 - g - k) / (1.0 - k);
+        let y = (1.0 - b - k) / (1.0 - k);
+
+        (
+            (c * 100.0).round() as u8,
+            (m * 100.0).round() as u8,
+            (y * 100.0).round() as u8,
+            (k * 100.0).round() as u8,
+        )
     }
 
     /// Generate `count` shade variations from light to dark.
@@ -291,5 +317,23 @@ mod tests {
     fn shades_one() {
         let c = Color::new(128, 128, 128);
         assert_eq!(c.shades(1).len(), 1);
+    }
+
+    #[test]
+    fn cmyk_format() {
+        let c = Color::new(255, 0, 0);
+        assert_eq!(c.format(ColorFormat::Cmyk), "cmyk(0%, 100%, 100%, 0%)");
+    }
+
+    #[test]
+    fn cmyk_black() {
+        let c = Color::new(0, 0, 0);
+        assert_eq!(c.format(ColorFormat::Cmyk), "cmyk(0%, 0%, 0%, 100%)");
+    }
+
+    #[test]
+    fn cmyk_white() {
+        let c = Color::new(255, 255, 255);
+        assert_eq!(c.format(ColorFormat::Cmyk), "cmyk(0%, 0%, 0%, 0%)");
     }
 }

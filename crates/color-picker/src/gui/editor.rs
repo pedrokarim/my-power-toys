@@ -14,6 +14,7 @@ struct EditorApp {
     rgb_text: String,
     hsl_text: String,
     hsv_text: String,
+    cmyk_text: String,
     frame_count: u32,
     copied_feedback: Option<(ColorFormat, Instant)>,
 }
@@ -28,6 +29,7 @@ impl EditorApp {
             rgb_text: String::new(),
             hsl_text: String::new(),
             hsv_text: String::new(),
+            cmyk_text: String::new(),
             frame_count: 0,
             copied_feedback: None,
         };
@@ -42,6 +44,7 @@ impl EditorApp {
         self.rgb_text = color.format(ColorFormat::Rgb);
         self.hsl_text = color.format(ColorFormat::Hsl);
         self.hsv_text = color.format(ColorFormat::Hsv);
+        self.cmyk_text = color.format(ColorFormat::Cmyk);
     }
 
     fn draw_header(&mut self, ui: &mut egui::Ui) {
@@ -424,6 +427,7 @@ impl eframe::App for EditorApp {
                                 let rgb = self.rgb_text.clone();
                                 let hsl = self.hsl_text.clone();
                                 let hsv = self.hsv_text.clone();
+                                let cmyk = self.cmyk_text.clone();
 
                                 self.draw_format_card(ui, ColorFormat::Hex, "HEX", &hex);
                                 ui.add_space(8.0);
@@ -432,6 +436,8 @@ impl eframe::App for EditorApp {
                                 self.draw_format_card(ui, ColorFormat::Hsl, "HSL", &hsl);
                                 ui.add_space(8.0);
                                 self.draw_format_card(ui, ColorFormat::Hsv, "HSV", &hsv);
+                                ui.add_space(8.0);
+                                self.draw_format_card(ui, ColorFormat::Cmyk, "CMYK", &cmyk);
                             });
                         });
                     });

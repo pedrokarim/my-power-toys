@@ -142,7 +142,17 @@ pub struct Tr {
 
     // Module settings labels
     pub ms_no_settings: &'static str,
-    pub ms_format: &'static str,
+    pub ms_cp_behavior: &'static str,
+    pub ms_cp_behavior_desc: &'static str,
+    pub ms_cp_open_editor: &'static str,
+    pub ms_cp_pick_first: &'static str,
+    pub ms_cp_pick_and_edit: &'static str,
+    pub ms_cp_default_format: &'static str,
+    pub ms_cp_default_format_desc: &'static str,
+    pub ms_cp_show_name: &'static str,
+    pub ms_cp_show_name_desc: &'static str,
+    pub ms_cp_formats: &'static str,
+    pub ms_cp_formats_desc: &'static str,
     pub ms_ocr_language: &'static str,
     pub ms_preset: &'static str,
     pub ms_output_format: &'static str,

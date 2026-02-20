@@ -38,15 +38,25 @@ pub fn stat_card<'a>(label: &str, value: &str, accent: Color, ui: Ui) -> Element
 }
 
 pub fn kbd<'a>(key: &str, ui: Ui) -> Element<'a, Message> {
-    container(
-        text(key.to_string())
-            .size(ui.sz(12.0))
-            .font(ui.font())
-            .color(theme::subtext1(ui.dark)),
-    )
-    .padding(Padding::from([4.0, 10.0]))
-    .style(theme::kbd(ui.contrast, ui.glass))
-    .into()
+    let parts: Vec<&str> = key.split('+').collect();
+    let mut r = row![].spacing(4).align_y(Alignment::Center);
+    for part in parts {
+        let label = match part.trim() {
+            "Super" => "\u{2318}",
+            other => other,
+        };
+        let badge: Element<'a, Message> = container(
+            text(label.to_string())
+                .size(ui.sz(12.0))
+                .font(ui.font())
+                .color(Color::WHITE),
+        )
+        .padding(Padding::from([6.0, 12.0]))
+        .style(theme::kbd_key())
+        .into();
+        r = r.push(badge);
+    }
+    r.into()
 }
 
 pub fn icon_badge<'a>(icon: Bootstrap, accent: Color, size: f32) -> Element<'a, Message> {
@@ -129,14 +139,13 @@ pub fn key_cap<'a>(label: &str, active: bool, ui: Ui) -> Element<'a, Message> {
 }
 
 pub fn seg_button(label: &str, active: bool, msg: Message, ui: Ui) -> Element<'static, Message> {
-    let h = ui.sz(11.0) + 10.0; // text size + vertical breathing room
     button(
-        container(text(label.to_string()).size(ui.sz(11.0)).font(ui.font()))
-            .center_y(h)
-            .center_x(Length::Shrink),
+        text(label.to_string())
+            .size(ui.sz(12.0))
+            .font(ui.font()),
     )
     .on_press(msg)
-    .padding(Padding::from([0.0, 10.0]))
+    .padding(Padding::from([8.0, 20.0]))
     .style(theme::seg_button(active))
     .into()
 }

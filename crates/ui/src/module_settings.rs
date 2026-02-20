@@ -4,11 +4,32 @@ use serde::{Deserialize, Serialize};
 // ── Color Picker ─────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ColorFormatEntry {
+    pub id: String,
+    pub label: String,
+    pub enabled: bool,
+}
+
+fn default_formats() -> Vec<ColorFormatEntry> {
+    vec![
+        ColorFormatEntry { id: "hex".into(), label: "HEX".into(), enabled: true },
+        ColorFormatEntry { id: "rgb".into(), label: "RGB".into(), enabled: true },
+        ColorFormatEntry { id: "hsl".into(), label: "HSL".into(), enabled: true },
+        ColorFormatEntry { id: "hsv".into(), label: "HSV".into(), enabled: true },
+        ColorFormatEntry { id: "cmyk".into(), label: "CMYK".into(), enabled: true },
+    ]
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ColorPickerConf {
     #[serde(default = "default_hex")]
     pub format: String,
     #[serde(default = "default_pick_and_edit")]
     pub behavior: String,
+    #[serde(default = "default_true_cp")]
+    pub show_color_name: bool,
+    #[serde(default = "default_formats")]
+    pub formats: Vec<ColorFormatEntry>,
 }
 
 fn default_hex() -> String {
@@ -19,11 +40,17 @@ fn default_pick_and_edit() -> String {
     "pick-and-edit".into()
 }
 
+fn default_true_cp() -> bool {
+    true
+}
+
 impl Default for ColorPickerConf {
     fn default() -> Self {
         Self {
             format: default_hex(),
             behavior: default_pick_and_edit(),
+            show_color_name: true,
+            formats: default_formats(),
         }
     }
 }

@@ -169,6 +169,27 @@ pub struct Tr {
     pub ms_zone_gap: &'static str,
     pub ms_preview_lines: &'static str,
     pub ms_dir_entries: &'static str,
+
+    // Light Switch
+    pub ms_ls_schedule: &'static str,
+    pub ms_ls_schedule_desc: &'static str,
+    pub ms_ls_off: &'static str,
+    pub ms_ls_sunset_sunrise: &'static str,
+    pub ms_ls_fixed: &'static str,
+    pub ms_ls_location: &'static str,
+    pub ms_ls_location_desc: &'static str,
+    pub ms_ls_latitude: &'static str,
+    pub ms_ls_longitude: &'static str,
+    pub ms_ls_sunrise_offset: &'static str,
+    pub ms_ls_sunset_offset: &'static str,
+    pub ms_ls_dark_time: &'static str,
+    pub ms_ls_light_time: &'static str,
+    pub ms_ls_behavior: &'static str,
+    pub ms_ls_behavior_desc: &'static str,
+    pub ms_ls_apply_system: &'static str,
+    pub ms_ls_apply_system_desc: &'static str,
+    pub ms_ls_apply_apps: &'static str,
+    pub ms_ls_apply_apps_desc: &'static str,
 }
 
 pub fn get(lang: Language) -> &'static Tr {

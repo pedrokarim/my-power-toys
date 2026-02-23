@@ -890,6 +890,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "chrono"
+version = "0.4.43"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fac4744fb15ae8337dc853fee7fb3f4e48c0fbaa23d0afe49c447b4fab126118"
+dependencies = [
+ "iana-time-zone",
+ "js-sys",
+ "num-traits",
+ "wasm-bindgen",
+ "windows-link",
+]
+
+[[package]]
 name = "clap"
 version = "2.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2606,6 +2619,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "iana-time-zone"
+version = "0.1.65"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e31bc9ad994ba00e440a8aa5c9ef0ec67d5cb5e5cb0cc7f8b744a35b389cc470"
+dependencies = [
+ "android_system_properties",
+ "core-foundation-sys 0.8.7",
+ "iana-time-zone-haiku",
+ "js-sys",
+ "log",
+ "wasm-bindgen",
+ "windows-core 0.58.0",
+]
+
+[[package]]
+name = "iana-time-zone-haiku"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "iced"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3557,6 +3594,7 @@ dependencies = [
  "mpt-hosts-editor",
  "mpt-image-resizer",
  "mpt-key-manager",
+ "mpt-light-switch",
  "mpt-mouse-utils",
  "mpt-paste-plain",
  "mpt-peek",
@@ -3620,6 +3658,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpt-light-switch"
+version = "0.3.19"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "mpt-common",
+ "serde",
+ "toml",
+ "tracing",
+]
+
+[[package]]
 name = "mpt-mouse-utils"
 version = "0.3.19"
 dependencies = [
@@ -3644,11 +3694,16 @@ name = "mpt-peek"
 version = "0.3.19"
 dependencies = [
  "anyhow",
+ "eframe",
+ "egui",
+ "image 0.25.9",
  "mpt-common",
+ "scopeguard",
  "serde",
  "serde_json",
  "toml",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

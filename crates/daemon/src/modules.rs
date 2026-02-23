@@ -65,6 +65,9 @@ impl ModuleRegistry {
         let palette = mpt_command_palette::CommandPalette::new();
         self.modules.insert(palette.id(), Box::new(palette));
 
+        let ls = mpt_light_switch::LightSwitch::new();
+        self.modules.insert(ls.id(), Box::new(ls));
+
         info!("Registered {} module(s)", self.modules.len());
     }
 

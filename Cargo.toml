@@ -22,6 +22,7 @@ members = [
     "crates/app-launcher",
     "crates/fancy-zones",
     "crates/command-palette",
+    "crates/light-switch",
 ]
 
 [workspace.package]

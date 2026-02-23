@@ -1,0 +1,14 @@
+[package]
+name = "mpt-light-switch"
+description = "Light Switch – toggle light/dark system theme on schedule or shortcut"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpt-common = { path = "../common" }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
+chrono = "0.4"

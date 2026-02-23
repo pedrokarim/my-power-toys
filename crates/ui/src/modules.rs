@@ -42,6 +42,15 @@ pub fn default_module_list() -> Vec<ModuleInfo> {
             running: false,
         },
         ModuleInfo {
+            id: "light-switch".into(),
+            name: "Light Switch".into(),
+            description: "Switch between light and dark mode on a schedule".into(),
+            icon: Bootstrap::BrightnessHighFill,
+            accent: theme::yellow(),
+            hotkey: Some("Super+Shift+D".into()),
+            running: false,
+        },
+        ModuleInfo {
             id: "hosts-editor".into(),
             name: "Hosts Editor".into(),
             description: "GUI editor for /etc/hosts with toggle on/off".into(),

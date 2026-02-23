@@ -2539,6 +2539,7 @@ impl Settings {
             "app-launcher" => self.settings_app_launcher(tr, ui),
             "fancy-zones" => self.settings_fancy_zones(tr, ui),
             "peek" => self.settings_peek(tr, ui),
+            "light-switch" => self.settings_light_switch(tr, ui),
             _ => column![
                 text(tr.module_settings)
                     .size(ui.sz(16.0))
@@ -3067,5 +3068,202 @@ impl Settings {
         ]
         .spacing(8)
         .into()
+    }
+
+    fn settings_light_switch<'a>(
+        &self,
+        tr: &'a translations::Tr,
+        ui: Ui,
+    ) -> Element<'a, Message> {
+        let cfg = &self.module_configs.light_switch;
+
+        let mut col = column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            // Schedule mode
+            text(tr.ms_ls_schedule)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(ui.heading()),
+            text(tr.ms_ls_schedule_desc)
+                .size(ui.sz(12.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        tr.ms_ls_off,
+                        cfg.schedule_mode == "off",
+                        Message::SetLightSwitchSchedule("off".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_ls_sunset_sunrise,
+                        cfg.schedule_mode == "sunset-sunrise",
+                        Message::SetLightSwitchSchedule("sunset-sunrise".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_ls_fixed,
+                        cfg.schedule_mode == "fixed",
+                        Message::SetLightSwitchSchedule("fixed".into()),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+            Space::with_height(8),
+        ]
+        .spacing(8);
+
+        // Location section (for sunset-sunrise mode)
+        if cfg.schedule_mode == "sunset-sunrise" {
+            let lat_str = format!("{}", cfg.latitude);
+            let lon_str = format!("{}", cfg.longitude);
+            let rise_off = format!("{}", cfg.sunrise_offset_min);
+            let set_off = format!("{}", cfg.sunset_offset_min);
+
+            col = col
+                .push(
+                    text(tr.ms_ls_location)
+                        .size(ui.sz(14.0))
+                        .font(ui.font())
+                        .color(ui.heading()),
+                )
+                .push(
+                    text(tr.ms_ls_location_desc)
+                        .size(ui.sz(12.0))
+                        .font(ui.font())
+                        .color(theme::subtext0(ui.dark)),
+                )
+                .push(
+                    row![
+                        column![
+                            text(tr.ms_ls_latitude)
+                                .size(ui.sz(12.0))
+                                .font(ui.font())
+                                .color(theme::subtext0(ui.dark)),
+                            iced::widget::text_input(tr.ms_ls_latitude, &lat_str)
+                                .on_input(Message::SetLightSwitchLatitude)
+                                .size(ui.sz(13.0))
+                                .padding(8),
+                        ]
+                        .spacing(4)
+                        .width(Length::Fill),
+                        column![
+                            text(tr.ms_ls_longitude)
+                                .size(ui.sz(12.0))
+                                .font(ui.font())
+                                .color(theme::subtext0(ui.dark)),
+                            iced::widget::text_input(tr.ms_ls_longitude, &lon_str)
+                                .on_input(Message::SetLightSwitchLongitude)
+                                .size(ui.sz(13.0))
+                                .padding(8),
+                        ]
+                        .spacing(4)
+                        .width(Length::Fill),
+                    ]
+                    .spacing(12),
+                )
+                .push(
+                    row![
+                        column![
+                            text(tr.ms_ls_sunrise_offset)
+                                .size(ui.sz(12.0))
+                                .font(ui.font())
+                                .color(theme::subtext0(ui.dark)),
+                            iced::widget::text_input("0", &rise_off)
+                                .on_input(Message::SetLightSwitchSunriseOffset)
+                                .size(ui.sz(13.0))
+                                .padding(8),
+                        ]
+                        .spacing(4)
+                        .width(Length::Fill),
+                        column![
+                            text(tr.ms_ls_sunset_offset)
+                                .size(ui.sz(12.0))
+                                .font(ui.font())
+                                .color(theme::subtext0(ui.dark)),
+                            iced::widget::text_input("0", &set_off)
+                                .on_input(Message::SetLightSwitchSunsetOffset)
+                                .size(ui.sz(13.0))
+                                .padding(8),
+                        ]
+                        .spacing(4)
+                        .width(Length::Fill),
+                    ]
+                    .spacing(12),
+                )
+                .push(Space::with_height(8));
+        }
+
+        // Fixed hours section
+        if cfg.schedule_mode == "fixed" {
+            col = col
+                .push(
+                    row![
+                        column![
+                            text(tr.ms_ls_dark_time)
+                                .size(ui.sz(12.0))
+                                .font(ui.font())
+                                .color(theme::subtext0(ui.dark)),
+                            iced::widget::text_input("20:00", &cfg.dark_mode_time)
+                                .on_input(Message::SetLightSwitchDarkTime)
+                                .size(ui.sz(13.0))
+                                .padding(8),
+                        ]
+                        .spacing(4)
+                        .width(Length::Fill),
+                        column![
+                            text(tr.ms_ls_light_time)
+                                .size(ui.sz(12.0))
+                                .font(ui.font())
+                                .color(theme::subtext0(ui.dark)),
+                            iced::widget::text_input("06:00", &cfg.light_mode_time)
+                                .on_input(Message::SetLightSwitchLightTime)
+                                .size(ui.sz(13.0))
+                                .padding(8),
+                        ]
+                        .spacing(4)
+                        .width(Length::Fill),
+                    ]
+                    .spacing(12),
+                )
+                .push(Space::with_height(8));
+        }
+
+        // Behavior section
+        col = col
+            .push(
+                text(tr.ms_ls_behavior)
+                    .size(ui.sz(14.0))
+                    .font(ui.font())
+                    .color(ui.heading()),
+            )
+            .push(
+                text(tr.ms_ls_behavior_desc)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            )
+            .push(pref_toggle(
+                tr.ms_ls_apply_system,
+                tr.ms_ls_apply_system_desc,
+                cfg.apply_system,
+                Message::ToggleLightSwitchSystem,
+                ui,
+            ))
+            .push(pref_toggle(
+                tr.ms_ls_apply_apps,
+                tr.ms_ls_apply_apps_desc,
+                cfg.apply_apps,
+                Message::ToggleLightSwitchApps,
+                ui,
+            ));
+
+        col.into()
     }
 }

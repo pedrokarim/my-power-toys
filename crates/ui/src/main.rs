@@ -584,6 +584,51 @@ impl Settings {
                 self.module_configs.peek.max_dir_entries = n;
                 self.module_configs.save("peek");
             }
+            // Light Switch
+            Message::SetLightSwitchSchedule(mode) => {
+                self.module_configs.light_switch.schedule_mode = mode;
+                self.module_configs.save("light-switch");
+            }
+            Message::SetLightSwitchLatitude(val) => {
+                if let Ok(v) = val.parse::<f64>() {
+                    self.module_configs.light_switch.latitude = v;
+                    self.module_configs.save("light-switch");
+                }
+            }
+            Message::SetLightSwitchLongitude(val) => {
+                if let Ok(v) = val.parse::<f64>() {
+                    self.module_configs.light_switch.longitude = v;
+                    self.module_configs.save("light-switch");
+                }
+            }
+            Message::SetLightSwitchSunriseOffset(val) => {
+                if let Ok(v) = val.parse::<i32>() {
+                    self.module_configs.light_switch.sunrise_offset_min = v;
+                    self.module_configs.save("light-switch");
+                }
+            }
+            Message::SetLightSwitchSunsetOffset(val) => {
+                if let Ok(v) = val.parse::<i32>() {
+                    self.module_configs.light_switch.sunset_offset_min = v;
+                    self.module_configs.save("light-switch");
+                }
+            }
+            Message::SetLightSwitchDarkTime(val) => {
+                self.module_configs.light_switch.dark_mode_time = val;
+                self.module_configs.save("light-switch");
+            }
+            Message::SetLightSwitchLightTime(val) => {
+                self.module_configs.light_switch.light_mode_time = val;
+                self.module_configs.save("light-switch");
+            }
+            Message::ToggleLightSwitchSystem(v) => {
+                self.module_configs.light_switch.apply_system = v;
+                self.module_configs.save("light-switch");
+            }
+            Message::ToggleLightSwitchApps(v) => {
+                self.module_configs.light_switch.apply_apps = v;
+                self.module_configs.save("light-switch");
+            }
             Message::DemoToast(kind) => {
                 let tr = translations::get(self.language);
                 match kind {

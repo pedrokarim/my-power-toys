@@ -493,11 +493,5 @@ pub fn run_editor(color: Color, history: ColorHistory) {
 }
 
 fn setup_visuals(ctx: &egui::Context) {
-    let mut visuals = egui::Visuals::dark();
-    visuals.window_fill = theme::BG_PRIMARY;
-    visuals.panel_fill = theme::BG_PRIMARY;
-    visuals.window_shadow = egui::Shadow::NONE;
-    visuals.window_stroke = egui::Stroke::NONE;
-    visuals.widgets.noninteractive.bg_fill = theme::BG_PRIMARY;
-    ctx.set_visuals(visuals);
+    theme::setup_visuals(ctx);
 }

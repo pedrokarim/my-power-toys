@@ -1,9 +1,12 @@
 mod resizer;
 
+#[cfg(feature = "gui")]
+pub mod gui;
+
 use anyhow::Result;
 use mpt_common::module::PowerModule;
 use serde::{Deserialize, Serialize};
-use tracing::info;
+use tracing::{info, warn};
 
 pub use resizer::{OutputFormat, ResizePreset, resize_batch, resize_image};
 
@@ -94,7 +97,37 @@ impl PowerModule for ImageResizer {
     }
 
     fn on_hotkey(&mut self) -> Result<()> {
-        info!("Image Resizer: would open resize window");
+        info!("Image Resizer: launching GUI");
+
+        let bin = find_gui_binary();
+        let result = std::process::Command::new(&bin)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn();
+
+        match result {
+            Ok(child) => {
+                info!("Image Resizer GUI spawned (pid={})", child.id());
+            }
+            Err(e) => {
+                warn!("Failed to spawn Image Resizer GUI ({bin:?}): {e}");
+            }
+        }
         Ok(())
     }
+}
+
+/// Find the mpt-image-resizer binary, looking next to the current executable first.
+fn find_gui_binary() -> std::path::PathBuf {
+    if let Ok(exe) = std::env::current_exe()
+        && let Some(dir) = exe.parent()
+    {
+        let candidate = dir.join("mpt-image-resizer");
+        if candidate.exists() {
+            return candidate;
+        }
+    }
+    // Fallback: rely on PATH
+    "mpt-image-resizer".into()
 }

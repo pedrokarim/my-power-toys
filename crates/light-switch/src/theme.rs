@@ -25,12 +25,7 @@ pub fn set_theme(dark: bool, apply_system: bool, apply_apps: bool) {
 
     if apply_system || apply_apps {
         let res = Command::new("gsettings")
-            .args([
-                "set",
-                "org.gnome.desktop.interface",
-                "color-scheme",
-                scheme,
-            ])
+            .args(["set", "org.gnome.desktop.interface", "color-scheme", scheme])
             .status();
 
         match res {

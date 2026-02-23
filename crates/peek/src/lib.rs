@@ -1,10 +1,13 @@
+pub mod file_detect;
+#[cfg(feature = "gui")]
+pub mod gui;
 pub mod preview;
 
 use anyhow::Result;
 use mpt_common::hotkey::{Hotkey, Modifier};
 use mpt_common::module::PowerModule;
 use serde::{Deserialize, Serialize};
-use tracing::info;
+use tracing::{info, warn};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PeekConfig {
@@ -91,9 +94,38 @@ impl PowerModule for Peek {
     }
 
     fn on_hotkey(&mut self) -> Result<()> {
-        info!("Peek: would open file preview for selected file");
+        info!("Peek: launching GUI");
+
+        let bin = find_gui_binary();
+        let result = std::process::Command::new(&bin)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn();
+
+        match result {
+            Ok(child) => {
+                info!("Peek GUI spawned (pid={})", child.id());
+            }
+            Err(e) => {
+                warn!("Failed to spawn Peek GUI ({bin:?}): {e}");
+            }
+        }
         Ok(())
     }
+}
+
+/// Find the mpt-peek binary, looking next to the current executable first.
+fn find_gui_binary() -> std::path::PathBuf {
+    if let Ok(exe) = std::env::current_exe()
+        && let Some(dir) = exe.parent()
+    {
+        let candidate = dir.join("mpt-peek");
+        if candidate.exists() {
+            return candidate;
+        }
+    }
+    "mpt-peek".into()
 }
 
 #[cfg(test)]

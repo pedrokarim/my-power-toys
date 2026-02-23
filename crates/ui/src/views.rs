@@ -3070,11 +3070,7 @@ impl Settings {
         .into()
     }
 
-    fn settings_light_switch<'a>(
-        &self,
-        tr: &'a translations::Tr,
-        ui: Ui,
-    ) -> Element<'a, Message> {
+    fn settings_light_switch<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
         let cfg = &self.module_configs.light_switch;
 
         let mut col = column![

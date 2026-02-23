@@ -5,7 +5,13 @@ use chrono::{Datelike, NaiveTime};
 /// Uses the NOAA solar calculator simplified algorithm.
 /// Returns `(sunrise, sunset)` as `NaiveTime` in local solar time.
 /// The caller should apply timezone offset separately.
-pub fn sunrise_sunset(year: i32, month: u32, day: u32, lat: f64, lon: f64) -> (NaiveTime, NaiveTime) {
+pub fn sunrise_sunset(
+    year: i32,
+    month: u32,
+    day: u32,
+    lat: f64,
+    lon: f64,
+) -> (NaiveTime, NaiveTime) {
     let day_of_year = chrono::NaiveDate::from_ymd_opt(year, month, day)
         .unwrap_or_else(|| chrono::NaiveDate::from_ymd_opt(year, 1, 1).unwrap())
         .ordinal() as f64;
@@ -15,7 +21,8 @@ pub fn sunrise_sunset(year: i32, month: u32, day: u32, lat: f64, lon: f64) -> (N
 
     // Equation of time (minutes)
     let eqtime = 229.18
-        * (0.000075 + 0.001868 * gamma.cos() - 0.032077 * gamma.sin()
+        * (0.000075 + 0.001868 * gamma.cos()
+            - 0.032077 * gamma.sin()
             - 0.014615 * (2.0 * gamma).cos()
             - 0.040849 * (2.0 * gamma).sin());
 
@@ -31,8 +38,7 @@ pub fn sunrise_sunset(year: i32, month: u32, day: u32, lat: f64, lon: f64) -> (N
     // Hour angle (degrees)
     // cos(90.833°) ≈ -0.01454 — the cosine of the official zenith for sunrise/sunset
     let cos_zenith: f64 = -0.01454;
-    let cos_ha = (cos_zenith - lat_rad.sin() * decl.sin())
-        / (lat_rad.cos() * decl.cos());
+    let cos_ha = (cos_zenith - lat_rad.sin() * decl.sin()) / (lat_rad.cos() * decl.cos());
 
     // Clamp for polar regions
     let cos_ha = cos_ha.clamp(-1.0, 1.0);
@@ -50,7 +56,8 @@ fn minutes_to_time(mut mins: f64) -> NaiveTime {
     mins = mins.rem_euclid(1440.0);
     let h = (mins / 60.0).floor() as u32;
     let m = (mins % 60.0).floor() as u32;
-    NaiveTime::from_hms_opt(h.min(23), m.min(59), 0).unwrap_or(NaiveTime::from_hms_opt(12, 0, 0).unwrap())
+    NaiveTime::from_hms_opt(h.min(23), m.min(59), 0)
+        .unwrap_or(NaiveTime::from_hms_opt(12, 0, 0).unwrap())
 }
 
 #[cfg(test)]

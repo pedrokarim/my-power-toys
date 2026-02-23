@@ -5,8 +5,8 @@ const GLASS: GlassTheme = GlassTheme::dark();
 
 // ── Glassmorphism backgrounds (from shared theme) ──────────────────────────
 pub const BG_PRIMARY: Color32 = GLASS.bg_primary;
-pub const BG_SELECTED: Color32 = GLASS.bg_selected;
-pub const BG_HOVER: Color32 = GLASS.bg_hover;
+pub const BG_HEADER: Color32 = GLASS.bg_header;
+pub const BG_FOOTER: Color32 = GLASS.bg_footer;
 pub const SEPARATOR: Color32 = GLASS.separator;
 pub const BORDER: Color32 = GLASS.border;
 
@@ -14,22 +14,22 @@ pub const BORDER: Color32 = GLASS.border;
 pub const TEXT_PRIMARY: Color32 = GLASS.text_primary;
 pub const TEXT_SECONDARY: Color32 = GLASS.text_secondary;
 pub const TEXT_HINT: Color32 = GLASS.text_muted;
-pub const TEXT_TAG: Color32 = Color32::from_rgb(110, 110, 130);
 
 // ── Accent (from shared theme) ─────────────────────────────────────────────
 pub const ACCENT: Color32 = GLASS.accent;
 
 // ── Module-specific dimensions ─────────────────────────────────────────────
-pub const WINDOW_WIDTH: f32 = 680.0;
-pub const SEARCH_BAR_HEIGHT: f32 = 56.0;
-pub const RESULT_ROW_HEIGHT: f32 = 48.0;
-pub const MAX_VISIBLE_RESULTS: usize = 8;
+pub const WINDOW_WIDTH: f32 = 600.0;
+pub const WINDOW_HEIGHT: f32 = 460.0;
+pub const HEADER_HEIGHT: f32 = 52.0;
+pub const FOOTER_HEIGHT: f32 = 40.0;
 pub const CORNER_RADIUS: f32 = 12.0;
 pub const INNER_PADDING: f32 = 16.0;
 
 // ── Module-specific font sizes ─────────────────────────────────────────────
-pub const FONT_SEARCH: f32 = 18.0;
-pub const FONT_TITLE: f32 = 14.0;
-pub const FONT_SUBTITLE: f32 = 11.0;
-pub const FONT_TAG: f32 = 10.0;
-pub const FONT_ICON: f32 = 20.0;
+pub const FONT_FILENAME: f32 = 15.0;
+pub const FONT_META: f32 = 11.0;
+pub const FONT_CODE: f32 = 13.0;
+pub const FONT_BODY: f32 = 13.0;
+pub const FONT_BUTTON: f32 = 12.0;
+pub const FONT_NAV: f32 = 16.0;

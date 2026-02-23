@@ -7,8 +7,8 @@ use chrono::{Datelike, Local, NaiveTime, Timelike};
 use config::LightSwitchConfig;
 use mpt_common::hotkey::{Hotkey, Modifier};
 use mpt_common::module::PowerModule;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
 use theme::SystemTheme;
@@ -55,8 +55,10 @@ impl LightSwitch {
                 now_time < sunrise || now_time >= sunset
             }
             "fixed" => {
-                let dark_time = parse_time(&self.config.dark_mode_time).unwrap_or(NaiveTime::from_hms_opt(20, 0, 0).unwrap());
-                let light_time = parse_time(&self.config.light_mode_time).unwrap_or(NaiveTime::from_hms_opt(6, 0, 0).unwrap());
+                let dark_time = parse_time(&self.config.dark_mode_time)
+                    .unwrap_or(NaiveTime::from_hms_opt(20, 0, 0).unwrap());
+                let light_time = parse_time(&self.config.light_mode_time)
+                    .unwrap_or(NaiveTime::from_hms_opt(6, 0, 0).unwrap());
                 let now_time = now.time();
 
                 if light_time < dark_time {
@@ -183,6 +185,5 @@ fn parse_time(s: &str) -> Option<NaiveTime> {
 fn offset_time(time: NaiveTime, offset_minutes: i32) -> NaiveTime {
     let total_min = time.hour() as i32 * 60 + time.minute() as i32 + offset_minutes;
     let total_min = total_min.rem_euclid(1440);
-    NaiveTime::from_hms_opt(total_min as u32 / 60, total_min as u32 % 60, 0)
-        .unwrap_or(time)
+    NaiveTime::from_hms_opt(total_min as u32 / 60, total_min as u32 % 60, 0).unwrap_or(time)
 }

@@ -1,7 +1,9 @@
 use anyhow::{Context, Result};
 use image::DynamicImage;
+use image::codecs::jpeg::JpegEncoder;
 use image::imageops::FilterType;
 use serde::{Deserialize, Serialize};
+use std::io::BufWriter;
 use std::path::{Path, PathBuf};
 use tracing::info;
 
@@ -95,12 +97,16 @@ pub fn resize_batch(
         .collect()
 }
 
-fn save_image(img: &DynamicImage, path: &Path, format: OutputFormat, _quality: u8) -> Result<()> {
+fn save_image(img: &DynamicImage, path: &Path, format: OutputFormat, quality: u8) -> Result<()> {
     match format {
         OutputFormat::Jpeg => {
-            let rgb = img.to_rgb8();
-            rgb.save(path)
-                .with_context(|| format!("failed to save {}", path.display()))?;
+            let file = std::fs::File::create(path)
+                .with_context(|| format!("failed to create {}", path.display()))?;
+            let writer = BufWriter::new(file);
+            let encoder = JpegEncoder::new_with_quality(writer, quality);
+            img.to_rgb8()
+                .write_with_encoder(encoder)
+                .with_context(|| format!("failed to encode JPEG {}", path.display()))?;
         }
         _ => {
             img.save(path)

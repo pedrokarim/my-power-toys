@@ -64,6 +64,7 @@ text, letters, words, watermark, logo artifacts, over-detailed busy scene, extre
 | `fancy-zones` | FancyZones | `fancy-zones-banner.png` | `#89B4FA` | `window tiling grid layout across desktop, snap trajectories into custom zones, structured composition` |
 | `peek` | Peek | `peek-banner.png` | `#EBA0AC` | `quick preview pane over files, eye-focus metaphor with clean preview cards for media/text/pdf` |
 | `light-switch` | Light Switch | `light-switch-banner.png` | `#F9E2AF` | `day-to-night theme transition scene, split desktop surface with light mode fading into dark mode, toggle switch metaphor with warm-to-cool color gradient, sunrise and sunset ambient cues` |
+| `quick-accent` | Quick Accent | `quick-accent-banner.png` | `#CBA6F7` | `keyboard key held down with floating accent character overlay bar, horizontal strip of accented letters hovering above a clean text editor surface, typographic precision feel, diacritical marks softly highlighted` |
 
 ## Exemple complet (Color Picker)
 

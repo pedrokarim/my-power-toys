@@ -1,0 +1,28 @@
+[package]
+name = "mpt-quick-accent"
+description = "Type accented characters by holding a base letter and pressing an activation key"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "mpt-quick-accent"
+path = "src/main.rs"
+required-features = ["gui"]
+
+[features]
+default = ["gui"]
+gui = ["dep:egui", "dep:eframe", "dep:scopeguard", "mpt-common/gui"]
+
+[dependencies]
+mpt-common = { path = "../common" }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
+x11rb = { version = "0.13", features = ["allow-unsafe-code", "xinput"] }
+xkeysym = "0.2"
+egui = { workspace = true, optional = true }
+eframe = { workspace = true, optional = true }
+scopeguard = { version = "1", optional = true }

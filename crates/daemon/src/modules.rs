@@ -68,6 +68,9 @@ impl ModuleRegistry {
         let ls = mpt_light_switch::LightSwitch::new();
         self.modules.insert(ls.id(), Box::new(ls));
 
+        let accent = mpt_quick_accent::QuickAccent::new();
+        self.modules.insert(accent.id(), Box::new(accent));
+
         info!("Registered {} module(s)", self.modules.len());
     }
 

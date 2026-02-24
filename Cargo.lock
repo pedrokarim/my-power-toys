@@ -3600,6 +3600,7 @@ dependencies = [
  "mpt-mouse-utils",
  "mpt-paste-plain",
  "mpt-peek",
+ "mpt-quick-accent",
  "mpt-screen-ruler",
  "mpt-shortcut-guide",
  "mpt-text-extractor",
@@ -3716,6 +3717,23 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "mpt-quick-accent"
+version = "0.3.20"
+dependencies = [
+ "anyhow",
+ "eframe",
+ "egui",
+ "mpt-common",
+ "scopeguard",
+ "serde",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+ "x11rb",
+ "xkeysym",
 ]
 
 [[package]]

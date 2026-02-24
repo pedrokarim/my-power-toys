@@ -3617,11 +3617,16 @@ name = "mpt-fancy-zones"
 version = "0.3.20"
 dependencies = [
  "anyhow",
+ "eframe",
+ "egui",
  "mpt-common",
+ "scopeguard",
  "serde",
  "serde_json",
  "toml",
  "tracing",
+ "tracing-subscriber",
+ "x11rb",
 ]
 
 [[package]]

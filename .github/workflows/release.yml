@@ -50,9 +50,10 @@ jobs:
           cp target/release/mpt-command-palette dist/
           cp target/release/mpt-peek dist/
           cp target/release/mpt-image-resizer dist/
+          cp target/release/mpt-fancy-zones dist/
           cp -r assets dist/assets
           rm -f dist/assets/*.desktop dist/assets/*.service dist/assets/main-screen-app.png
-          tar czf "my-power-toys-${{ steps.version.outputs.VERSION }}-x86_64-unknown-linux-gnu.tar.gz" -C dist mpt-daemon mpt-ctl mpt-settings mpt-color-picker mpt-command-palette mpt-peek mpt-image-resizer assets
+          tar czf "my-power-toys-${{ steps.version.outputs.VERSION }}-x86_64-unknown-linux-gnu.tar.gz" -C dist mpt-daemon mpt-ctl mpt-settings mpt-color-picker mpt-command-palette mpt-peek mpt-image-resizer mpt-fancy-zones assets
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

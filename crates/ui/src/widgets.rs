@@ -1,7 +1,9 @@
-use iced::widget::{button, column, container, row, text, toggler};
+use iced::widget::{button, column, container, image, row, text, toggler};
 use iced::{Alignment, Color, Element, Length, Padding};
 use iced_fonts::BOOTSTRAP_FONT;
 use iced_fonts::bootstrap::Bootstrap;
+
+const SUPER_KEY_ICON: &[u8] = include_bytes!("../../../assets/super_key.png");
 
 use crate::message::Message;
 use crate::theme;
@@ -41,19 +43,24 @@ pub fn kbd<'a>(key: &str, ui: Ui) -> Element<'a, Message> {
     let parts: Vec<&str> = key.split('+').collect();
     let mut r = row![].spacing(4).align_y(Alignment::Center);
     for part in parts {
-        let label = match part.trim() {
-            "Super" => "\u{2318}",
-            other => other,
+        let badge: Element<'a, Message> = if part.trim() == "Super" {
+            let icon_size = ui.sz(14.0);
+            let handle = image::Handle::from_bytes(SUPER_KEY_ICON);
+            container(image(handle).width(icon_size).height(icon_size))
+                .padding(Padding::from([6.0, 10.0]))
+                .style(theme::kbd_key())
+                .into()
+        } else {
+            container(
+                text(part.trim().to_string())
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(Color::WHITE),
+            )
+            .padding(Padding::from([6.0, 12.0]))
+            .style(theme::kbd_key())
+            .into()
         };
-        let badge: Element<'a, Message> = container(
-            text(label.to_string())
-                .size(ui.sz(12.0))
-                .font(ui.font())
-                .color(Color::WHITE),
-        )
-        .padding(Padding::from([6.0, 12.0]))
-        .style(theme::kbd_key())
-        .into();
         r = r.push(badge);
     }
     r.into()

@@ -1,10 +1,13 @@
 pub mod config;
 pub mod layout;
+#[cfg(feature = "gui")]
+pub mod overlay;
+pub mod x11;
 
 use anyhow::Result;
 use mpt_common::hotkey::{Hotkey, Modifier};
 use mpt_common::module::PowerModule;
-use tracing::info;
+use tracing::{info, warn};
 
 pub struct FancyZones {
     running: bool,
@@ -78,7 +81,38 @@ impl PowerModule for FancyZones {
     }
 
     fn on_hotkey(&mut self) -> Result<()> {
-        info!("FancyZones: would open zone editor overlay");
+        info!("FancyZones: opening zone overlay");
+
+        // Capture focused window BEFORE spawning overlay (overlay steals focus)
+        let window_id = x11::get_focused_window()?;
+
+        let bin = find_gui_binary();
+        let result = std::process::Command::new(&bin)
+            .arg("--window-id")
+            .arg(window_id.to_string())
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn();
+
+        match result {
+            Ok(child) => info!("FancyZones overlay spawned (pid={})", child.id()),
+            Err(e) => warn!("Failed to spawn FancyZones overlay ({bin:?}): {e}"),
+        }
         Ok(())
     }
+}
+
+/// Find the mpt-fancy-zones binary, looking next to the current executable first.
+fn find_gui_binary() -> std::path::PathBuf {
+    if let Ok(exe) = std::env::current_exe()
+        && let Some(dir) = exe.parent()
+    {
+        let candidate = dir.join("mpt-fancy-zones");
+        if candidate.exists() {
+            return candidate;
+        }
+    }
+    // Fallback: rely on PATH
+    "mpt-fancy-zones".into()
 }

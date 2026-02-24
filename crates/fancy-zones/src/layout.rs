@@ -35,6 +35,23 @@ impl Zone {
         (x, y, w, h)
     }
 
+    /// Convert to pixel coordinates with gap applied (half-gap inset on each side).
+    pub fn to_pixels_with_gap(
+        &self,
+        screen_w: u32,
+        screen_h: u32,
+        gap: u32,
+    ) -> (i32, i32, u32, u32) {
+        let (x, y, w, h) = self.to_pixels(screen_w, screen_h);
+        let half = (gap / 2) as i32;
+        (
+            x + half,
+            y + half,
+            (w as i32 - gap as i32).max(100) as u32,
+            (h as i32 - gap as i32).max(100) as u32,
+        )
+    }
+
     /// Check if a point (in percentages) is inside this zone.
     pub fn contains(&self, px: f32, py: f32) -> bool {
         px >= self.x && px <= self.x + self.width && py >= self.y && py <= self.y + self.height

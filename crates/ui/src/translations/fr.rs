@@ -165,4 +165,15 @@ pub(super) static FR: Tr = Tr {
     ms_ls_apply_system_desc: "Barre des tâches, menu et autres éléments système",
     ms_ls_apply_apps: "Applications",
     ms_ls_apply_apps_desc: "Applications compatibles",
+
+    // Key Manager
+    ms_km_keys: "Touches",
+    ms_km_keys_desc: "Remapper des touches vers d'autres touches, raccourcis ou texte",
+    ms_km_shortcuts: "Raccourcis",
+    ms_km_shortcuts_desc: "Remapper des raccourcis vers d'autres raccourcis, touches ou texte",
+    ms_km_add_key: "Ajouter un remap de touche",
+    ms_km_add_shortcut: "Ajouter un remap de raccourci",
+    ms_km_no_mappings: "Aucun mapping configuré",
+    ms_km_disabled: "Désactivé",
+    ms_km_all_apps: "Toutes les apps",
 };

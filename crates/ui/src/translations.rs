@@ -190,6 +190,17 @@ pub struct Tr {
     pub ms_ls_apply_system_desc: &'static str,
     pub ms_ls_apply_apps: &'static str,
     pub ms_ls_apply_apps_desc: &'static str,
+
+    // Key Manager
+    pub ms_km_keys: &'static str,
+    pub ms_km_keys_desc: &'static str,
+    pub ms_km_shortcuts: &'static str,
+    pub ms_km_shortcuts_desc: &'static str,
+    pub ms_km_add_key: &'static str,
+    pub ms_km_add_shortcut: &'static str,
+    pub ms_km_no_mappings: &'static str,
+    pub ms_km_disabled: &'static str,
+    pub ms_km_all_apps: &'static str,
 }
 
 pub fn get(lang: Language) -> &'static Tr {

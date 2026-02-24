@@ -165,4 +165,15 @@ pub(super) static JP: Tr = Tr {
     ms_ls_apply_system_desc: "タスクバー、スタートメニュー、その他のシステムUI",
     ms_ls_apply_apps: "アプリ",
     ms_ls_apply_apps_desc: "対応アプリケーション",
+
+    // Key Manager
+    ms_km_keys: "Keys",
+    ms_km_keys_desc: "Remap keys to other keys, shortcuts, or text",
+    ms_km_shortcuts: "Shortcuts",
+    ms_km_shortcuts_desc: "Remap shortcuts to other shortcuts, keys, or text",
+    ms_km_add_key: "Add key remap",
+    ms_km_add_shortcut: "Add shortcut remap",
+    ms_km_no_mappings: "No mappings configured",
+    ms_km_disabled: "Disabled",
+    ms_km_all_apps: "All Apps",
 };

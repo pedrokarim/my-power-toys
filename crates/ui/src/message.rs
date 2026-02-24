@@ -68,6 +68,10 @@ pub enum Message {
     SetLightSwitchLightTime(String),
     ToggleLightSwitchSystem(bool),
     ToggleLightSwitchApps(bool),
+    // Key Manager
+    AddKeyMapping(mpt_key_manager::KeyMapping),
+    RemoveKeyMapping(usize),
+    ToggleKeyMapping(usize, bool),
     DemoToast(ToastKind),
     OpenDemoDialog,
     CloseDemoDialog,

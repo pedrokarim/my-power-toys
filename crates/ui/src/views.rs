@@ -2540,6 +2540,7 @@ impl Settings {
             "fancy-zones" => self.settings_fancy_zones(tr, ui),
             "peek" => self.settings_peek(tr, ui),
             "light-switch" => self.settings_light_switch(tr, ui),
+            "key-manager" => self.settings_key_manager(tr, ui),
             _ => column![
                 text(tr.module_settings)
                     .size(ui.sz(16.0))
@@ -3259,6 +3260,292 @@ impl Settings {
                 Message::ToggleLightSwitchApps,
                 ui,
             ));
+
+        col.into()
+    }
+
+    // ── Key Manager ─────────────────────────────────────────────────────────
+
+    fn settings_key_manager<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
+        use mpt_key_manager::{KeyAction, KeyCombo, KeyMapping, KeyTrigger};
+
+        let cfg = &self.module_configs.key_manager;
+
+        // Split mappings into keys (single key triggers) and shortcuts (combo triggers)
+        type IndexedMappings<'b> = Vec<(usize, &'b KeyMapping)>;
+        let (key_maps, shortcut_maps): (IndexedMappings<'_>, IndexedMappings<'_>) = cfg
+            .mappings
+            .iter()
+            .enumerate()
+            .partition(|(_, m)| matches!(&m.trigger, KeyTrigger::Key(_)));
+
+        // ── Helper: format evdev key name for display ────────────────────
+        fn fmt_key(raw: &str) -> String {
+            raw.strip_prefix("KEY_").unwrap_or(raw).replace('_', " ")
+        }
+
+        // ── Helper: render a KeyCombo as a row of key_cap badges ─────────
+        fn render_combo<'b>(combo: &KeyCombo, active: bool, ui: Ui) -> Element<'b, Message> {
+            let mut r = row![].spacing(4).align_y(Alignment::Center);
+            for modifier in &combo.modifiers {
+                r = r.push(key_cap(&fmt_key(modifier), active, ui));
+            }
+            r = r.push(key_cap(&fmt_key(&combo.key), active, ui));
+            if let Some(chord) = &combo.chord {
+                r = r.push(text(",").size(ui.sz(12.0)).color(theme::subtext0(ui.dark)));
+                r = r.push(key_cap(&fmt_key(chord), active, ui));
+            }
+            r.into()
+        }
+
+        // ── Helper: render trigger side ──────────────────────────────────
+        fn render_trigger<'b>(trigger: &KeyTrigger, ui: Ui) -> Element<'b, Message> {
+            match trigger {
+                KeyTrigger::Key(k) => key_cap(&fmt_key(k), false, ui),
+                KeyTrigger::Combo(c) => render_combo(c, false, ui),
+            }
+        }
+
+        // ── Helper: render action side ───────────────────────────────────
+        fn render_action<'b>(
+            action: &KeyAction,
+            tr: &'b translations::Tr,
+            ui: Ui,
+        ) -> Element<'b, Message> {
+            match action {
+                KeyAction::RemapKey { to } => render_combo(to, true, ui),
+                KeyAction::SendText { text: txt } => {
+                    let label = format!("\"{}\"", txt);
+                    container(
+                        text(label)
+                            .size(ui.sz(12.0))
+                            .font(ui.font())
+                            .color(theme::blue()),
+                    )
+                    .padding(Padding::from([6.0, 12.0]))
+                    .style(theme::card(ui.contrast, ui.glass))
+                    .into()
+                }
+                KeyAction::RunCommand { command: cmd } => {
+                    let label = format!("$ {}", cmd);
+                    container(
+                        text(label)
+                            .size(ui.sz(12.0))
+                            .font(ui.font())
+                            .color(theme::peach()),
+                    )
+                    .padding(Padding::from([6.0, 12.0]))
+                    .style(theme::card(ui.contrast, ui.glass))
+                    .into()
+                }
+                KeyAction::LaunchApp { path, .. } => {
+                    let name = std::path::Path::new(path)
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or(path);
+                    container(
+                        text(name.to_string())
+                            .size(ui.sz(12.0))
+                            .font(ui.font())
+                            .color(theme::green()),
+                    )
+                    .padding(Padding::from([6.0, 12.0]))
+                    .style(theme::card(ui.contrast, ui.glass))
+                    .into()
+                }
+                KeyAction::OpenUri { uri } => container(
+                    text(uri.to_string())
+                        .size(ui.sz(12.0))
+                        .font(ui.font())
+                        .color(theme::blue()),
+                )
+                .padding(Padding::from([6.0, 12.0]))
+                .style(theme::card(ui.contrast, ui.glass))
+                .into(),
+                KeyAction::Disable => container(
+                    text(tr.ms_km_disabled)
+                        .size(ui.sz(12.0))
+                        .font(ui.font())
+                        .color(theme::red()),
+                )
+                .padding(Padding::from([6.0, 12.0]))
+                .style(theme::card(ui.contrast, ui.glass))
+                .into(),
+            }
+        }
+
+        // ── Helper: render one mapping row ───────────────────────────────
+        fn render_mapping_row<'b>(
+            idx: usize,
+            mapping: &KeyMapping,
+            tr: &'b translations::Tr,
+            ui: Ui,
+        ) -> Element<'b, Message> {
+            let trigger_el = render_trigger(&mapping.trigger, ui);
+            let arrow: Element<'b, Message> = text("\u{2192}")
+                .size(ui.sz(14.0))
+                .color(theme::subtext0(ui.dark))
+                .into();
+            let action_el = render_action(&mapping.action, tr, ui);
+
+            let mut r = row![trigger_el, arrow, action_el]
+                .spacing(8)
+                .align_y(Alignment::Center);
+
+            // App filter badge
+            if let Some(app) = &mapping.app_filter {
+                r = r.push(
+                    container(
+                        text(app.to_string())
+                            .size(ui.sz(11.0))
+                            .font(ui.font())
+                            .color(theme::subtext1(ui.dark)),
+                    )
+                    .padding(Padding::from([4.0, 8.0]))
+                    .style(theme::card(ui.contrast, ui.glass)),
+                );
+            } else {
+                r = r.push(
+                    container(
+                        text(tr.ms_km_all_apps)
+                            .size(ui.sz(11.0))
+                            .font(ui.font())
+                            .color(theme::overlay0(ui.dark)),
+                    )
+                    .padding(Padding::from([4.0, 8.0]))
+                    .style(theme::card(ui.contrast, ui.glass)),
+                );
+            }
+
+            r = r.push(Space::with_width(Length::Fill));
+
+            // Toggle enabled
+            r = r.push(
+                toggler(mapping.enabled)
+                    .on_toggle(move |v| Message::ToggleKeyMapping(idx, v))
+                    .size(ui.sz(18.0)),
+            );
+
+            // Remove button
+            r = r.push(
+                button(text("\u{2715}").size(ui.sz(12.0)).color(theme::red()))
+                    .on_press(Message::RemoveKeyMapping(idx))
+                    .padding(Padding::from([4.0, 8.0]))
+                    .style(theme::seg_button(false)),
+            );
+
+            container(r)
+                .padding(Padding::from([8.0, 12.0]))
+                .width(Length::Fill)
+                .style(theme::card(ui.contrast, ui.glass))
+                .into()
+        }
+
+        // ── Build the settings panel ─────────────────────────────────────
+
+        let mut col = column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+        ]
+        .spacing(8);
+
+        // ── Keys section ─────────────────────────────────────────────────
+        col = col
+            .push(Space::with_height(4))
+            .push(
+                text(tr.ms_km_keys)
+                    .size(ui.sz(14.0))
+                    .font(bold())
+                    .color(ui.heading()),
+            )
+            .push(
+                text(tr.ms_km_keys_desc)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            );
+
+        if key_maps.is_empty() {
+            col = col.push(
+                text(tr.ms_km_no_mappings)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::overlay0(ui.dark)),
+            );
+        } else {
+            for (idx, mapping) in &key_maps {
+                col = col.push(render_mapping_row(*idx, mapping, tr, ui));
+            }
+        }
+
+        // Add key remap button
+        col = col.push(
+            button(
+                row![
+                    text("+").size(ui.sz(14.0)).font(bold()),
+                    text(tr.ms_km_add_key).size(ui.sz(12.0)).font(ui.font()),
+                ]
+                .spacing(6)
+                .align_y(Alignment::Center),
+            )
+            .on_press(Message::AddKeyMapping(KeyMapping::remap(
+                "KEY_CAPSLOCK",
+                "KEY_ESC",
+            )))
+            .padding(Padding::from([8.0, 16.0]))
+            .style(theme::seg_button(false)),
+        );
+
+        // ── Shortcuts section ────────────────────────────────────────────
+        col = col
+            .push(Space::with_height(8))
+            .push(
+                text(tr.ms_km_shortcuts)
+                    .size(ui.sz(14.0))
+                    .font(bold())
+                    .color(ui.heading()),
+            )
+            .push(
+                text(tr.ms_km_shortcuts_desc)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            );
+
+        if shortcut_maps.is_empty() {
+            col = col.push(
+                text(tr.ms_km_no_mappings)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::overlay0(ui.dark)),
+            );
+        } else {
+            for (idx, mapping) in &shortcut_maps {
+                col = col.push(render_mapping_row(*idx, mapping, tr, ui));
+            }
+        }
+
+        // Add shortcut remap button
+        col = col.push(
+            button(
+                row![
+                    text("+").size(ui.sz(14.0)).font(bold()),
+                    text(tr.ms_km_add_shortcut)
+                        .size(ui.sz(12.0))
+                        .font(ui.font()),
+                ]
+                .spacing(6)
+                .align_y(Alignment::Center),
+            )
+            .on_press(Message::AddKeyMapping(KeyMapping::shortcut_remap(
+                KeyCombo::shortcut(vec!["KEY_LEFTCTRL".into()], "KEY_C"),
+                KeyCombo::shortcut(vec!["KEY_LEFTCTRL".into()], "KEY_V"),
+            )))
+            .padding(Padding::from([8.0, 16.0]))
+            .style(theme::seg_button(false)),
+        );
 
         col.into()
     }

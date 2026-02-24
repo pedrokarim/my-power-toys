@@ -629,6 +629,23 @@ impl Settings {
                 self.module_configs.light_switch.apply_apps = v;
                 self.module_configs.save("light-switch");
             }
+            // Key Manager
+            Message::AddKeyMapping(mapping) => {
+                self.module_configs.key_manager.mappings.push(mapping);
+                self.module_configs.save("key-manager");
+            }
+            Message::RemoveKeyMapping(idx) => {
+                if idx < self.module_configs.key_manager.mappings.len() {
+                    self.module_configs.key_manager.mappings.remove(idx);
+                    self.module_configs.save("key-manager");
+                }
+            }
+            Message::ToggleKeyMapping(idx, enabled) => {
+                if let Some(m) = self.module_configs.key_manager.mappings.get_mut(idx) {
+                    m.enabled = enabled;
+                }
+                self.module_configs.save("key-manager");
+            }
             Message::DemoToast(kind) => {
                 let tr = translations::get(self.language);
                 match kind {

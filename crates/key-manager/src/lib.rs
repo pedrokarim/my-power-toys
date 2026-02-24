@@ -5,7 +5,7 @@ use mpt_common::module::PowerModule;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
-pub use mapping::KeyMapping;
+pub use mapping::{KeyAction, KeyCombo, KeyMapping, KeyTrigger};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct KeyManagerConfig {
@@ -64,7 +64,7 @@ impl PowerModule for KeyManager {
     }
 
     fn description(&self) -> &'static str {
-        "Remap keys and create custom keyboard shortcuts"
+        "Remap keys and shortcuts, send text, launch apps, per-app rules"
     }
 
     fn start(&mut self) -> Result<()> {

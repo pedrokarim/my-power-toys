@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Manager — Keyboard Remapping | MyPowerToys</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/assets/icons/icon-32.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --accent: #B4BEFE;
+            --accent-dark: #7C84D4;
+            --bg-base: #0d1117;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --text: #f5f5f5;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-base);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .bg-layer {
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180, 190, 254, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 20%, rgba(124, 132, 212, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 40% at 20% 80%, rgba(134, 97, 193, 0.05) 0%, transparent 50%),
+                var(--bg-base);
+        }
+
+        .bg-layer::after {
+            content: ''; position: absolute; inset: 0; opacity: 0.015;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 128px 128px;
+        }
+
+        .glass {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            transition: all 0.2s ease;
+        }
+
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(13, 17, 23, 0.7);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 600; font-size: 15px; text-decoration: none; color: var(--text);
+        }
+        .nav-brand img { width: 28px; height: 28px; border-radius: 6px; }
+
+        .nav-links { display: flex; gap: 8px; }
+        .nav-links a {
+            color: var(--text-secondary); text-decoration: none; font-size: 13px; font-weight: 500;
+            padding: 6px 14px; border-radius: 6px; transition: all 0.15s ease;
+        }
+        .nav-links a:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
+
+        .hero {
+            padding: 140px 24px 60px; text-align: center;
+            max-width: 800px; margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 16px; font-size: 12px; font-weight: 500;
+            color: var(--accent); background: rgba(180, 190, 254, 0.08);
+            border: 1px solid rgba(180, 190, 254, 0.15); border-radius: 20px; margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; letter-spacing: -0.03em; margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .hero p {
+            font-size: 17px; color: var(--text-secondary);
+            max-width: 560px; margin: 0 auto 32px; line-height: 1.7;
+        }
+
+        kbd {
+            display: inline-block; padding: 3px 8px; font-size: 12px;
+            font-family: 'Inter', sans-serif; font-weight: 600; color: var(--text);
+            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 5px; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        kbd.accent {
+            color: var(--accent);
+            background: rgba(180, 190, 254, 0.12);
+            border-color: rgba(180, 190, 254, 0.25);
+        }
+
+        /* Remap examples */
+        .remaps {
+            padding: 60px 24px 80px; max-width: 740px; margin: 0 auto;
+        }
+
+        .remaps h2 {
+            font-size: 24px; font-weight: 600; letter-spacing: -0.02em;
+            text-align: center; margin-bottom: 12px;
+        }
+
+        .remaps > p {
+            font-size: 14px; color: var(--text-secondary);
+            text-align: center; margin-bottom: 40px;
+        }
+
+        .remap-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .remap-row {
+            padding: 16px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        }
+
+        .remap-arrow { color: var(--text-secondary); font-size: 18px; }
+
+        .remap-label {
+            font-size: 12px; color: var(--text-secondary); margin-left: auto;
+            padding: 4px 10px; border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
+        }
+
+        .remap-action {
+            font-size: 12px; padding: 4px 10px; border-radius: 6px;
+        }
+        .remap-action.text { color: #89B4FA; background: rgba(137, 180, 250, 0.1); }
+        .remap-action.cmd { color: #FAB387; background: rgba(250, 179, 135, 0.1); }
+        .remap-action.app { color: #A6E3A1; background: rgba(166, 227, 161, 0.1); }
+        .remap-action.disabled { color: #F38BA8; background: rgba(243, 139, 168, 0.1); }
+
+        /* Features */
+        .features {
+            padding: 80px 24px; max-width: 900px; margin: 0 auto;
+        }
+
+        .features h2 {
+            font-size: 24px; font-weight: 600; letter-spacing: -0.02em;
+            text-align: center; margin-bottom: 48px;
+        }
+
+        .features-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+        }
+
+        .feature-card { padding: 24px; display: flex; gap: 16px; align-items: flex-start; }
+
+        .feature-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+            background: rgba(180, 190, 254, 0.08); border: 1px solid rgba(180, 190, 254, 0.1);
+        }
+
+        .feature-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .feature-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+        /* How it works */
+        .how-it-works {
+            padding: 60px 24px 80px; max-width: 700px; margin: 0 auto;
+        }
+
+        .how-it-works h2 {
+            font-size: 24px; font-weight: 600; letter-spacing: -0.02em;
+            text-align: center; margin-bottom: 40px;
+        }
+
+        .steps { display: flex; flex-direction: column; gap: 16px; }
+
+        .step { padding: 20px 24px; display: flex; gap: 16px; align-items: center; }
+
+        .step-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; flex-shrink: 0;
+            background: rgba(180, 190, 254, 0.12); color: var(--accent);
+            border: 1px solid rgba(180, 190, 254, 0.2);
+        }
+
+        .step p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+        .step strong { color: var(--text); }
+
+        .back-section { text-align: center; padding: 40px 24px 60px; }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--accent); text-decoration: none; font-size: 14px; font-weight: 500;
+            padding: 10px 24px; border-radius: var(--radius);
+            border: 1px solid rgba(180, 190, 254, 0.2); transition: all 0.15s ease;
+        }
+        .back-link:hover { background: rgba(180, 190, 254, 0.08); border-color: rgba(180, 190, 254, 0.3); }
+
+        footer {
+            text-align: center; padding: 40px 24px;
+            border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 13px;
+        }
+        footer a { color: var(--text-secondary); text-decoration: none; transition: color 0.15s; }
+        footer a:hover { color: var(--text); }
+
+        @media (max-width: 768px) {
+            nav { padding: 12px 16px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .remap-label { margin-left: 0; }
+        }
+
+        html { scroll-behavior: smooth; }
+        ::selection { background: rgba(180, 190, 254, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="bg-layer"></div>
+
+    <nav>
+        <a href="index.html" class="nav-brand">
+            <img src="https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/assets/icons/icon-128.png" alt="MyPowerToys">
+            MyPowerToys
+        </a>
+        <div class="nav-links">
+            <a href="index.html#features">Features</a>
+            <a href="index.html#modules">Modules</a>
+            <a href="index.html#install">Install</a>
+            <a href="https://github.com/pedrokarim/my-power-toys" target="_blank">GitHub</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-badge">&#9000; Module Spotlight</div>
+        <h1>Key Manager</h1>
+        <p>Remap keys and shortcuts, send text, launch apps, and create per-application rules. Full keyboard customization for Linux.</p>
+    </section>
+
+    <!-- Remap examples -->
+    <section class="remaps">
+        <h2>Remap Examples</h2>
+        <p>See what Key Manager can do. Configure everything from the Settings UI.</p>
+
+        <div class="remap-list">
+            <div class="glass remap-row">
+                <kbd>CapsLock</kbd>
+                <span class="remap-arrow">&rarr;</span>
+                <kbd class="accent">Escape</kbd>
+                <span class="remap-label">All Apps</span>
+            </div>
+            <div class="glass remap-row">
+                <kbd>Insert</kbd>
+                <span class="remap-arrow">&rarr;</span>
+                <span class="remap-action disabled">Disabled</span>
+                <span class="remap-label">All Apps</span>
+            </div>
+            <div class="glass remap-row">
+                <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Q</kbd>
+                <span class="remap-arrow">&rarr;</span>
+                <kbd class="accent">Ctrl</kbd> <kbd class="accent">Shift</kbd> <kbd class="accent">W</kbd>
+                <span class="remap-label">All Apps</span>
+            </div>
+            <div class="glass remap-row">
+                <kbd>Ctrl</kbd> <kbd>G</kbd>
+                <span class="remap-arrow">&rarr;</span>
+                <span class="remap-action text">"Hello from shortcut!"</span>
+                <span class="remap-label">All Apps</span>
+            </div>
+            <div class="glass remap-row">
+                <kbd>Ctrl</kbd> <kbd>T</kbd>
+                <span class="remap-arrow">&rarr;</span>
+                <span class="remap-action app">alacritty</span>
+                <span class="remap-label">firefox</span>
+            </div>
+            <div class="glass remap-row">
+                <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>V</kbd> , <kbd>U</kbd>
+                <span class="remap-arrow">&rarr;</span>
+                <span class="remap-action cmd">$ pactl set-sink-volume @DEFAULT_SINK@ +5%</span>
+                <span class="remap-label">All Apps</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+        <h2>Features</h2>
+
+        <div class="features-grid">
+            <div class="glass feature-card">
+                <div class="feature-icon">&#128260;</div>
+                <div>
+                    <h3>Key Remapping</h3>
+                    <p>Remap any key to another key, a shortcut combo, or disable it entirely. Classic use: CapsLock to Escape.</p>
+                </div>
+            </div>
+            <div class="glass feature-card">
+                <div class="feature-icon">&#9000;</div>
+                <div>
+                    <h3>Shortcut Remapping</h3>
+                    <p>Remap shortcut combos to other shortcuts, single keys, or text. Supports modifier keys: Ctrl, Shift, Alt, Super.</p>
+                </div>
+            </div>
+            <div class="glass feature-card">
+                <div class="feature-icon">&#128172;</div>
+                <div>
+                    <h3>Text Snippets</h3>
+                    <p>Map any key or shortcut to send arbitrary unicode text. Type email signatures, code snippets, or emojis with a single press.</p>
+                </div>
+            </div>
+            <div class="glass feature-card">
+                <div class="feature-icon">&#128640;</div>
+                <div>
+                    <h3>Launch Apps &amp; URIs</h3>
+                    <p>Start applications or open URIs with a shortcut. Configure arguments, working directory, and elevation level.</p>
+                </div>
+            </div>
+            <div class="glass feature-card">
+                <div class="feature-icon">&#127919;</div>
+                <div>
+                    <h3>Per-App Rules</h3>
+                    <p>Apply remappings only when a specific application is focused. Target apps by process name (e.g. firefox, code).</p>
+                </div>
+            </div>
+            <div class="glass feature-card">
+                <div class="feature-icon">&#127929;</div>
+                <div>
+                    <h3>Chord Shortcuts</h3>
+                    <p>Create two-step shortcuts: hold modifiers + first key, then press a second key. Group related actions under one prefix.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="how-it-works">
+        <h2>How It Works</h2>
+
+        <div class="steps">
+            <div class="glass step">
+                <div class="step-num">1</div>
+                <p>Open <strong>MyPowerToys Settings</strong> and navigate to the <strong>Key Manager</strong> module page.</p>
+            </div>
+            <div class="glass step">
+                <div class="step-num">2</div>
+                <p>In the <strong>Keys</strong> section, click <strong>Add key remap</strong> to remap single keys. In the <strong>Shortcuts</strong> section, add shortcut remaps.</p>
+            </div>
+            <div class="glass step">
+                <div class="step-num">3</div>
+                <p>Each mapping shows the trigger, action, and app filter. Use the <strong>toggle</strong> to enable/disable, or the <strong>&times;</strong> button to remove.</p>
+            </div>
+            <div class="glass step">
+                <div class="step-num">4</div>
+                <p>Changes are saved immediately to <code>~/.config/mpt/key-manager.toml</code> and picked up by the daemon.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="back-section">
+        <a href="index.html" class="back-link">&#8592; Back to MyPowerToys</a>
+    </section>
+
+    <footer>
+        <p>MyPowerToys &mdash; GPL-3.0 &middot; Made with Rust &middot; <a href="https://github.com/pedrokarim/my-power-toys">GitHub</a></p>
+    </footer>
+</body>
+</html>

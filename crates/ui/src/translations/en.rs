@@ -176,4 +176,14 @@ pub(super) static EN: Tr = Tr {
     ms_km_no_mappings: "No mappings configured",
     ms_km_disabled: "Disabled",
     ms_km_all_apps: "All Apps",
+
+    // Workspaces
+    ms_ws_title: "Workspaces",
+    ms_ws_desc: "Save and restore desktop app layouts with one click",
+    ms_ws_apps: "app(s)",
+    ms_ws_never: "Never launched",
+    ms_ws_launch: "Launch",
+    ms_ws_delete: "Delete",
+    ms_ws_no_workspaces: "No workspaces configured. Use Super+Ctrl+W to open the editor and capture your first workspace.",
+    ms_ws_editor_hint: "Use Super+Ctrl+W to open the full Workspaces Editor for capture and editing.",
 };

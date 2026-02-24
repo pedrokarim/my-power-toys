@@ -2541,6 +2541,7 @@ impl Settings {
             "peek" => self.settings_peek(tr, ui),
             "light-switch" => self.settings_light_switch(tr, ui),
             "key-manager" => self.settings_key_manager(tr, ui),
+            "workspaces" => self.settings_workspaces(tr, ui),
             _ => column![
                 text(tr.module_settings)
                     .size(ui.sz(16.0))
@@ -3545,6 +3546,120 @@ impl Settings {
             )))
             .padding(Padding::from([8.0, 16.0]))
             .style(theme::seg_button(false)),
+        );
+
+        col.into()
+    }
+
+    // ── Workspaces ──────────────────────────────────────────────────────────
+
+    fn settings_workspaces<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
+        let cfg = &self.module_configs.workspaces;
+        let mut col = column![].spacing(12);
+
+        // Title
+        col = col.push(
+            text(tr.ms_ws_title)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+        );
+        col = col.push(
+            text(tr.ms_ws_desc)
+                .size(ui.sz(12.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+        );
+
+        if cfg.workspaces.is_empty() {
+            col = col.push(
+                text(tr.ms_ws_no_workspaces)
+                    .size(ui.sz(13.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            );
+        } else {
+            for (ws_idx, ws) in cfg.workspaces.iter().enumerate() {
+                let app_count = ws.app_count();
+                let last = ws
+                    .last_launched
+                    .clone()
+                    .unwrap_or_else(|| tr.ms_ws_never.to_string());
+                let ws_name = ws.name.clone();
+
+                // Workspace row
+                let mut ws_row = row![].spacing(8).align_y(Alignment::Center);
+
+                // Name + info
+                let info_col = column![
+                    text(ws_name)
+                        .size(ui.sz(14.0))
+                        .font(bold())
+                        .color(ui.heading()),
+                    text(format!("{app_count} {} · {last}", tr.ms_ws_apps))
+                        .size(ui.sz(11.0))
+                        .font(ui.font())
+                        .color(theme::subtext0(ui.dark)),
+                ]
+                .spacing(2);
+
+                ws_row = ws_row.push(info_col);
+                ws_row = ws_row.push(Space::with_width(Length::Fill));
+
+                // Launch button
+                ws_row = ws_row.push(
+                    button(text(tr.ms_ws_launch).size(ui.sz(12.0)).font(bold()))
+                        .on_press(Message::LaunchWorkspace(ws_idx))
+                        .padding(Padding::from([6.0, 14.0]))
+                        .style(theme::seg_button(true)),
+                );
+
+                // Delete button
+                ws_row = ws_row.push(
+                    button(
+                        text(tr.ms_ws_delete)
+                            .size(ui.sz(11.0))
+                            .font(ui.font())
+                            .color(theme::subtext0(ui.dark)),
+                    )
+                    .on_press(Message::RemoveWorkspace(ws_idx))
+                    .padding(Padding::from([6.0, 10.0]))
+                    .style(theme::seg_button(false)),
+                );
+
+                col = col.push(ws_row);
+
+                // App list (compact badges)
+                let mut apps_row = row![].spacing(4).align_y(Alignment::Center);
+                for (app_idx, app) in ws.apps.iter().enumerate() {
+                    let label_color = if app.enabled {
+                        theme::subtext1(ui.dark)
+                    } else {
+                        theme::subtext0(ui.dark)
+                    };
+                    let wm_class = app.wm_class.clone();
+                    apps_row = apps_row.push(
+                        button(
+                            text(wm_class)
+                                .size(ui.sz(10.0))
+                                .font(ui.font())
+                                .color(label_color),
+                        )
+                        .on_press(Message::ToggleWorkspaceApp(ws_idx, app_idx, !app.enabled))
+                        .padding(Padding::from([3.0, 8.0]))
+                        .style(theme::seg_button(app.enabled)),
+                    );
+                }
+                col = col.push(apps_row);
+            }
+        }
+
+        // Hint
+        col = col.push(
+            text(tr.ms_ws_editor_hint)
+                .size(ui.sz(11.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
         );
 
         col.into()

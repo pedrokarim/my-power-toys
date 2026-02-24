@@ -201,6 +201,16 @@ pub struct Tr {
     pub ms_km_no_mappings: &'static str,
     pub ms_km_disabled: &'static str,
     pub ms_km_all_apps: &'static str,
+
+    // Workspaces
+    pub ms_ws_title: &'static str,
+    pub ms_ws_desc: &'static str,
+    pub ms_ws_apps: &'static str,
+    pub ms_ws_never: &'static str,
+    pub ms_ws_launch: &'static str,
+    pub ms_ws_delete: &'static str,
+    pub ms_ws_no_workspaces: &'static str,
+    pub ms_ws_editor_hint: &'static str,
 }
 
 pub fn get(lang: Language) -> &'static Tr {

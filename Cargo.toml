@@ -24,6 +24,7 @@ members = [
     "crates/command-palette",
     "crates/light-switch",
     "crates/quick-accent",
+    "crates/workspaces",
 ]
 
 [workspace.package]

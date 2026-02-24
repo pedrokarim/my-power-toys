@@ -646,6 +646,27 @@ impl Settings {
                 }
                 self.module_configs.save("key-manager");
             }
+            // Workspaces
+            Message::RemoveWorkspace(idx) => {
+                if idx < self.module_configs.workspaces.workspaces.len() {
+                    self.module_configs.workspaces.workspaces.remove(idx);
+                    self.module_configs.save("workspaces");
+                }
+            }
+            Message::LaunchWorkspace(idx) => {
+                if let Some(ws) = self.module_configs.workspaces.workspaces.get_mut(idx) {
+                    let _ = mpt_workspaces::launcher::launch_workspace(ws);
+                    self.module_configs.save("workspaces");
+                }
+            }
+            Message::ToggleWorkspaceApp(ws_idx, app_idx, enabled) => {
+                if let Some(ws) = self.module_configs.workspaces.workspaces.get_mut(ws_idx)
+                    && let Some(app) = ws.apps.get_mut(app_idx)
+                {
+                    app.enabled = enabled;
+                }
+                self.module_configs.save("workspaces");
+            }
             Message::DemoToast(kind) => {
                 let tr = translations::get(self.language);
                 match kind {

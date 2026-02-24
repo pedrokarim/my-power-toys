@@ -150,6 +150,15 @@ pub fn default_module_list() -> Vec<ModuleInfo> {
             running: false,
         },
         ModuleInfo {
+            id: "workspaces".into(),
+            name: "Workspaces".into(),
+            description: "Save and restore desktop app layouts".into(),
+            icon: Bootstrap::WindowStack,
+            accent: theme::mauve(),
+            hotkey: Some("Super+Ctrl+W".into()),
+            running: false,
+        },
+        ModuleInfo {
             id: "command-palette".into(),
             name: "Command Palette".into(),
             description: "Spotlight-like search: apps, calculator, web, commands".into(),

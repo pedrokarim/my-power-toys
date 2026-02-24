@@ -29,6 +29,7 @@ mpt-peek = { path = "../peek" }
 mpt-command-palette = { path = "../command-palette", default-features = false }
 mpt-light-switch = { path = "../light-switch" }
 mpt-quick-accent = { path = "../quick-accent", default-features = false }
+mpt-workspaces = { path = "../workspaces", default-features = false }
 serde = { workspace = true }
 toml = { workspace = true }
 anyhow = { workspace = true }

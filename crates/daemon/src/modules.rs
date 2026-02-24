@@ -71,6 +71,9 @@ impl ModuleRegistry {
         let accent = mpt_quick_accent::QuickAccent::new();
         self.modules.insert(accent.id(), Box::new(accent));
 
+        let ws = mpt_workspaces::Workspaces::new();
+        self.modules.insert(ws.id(), Box::new(ws));
+
         info!("Registered {} module(s)", self.modules.len());
     }
 

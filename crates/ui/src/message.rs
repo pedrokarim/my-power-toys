@@ -72,6 +72,10 @@ pub enum Message {
     AddKeyMapping(mpt_key_manager::KeyMapping),
     RemoveKeyMapping(usize),
     ToggleKeyMapping(usize, bool),
+    // Workspaces
+    RemoveWorkspace(usize),
+    LaunchWorkspace(usize),
+    ToggleWorkspaceApp(usize, usize, bool),
     DemoToast(ToastKind),
     OpenDemoDialog,
     CloseDemoDialog,

@@ -331,6 +331,10 @@ impl Default for LightSwitchConf {
 
 pub type KeyManagerConf = mpt_key_manager::KeyManagerConfig;
 
+// ── Workspaces ──────────────────────────────────────────────────────────────
+
+pub type WorkspacesConf = mpt_workspaces::config::WorkspacesConfig;
+
 // ── Aggregate ────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone)]
@@ -345,6 +349,7 @@ pub struct ModuleConfigs {
     pub command_palette: CommandPaletteConf,
     pub light_switch: LightSwitchConf,
     pub key_manager: KeyManagerConf,
+    pub workspaces: WorkspacesConf,
 }
 
 impl ModuleConfigs {
@@ -360,6 +365,7 @@ impl ModuleConfigs {
             command_palette: load_module_config("command-palette").unwrap_or_default(),
             light_switch: load_module_config("light-switch").unwrap_or_default(),
             key_manager: load_module_config("key-manager").unwrap_or_default(),
+            workspaces: load_module_config("workspaces").unwrap_or_default(),
         }
     }
 
@@ -375,6 +381,7 @@ impl ModuleConfigs {
             "command-palette" => save_module_config("command-palette", &self.command_palette),
             "light-switch" => save_module_config("light-switch", &self.light_switch),
             "key-manager" => save_module_config("key-manager", &self.key_manager),
+            "workspaces" => save_module_config("workspaces", &self.workspaces),
             _ => Ok(()),
         };
     }

@@ -12,6 +12,7 @@ path = "src/main.rs"
 [dependencies]
 mpt-common = { path = "../common" }
 mpt-key-manager = { path = "../key-manager" }
+mpt-workspaces = { path = "../workspaces", default-features = false }
 anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }

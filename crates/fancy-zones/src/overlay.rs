@@ -1,5 +1,6 @@
 use crate::layout::Layout;
 use eframe::egui;
+use mpt_common::monitor::Monitor;
 use std::sync::{Arc, Mutex};
 
 const ZONE_FILL_ALPHA: u8 = 50;
@@ -72,26 +73,28 @@ impl eframe::App for ZoneOverlayApp {
         // Handle arrow navigation
         if arrow_right || arrow_down {
             let len = self.layout.zones.len();
-            let current = self.highlighted.unwrap_or(len.wrapping_sub(1));
-            self.highlighted = Some((current + 1) % len);
+            if len > 0 {
+                let current = self.highlighted.unwrap_or(len.wrapping_sub(1));
+                self.highlighted = Some((current + 1) % len);
+            }
         }
         if arrow_left || arrow_up {
             let len = self.layout.zones.len();
-            let current = self.highlighted.unwrap_or(1);
-            self.highlighted = Some((current + len - 1) % len);
+            if len > 0 {
+                let current = self.highlighted.unwrap_or(1);
+                self.highlighted = Some((current + len - 1) % len);
+            }
         }
 
         // Handle enter to confirm highlighted zone
-        if enter
-            && let Some(idx) = self.highlighted
-        {
+        if enter && let Some(idx) = self.highlighted {
             *self.result.lock().unwrap() = Some(idx);
             self.should_close = true;
         }
 
         // Draw the overlay
         let screen_size = egui::CentralPanel::default()
-            .frame(egui::Frame::NONE.fill(egui::Color32::from_black_alpha(140)))
+            .frame(egui::Frame::NONE.fill(egui::Color32::from_black_alpha(80)))
             .show(ctx, |ui| ui.available_size())
             .inner;
 
@@ -116,9 +119,7 @@ impl eframe::App for ZoneOverlayApp {
         }
 
         // Click to select zone
-        if primary_clicked
-            && let Some(idx) = self.highlighted
-        {
+        if primary_clicked && let Some(idx) = self.highlighted {
             *self.result.lock().unwrap() = Some(idx);
             self.should_close = true;
         }
@@ -210,17 +211,22 @@ impl eframe::App for ZoneOverlayApp {
     }
 }
 
-/// Run the zone overlay and return the selected zone index (or None if cancelled).
-pub fn run_overlay(layout: Layout, zone_gap: u32) -> Option<usize> {
+/// Run the zone overlay on a specific monitor and return the selected zone index.
+pub fn run_overlay(layout: Layout, zone_gap: u32, monitor: &Monitor) -> Option<usize> {
     let result = Arc::new(Mutex::new(None));
     let result_clone = result.clone();
 
     let on_x11 = std::env::var("WAYLAND_DISPLAY").is_err() && std::env::var("DISPLAY").is_ok();
 
-    // On X11, spawn helper thread to set override_redirect so overlay spans all monitors
+    let mon_x = monitor.x;
+    let mon_y = monitor.y;
+    let mon_w = monitor.width;
+    let mon_h = monitor.height;
+
+    // On X11, spawn helper thread to set override_redirect and position on monitor
     if on_x11 {
-        std::thread::spawn(|| {
-            x11_configure_overlay();
+        std::thread::spawn(move || {
+            x11_configure_overlay(mon_x, mon_y, mon_w, mon_h);
         });
     }
 
@@ -229,13 +235,16 @@ pub fn run_overlay(layout: Layout, zone_gap: u32) -> Option<usize> {
             egui::ViewportBuilder::default()
                 .with_decorations(false)
                 .with_always_on_top()
-                .with_position(egui::pos2(0.0, 0.0))
+                .with_transparent(true)
+                .with_position(egui::pos2(mon_x as f32, mon_y as f32))
+                .with_inner_size(egui::vec2(mon_w as f32, mon_h as f32))
                 .with_resizable(false)
         } else {
             egui::ViewportBuilder::default()
                 .with_fullscreen(true)
                 .with_decorations(false)
                 .with_always_on_top()
+                .with_transparent(true)
         },
         ..Default::default()
     };
@@ -255,17 +264,11 @@ pub fn run_overlay(layout: Layout, zone_gap: u32) -> Option<usize> {
     result.lock().unwrap().take()
 }
 
-/// On X11, find our overlay window and set override_redirect so it spans all monitors.
-fn x11_configure_overlay() {
+/// On X11, find our overlay window and position it on the target monitor.
+fn x11_configure_overlay(mon_x: i32, mon_y: i32, mon_w: u32, mon_h: u32) {
     use std::process::Command;
     use std::thread;
     use std::time::Duration;
-
-    // Get full virtual desktop size for spanning
-    let (width, height) = match crate::x11::get_screen_geometry() {
-        Ok(dims) => dims,
-        Err(_) => return,
-    };
 
     for _ in 0..100 {
         thread::sleep(Duration::from_millis(30));
@@ -291,11 +294,11 @@ fn x11_configure_overlay() {
             .status();
 
         let _ = Command::new("xdotool")
-            .args(["windowsize", wid, &width.to_string(), &height.to_string()])
+            .args(["windowsize", wid, &mon_w.to_string(), &mon_h.to_string()])
             .status();
 
         let _ = Command::new("xdotool")
-            .args(["windowmove", wid, "0", "0"])
+            .args(["windowmove", wid, &mon_x.to_string(), &mon_y.to_string()])
             .status();
 
         let _ = Command::new("xdotool")

@@ -2,6 +2,7 @@ pub mod config;
 pub mod hotkey;
 pub mod ipc;
 pub mod module;
+pub mod monitor;
 pub mod platform;
 #[cfg(feature = "gui")]
 pub mod theme;

@@ -93,6 +93,45 @@ fn unmaximize_window(conn: &RustConnection, root: u32, window: u32) -> Result<()
     Ok(())
 }
 
+/// Get the absolute position of a window on the virtual desktop.
+pub fn get_window_position(window: u32) -> Result<(i32, i32)> {
+    let (conn, screen_num) = RustConnection::connect(None).context("failed to connect to X11")?;
+    let screen = &conn.setup().roots[screen_num];
+    let root = screen.root;
+
+    // translate_coordinates gives us position relative to root (= absolute)
+    let coords = conn
+        .translate_coordinates(window, root, 0, 0)
+        .context("translate_coordinates request failed")?
+        .reply()
+        .context("translate_coordinates reply failed")?;
+
+    Ok((coords.dst_x as i32, coords.dst_y as i32))
+}
+
+/// Find which monitor a window is on, based on its top-left corner.
+pub fn find_monitor_for_window(window: u32) -> Result<mpt_common::monitor::Monitor> {
+    let (wx, wy) = get_window_position(window)?;
+    info!("Window {window} position: ({wx}, {wy})");
+    let monitors = mpt_common::monitor::detect_monitors()?;
+
+    // Find the monitor whose rect contains the window's top-left corner
+    if let Some(m) = monitors
+        .iter()
+        .find(|m| wx >= m.x && wx < m.x + m.width as i32 && wy >= m.y && wy < m.y + m.height as i32)
+    {
+        return Ok(m.clone());
+    }
+
+    // Fallback: primary or first monitor
+    monitors
+        .iter()
+        .find(|m| m.is_primary)
+        .or(monitors.first())
+        .cloned()
+        .ok_or_else(|| anyhow::anyhow!("no monitors detected"))
+}
+
 fn intern_atom(conn: &RustConnection, name: &[u8]) -> Result<u32> {
     let reply = conn
         .intern_atom(false, name)

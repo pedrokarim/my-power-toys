@@ -1,10 +1,28 @@
 use serde::{Deserialize, Serialize};
 
+/// Kind of zone template.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TemplateKind {
+    NoLayout,
+    Focus,
+    Columns,
+    Rows,
+    Grid,
+    PriorityGrid,
+    Custom,
+}
+
 /// A zone layout definition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Layout {
     pub name: String,
+    #[serde(default = "default_kind")]
+    pub kind: TemplateKind,
     pub zones: Vec<Zone>,
+}
+
+fn default_kind() -> TemplateKind {
+    TemplateKind::Custom
 }
 
 /// A zone is a rectangular region on screen, defined as percentages (0.0 - 1.0).
@@ -59,6 +77,24 @@ impl Zone {
 }
 
 impl Layout {
+    /// No layout — empty zone list.
+    pub fn no_layout() -> Self {
+        Self {
+            name: "No layout".to_string(),
+            kind: TemplateKind::NoLayout,
+            zones: vec![],
+        }
+    }
+
+    /// Focus layout — one large centered zone (70% x 80%).
+    pub fn focus() -> Self {
+        Self {
+            name: "Focus".to_string(),
+            kind: TemplateKind::Focus,
+            zones: vec![Zone::new(0.15, 0.1, 0.7, 0.8)],
+        }
+    }
+
     /// Create a layout with N equal columns.
     pub fn default_columns(n: usize) -> Self {
         let w = 1.0 / n as f32;
@@ -67,6 +103,7 @@ impl Layout {
             .collect();
         Self {
             name: format!("{n} Columns"),
+            kind: TemplateKind::Columns,
             zones,
         }
     }
@@ -79,19 +116,8 @@ impl Layout {
             .collect();
         Self {
             name: format!("{n} Rows"),
+            kind: TemplateKind::Rows,
             zones,
-        }
-    }
-
-    /// Create a "main + side" layout (like i3/sway master-stack).
-    pub fn main_plus_stack() -> Self {
-        Self {
-            name: "Main + Stack".to_string(),
-            zones: vec![
-                Zone::new(0.0, 0.0, 0.6, 1.0), // Main (60%)
-                Zone::new(0.6, 0.0, 0.4, 0.5), // Stack top
-                Zone::new(0.6, 0.5, 0.4, 0.5), // Stack bottom
-            ],
         }
     }
 
@@ -104,8 +130,48 @@ impl Layout {
             .collect();
         Self {
             name: format!("{cols}x{rows} Grid"),
+            kind: TemplateKind::Grid,
             zones,
         }
+    }
+
+    /// Priority Grid — large main zone left, two smaller zones stacked right.
+    pub fn priority_grid() -> Self {
+        Self {
+            name: "Priority Grid".to_string(),
+            kind: TemplateKind::PriorityGrid,
+            zones: vec![
+                Zone::new(0.0, 0.0, 0.5, 1.0),   // Main left (50%)
+                Zone::new(0.5, 0.0, 0.5, 0.5),   // Top right
+                Zone::new(0.5, 0.5, 0.25, 0.5),  // Bottom right left
+                Zone::new(0.75, 0.5, 0.25, 0.5), // Bottom right right
+            ],
+        }
+    }
+
+    /// Create a "main + side" layout (like i3/sway master-stack).
+    pub fn main_plus_stack() -> Self {
+        Self {
+            name: "Main + Stack".to_string(),
+            kind: TemplateKind::Custom,
+            zones: vec![
+                Zone::new(0.0, 0.0, 0.6, 1.0), // Main (60%)
+                Zone::new(0.6, 0.0, 0.4, 0.5), // Stack top
+                Zone::new(0.6, 0.5, 0.4, 0.5), // Stack bottom
+            ],
+        }
+    }
+
+    /// All built-in template layouts.
+    pub fn all_templates() -> Vec<Self> {
+        vec![
+            Self::no_layout(),
+            Self::focus(),
+            Self::default_columns(3),
+            Self::default_rows(3),
+            Self::grid(3, 2),
+            Self::priority_grid(),
+        ]
     }
 
     /// Find which zone a point falls into.

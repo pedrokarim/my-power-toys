@@ -63,6 +63,7 @@ text, letters, words, watermark, logo artifacts, over-detailed busy scene, extre
 | `app-launcher` | App Launcher | `app-launcher-banner.png` | `#F5E0DC` | `search-first launcher scene, app tiles emerging from a central query surface, quick access mood` |
 | `fancy-zones` | FancyZones | `fancy-zones-banner.png` | `#89B4FA` | `window tiling grid layout across desktop, snap trajectories into custom zones, structured composition` |
 | `peek` | Peek | `peek-banner.png` | `#EBA0AC` | `quick preview pane over files, eye-focus metaphor with clean preview cards for media/text/pdf` |
+| `light-switch` | Light Switch | `light-switch-banner.png` | `#F9E2AF` | `day-to-night theme transition scene, split desktop surface with light mode fading into dark mode, toggle switch metaphor with warm-to-cool color gradient, sunrise and sunset ambient cues` |
 
 ## Exemple complet (Color Picker)
 

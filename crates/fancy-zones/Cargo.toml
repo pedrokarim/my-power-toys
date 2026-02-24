@@ -12,7 +12,7 @@ required-features = ["gui"]
 
 [features]
 default = ["gui"]
-gui = ["dep:egui", "dep:eframe", "dep:scopeguard"]
+gui = ["dep:egui", "dep:eframe", "dep:scopeguard", "mpt-common/gui"]
 
 [dependencies]
 mpt-common = { path = "../common" }

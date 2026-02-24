@@ -30,4 +30,15 @@ pub trait PowerModule: Send + Sync {
     fn on_hotkey(&mut self) -> Result<()> {
         Ok(())
     }
+
+    /// Additional hotkeys beyond the default one.
+    /// Returns a list of (hotkey, action_name) pairs.
+    fn additional_hotkeys(&self) -> Vec<(Hotkey, &'static str)> {
+        vec![]
+    }
+
+    /// Called when a named action (from additional_hotkeys) is triggered.
+    fn on_named_action(&mut self, _action: &str) -> Result<()> {
+        Ok(())
+    }
 }

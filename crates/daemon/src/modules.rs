@@ -132,6 +132,7 @@ impl ModuleRegistry {
         let mut bindings = Vec::new();
 
         for module in self.modules.values() {
+            // Default hotkey
             let configured = config
                 .modules
                 .get(module.id())
@@ -144,22 +145,41 @@ impl ModuleRegistry {
             if let Some(hotkey) = hotkey {
                 bindings.push((module.id().to_string(), hotkey));
             }
+
+            // Additional hotkeys (e.g. "fancy-zones:snap")
+            for (hk, action) in module.additional_hotkeys() {
+                let key = format!("{}:{}", module.id(), action);
+                bindings.push((key, hk.to_string()));
+            }
         }
 
         bindings.sort_by(|a, b| a.0.cmp(&b.0));
         bindings
     }
 
+    /// Trigger a hotkey by binding key.
+    /// If `id` contains ':', it's a named action (e.g. "fancy-zones:snap").
     pub fn trigger_hotkey(&mut self, id: &str) -> Result<()> {
-        let module = self
-            .modules
-            .get_mut(id)
-            .ok_or_else(|| anyhow::anyhow!("unknown module: {id}"))?;
-
-        if module.is_running() {
-            module.on_hotkey()
+        if let Some((module_id, action)) = id.split_once(':') {
+            let module = self
+                .modules
+                .get_mut(module_id)
+                .ok_or_else(|| anyhow::anyhow!("unknown module: {module_id}"))?;
+            if module.is_running() {
+                module.on_named_action(action)
+            } else {
+                bail!("module '{module_id}' is not running");
+            }
         } else {
-            bail!("module '{id}' is not running");
+            let module = self
+                .modules
+                .get_mut(id)
+                .ok_or_else(|| anyhow::anyhow!("unknown module: {id}"))?;
+            if module.is_running() {
+                module.on_hotkey()
+            } else {
+                bail!("module '{id}' is not running");
+            }
         }
     }
 }

@@ -31,48 +31,119 @@ fn main() {
         let _ = fs::remove_file(&lock_path_cleanup);
     });
 
-    // Parse --window-id argument
-    let window_id = parse_window_id();
-    let Some(window_id) = window_id else {
-        error!("Usage: mpt-fancy-zones --window-id <WINDOW_ID>");
+    let args: Vec<String> = std::env::args().collect();
+
+    if args.iter().any(|a| a == "--editor") {
+        run_editor_mode();
+    } else if let Some(window_id) = parse_window_id(&args) {
+        run_snap_mode(window_id);
+    } else {
+        error!("Usage: mpt-fancy-zones --editor");
+        error!("       mpt-fancy-zones --window-id <WINDOW_ID>");
         std::process::exit(1);
-    };
+    }
+}
 
-    info!("FancyZones overlay starting for window {window_id}");
+fn run_editor_mode() {
+    info!("FancyZones editor starting");
 
-    // Load config
     let config: mpt_fancy_zones::config::FancyZonesConfig =
         mpt_common::config::load_module_config("fancy-zones").unwrap_or_default();
 
+    let monitors = match mpt_common::monitor::detect_monitors() {
+        Ok(m) => m,
+        Err(e) => {
+            error!("Failed to detect monitors: {e}");
+            // Provide a fallback single monitor from X11 screen geometry
+            match mpt_fancy_zones::x11::get_screen_geometry() {
+                Ok((w, h)) => vec![mpt_common::monitor::Monitor {
+                    name: "Screen".to_string(),
+                    x: 0,
+                    y: 0,
+                    width: w,
+                    height: h,
+                    is_primary: true,
+                }],
+                Err(e2) => {
+                    error!("Cannot determine screen size: {e2}");
+                    std::process::exit(1);
+                }
+            }
+        }
+    };
+
+    info!("Detected {} monitor(s)", monitors.len());
+    mpt_fancy_zones::editor::run_editor(monitors, config);
+}
+
+fn run_snap_mode(window_id: u32) {
+    info!("FancyZones overlay starting for window {window_id}");
+
+    let config: mpt_fancy_zones::config::FancyZonesConfig =
+        mpt_common::config::load_module_config("fancy-zones").unwrap_or_default();
+
+    // Detect which monitor the window is on
+    let monitor = match mpt_fancy_zones::x11::find_monitor_for_window(window_id) {
+        Ok(m) => m,
+        Err(e) => {
+            info!("Could not detect monitor for window ({e}), using full screen");
+            match mpt_fancy_zones::x11::get_screen_geometry() {
+                Ok((w, h)) => mpt_common::monitor::Monitor {
+                    name: "Screen".to_string(),
+                    x: 0,
+                    y: 0,
+                    width: w,
+                    height: h,
+                    is_primary: true,
+                },
+                Err(e2) => {
+                    error!("Cannot determine screen size: {e2}");
+                    std::process::exit(1);
+                }
+            }
+        }
+    };
+
+    info!(
+        "Window is on monitor '{}' ({}x{} at {},{})",
+        monitor.name, monitor.width, monitor.height, monitor.x, monitor.y
+    );
+
+    // Get layout for this monitor
     let layout = config
-        .layouts
-        .get(config.active_layout)
+        .layout_for_monitor(&monitor.name)
         .cloned()
         .unwrap_or_else(|| mpt_fancy_zones::layout::Layout::default_columns(2));
 
-    let zone_gap = config.zone_gap;
-    let layout_for_snap = layout.clone();
+    if layout.zones.is_empty() {
+        info!(
+            "No layout configured for monitor '{}', nothing to do",
+            monitor.name
+        );
+        return;
+    }
 
-    // Show overlay and get selected zone
-    let selected = mpt_fancy_zones::overlay::run_overlay(layout, zone_gap);
+    let zone_gap = config.zone_gap;
+
+    // Show overlay on the target monitor
+    let selected = mpt_fancy_zones::overlay::run_overlay(layout.clone(), zone_gap, &monitor);
 
     match selected {
         Some(zone_idx) => {
             info!("Zone {zone_idx} selected, snapping window {window_id}");
 
-            if let Some(zone) = layout_for_snap.zones.get(zone_idx) {
-                match mpt_fancy_zones::x11::get_screen_geometry() {
-                    Ok((sw, sh)) => {
-                        let (x, y, w, h) = zone.to_pixels_with_gap(sw, sh, zone_gap);
-                        if let Err(e) =
-                            mpt_fancy_zones::x11::move_resize_window(window_id, x, y, w, h)
-                        {
-                            error!("Failed to snap window: {e}");
-                        }
-                    }
-                    Err(e) => {
-                        error!("Failed to get screen geometry: {e}");
-                    }
+            if let Some(zone) = layout.zones.get(zone_idx) {
+                // Snap coordinates are relative to the monitor
+                let (zx, zy, zw, zh) =
+                    zone.to_pixels_with_gap(monitor.width, monitor.height, zone_gap);
+                // Convert to absolute screen coordinates
+                let abs_x = monitor.x + zx;
+                let abs_y = monitor.y + zy;
+
+                if let Err(e) =
+                    mpt_fancy_zones::x11::move_resize_window(window_id, abs_x, abs_y, zw, zh)
+                {
+                    error!("Failed to snap window: {e}");
                 }
             }
         }
@@ -82,8 +153,7 @@ fn main() {
     }
 }
 
-fn parse_window_id() -> Option<u32> {
-    let args: Vec<String> = std::env::args().collect();
+fn parse_window_id(args: &[String]) -> Option<u32> {
     for (i, arg) in args.iter().enumerate() {
         if arg == "--window-id" {
             return args.get(i + 1)?.parse().ok();

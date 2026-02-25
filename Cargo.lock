@@ -3471,7 +3471,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-always-on-top"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "mpt-common",
@@ -3485,7 +3485,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-app-launcher"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "dirs 6.0.0",
@@ -3498,7 +3498,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-awake"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "mpt-common",
@@ -3509,7 +3509,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-bulk-rename"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "mpt-common",
@@ -3519,7 +3519,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-cli"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "mpt-common",
@@ -3529,7 +3529,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-color-picker"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "eframe",
@@ -3546,7 +3546,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-command-palette"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "dirs 6.0.0",
@@ -3566,7 +3566,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-common"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "dirs 6.0.0",
@@ -3583,7 +3583,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-daemon"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "dirs 6.0.0",
@@ -3620,7 +3620,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-fancy-zones"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "eframe",
@@ -3637,7 +3637,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-hosts-editor"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "mpt-common",
@@ -3646,7 +3646,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-image-resizer"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "eframe",
@@ -3663,7 +3663,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-key-manager"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "evdev",
@@ -3676,7 +3676,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-light-switch"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3688,7 +3688,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-mouse-utils"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "mpt-common",
@@ -3699,7 +3699,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-paste-plain"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "mpt-common",
@@ -3708,7 +3708,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-peek"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "eframe",
@@ -3725,7 +3725,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-quick-accent"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "eframe",
@@ -3742,7 +3742,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-screen-ruler"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "mpt-common",
@@ -3752,7 +3752,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-shortcut-guide"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "mpt-common",
@@ -3763,7 +3763,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-text-extractor"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "mpt-common",
@@ -3773,7 +3773,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-ui"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "dirs 6.0.0",
@@ -3795,7 +3795,7 @@ dependencies = [
 
 [[package]]
 name = "mpt-workspaces"
-version = "0.3.23"
+version = "0.3.24"
 dependencies = [
  "anyhow",
  "chrono",

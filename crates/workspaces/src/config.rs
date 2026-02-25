@@ -20,6 +20,8 @@ pub struct Workspace {
     pub last_launched: Option<String>,
     #[serde(default = "default_true")]
     pub move_existing: bool,
+    #[serde(default)]
+    pub create_shortcut: bool,
 }
 
 impl Workspace {
@@ -30,6 +32,7 @@ impl Workspace {
             created_at: chrono::Local::now().to_rfc3339(),
             last_launched: None,
             move_existing: true,
+            create_shortcut: false,
         }
     }
 
@@ -57,6 +60,8 @@ pub struct AppEntry {
     pub monitor: String,
     #[serde(default = "default_true")]
     pub enabled: bool,
+    #[serde(default)]
+    pub minimized: bool,
 }
 
 /// Resolve executable path from a PID via /proc.
@@ -78,6 +83,55 @@ pub fn resolve_args_from_pid(pid: u32) -> Vec<String> {
                 .collect()
         })
         .unwrap_or_default()
+}
+
+/// Create a `.desktop` file for a workspace so it appears in the app menu.
+#[cfg(feature = "gui")]
+pub fn create_desktop_shortcut(workspace_name: &str, workspace_idx: usize) -> anyhow::Result<()> {
+    let app_dir = dirs::home_dir()
+        .ok_or_else(|| anyhow::anyhow!("no home dir"))?
+        .join(".local/share/applications");
+    std::fs::create_dir_all(&app_dir)?;
+
+    let slug = workspace_name
+        .to_lowercase()
+        .replace(|c: char| !c.is_alphanumeric(), "-");
+    let filename = format!("mpt-workspace-{slug}.desktop");
+
+    let content = format!(
+        "[Desktop Entry]\n\
+         Type=Application\n\
+         Name=Workspace: {name}\n\
+         Comment=Launch MyPowerToys workspace \"{name}\"\n\
+         Exec=mpt-workspaces --launch {idx}\n\
+         Icon=my-power-toys\n\
+         Terminal=false\n\
+         Categories=Utility;System;\n\
+         NoDisplay=false\n",
+        name = workspace_name,
+        idx = workspace_idx,
+    );
+
+    std::fs::write(app_dir.join(&filename), content)?;
+    tracing::info!("Created desktop shortcut: {filename}");
+    Ok(())
+}
+
+/// Remove a desktop shortcut for a workspace.
+#[cfg(feature = "gui")]
+pub fn remove_desktop_shortcut(workspace_name: &str) {
+    let slug = workspace_name
+        .to_lowercase()
+        .replace(|c: char| !c.is_alphanumeric(), "-");
+    let filename = format!("mpt-workspace-{slug}.desktop");
+
+    if let Some(home) = dirs::home_dir() {
+        let path = home.join(".local/share/applications").join(&filename);
+        if path.exists() {
+            let _ = std::fs::remove_file(&path);
+            tracing::info!("Removed desktop shortcut: {filename}");
+        }
+    }
 }
 
 #[cfg(test)]
@@ -112,6 +166,7 @@ mod tests {
                 height: 1080,
                 monitor: "DP-1".into(),
                 enabled: true,
+                minimized: false,
             },
             AppEntry {
                 name: "Code".into(),
@@ -124,6 +179,7 @@ mod tests {
                 height: 1080,
                 monitor: "DP-1".into(),
                 enabled: false,
+                minimized: false,
             },
         ];
         let ws = Workspace::new("Dev", apps);
@@ -147,6 +203,7 @@ mod tests {
                     height: 1080,
                     monitor: "DP-1".into(),
                     enabled: true,
+                    minimized: false,
                 }],
             )],
         };

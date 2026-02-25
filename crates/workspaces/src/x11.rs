@@ -15,6 +15,7 @@ pub struct CapturedWindow {
     pub y: i32,
     pub width: u32,
     pub height: u32,
+    pub minimized: bool,
 }
 
 /// List all managed (normal) application windows on the desktop.
@@ -39,8 +40,11 @@ pub fn list_windows() -> Result<Vec<CapturedWindow>> {
         };
         let pid = get_window_pid(&conn, win).ok().flatten();
         let (x, y, width, height) = get_window_geometry(&conn, root, win)?;
+        let minimized = is_minimized(&conn, win).unwrap_or(false);
 
-        debug!("Window {win}: {title:?} class={wm_class:?} pid={pid:?} {width}x{height}+{x}+{y}");
+        debug!(
+            "Window {win}: {title:?} class={wm_class:?} pid={pid:?} {width}x{height}+{x}+{y} minimized={minimized}"
+        );
 
         windows.push(CapturedWindow {
             window_id: win,
@@ -51,6 +55,7 @@ pub fn list_windows() -> Result<Vec<CapturedWindow>> {
             y,
             width,
             height,
+            minimized,
         });
     }
 
@@ -283,6 +288,26 @@ fn unmaximize_window(conn: &RustConnection, root: u32, window: u32) -> Result<()
 
     conn.flush()?;
     Ok(())
+}
+
+/// Check if a window has the _NET_WM_STATE_HIDDEN atom (minimized).
+fn is_minimized(conn: &RustConnection, window: u32) -> Result<bool> {
+    let net_wm_state = intern_atom(conn, b"_NET_WM_STATE")?;
+    let hidden = intern_atom(conn, b"_NET_WM_STATE_HIDDEN")?;
+
+    let reply = conn
+        .get_property(false, window, net_wm_state, xproto::AtomEnum::ATOM, 0, 64)
+        .context("get _NET_WM_STATE failed")?
+        .reply()
+        .context("get _NET_WM_STATE reply failed")?;
+
+    if reply.format == 32
+        && let Some(atoms) = reply.value32()
+    {
+        return Ok(atoms.collect::<Vec<_>>().contains(&hidden));
+    }
+
+    Ok(false)
 }
 
 fn intern_atom(conn: &RustConnection, name: &[u8]) -> Result<Atom> {

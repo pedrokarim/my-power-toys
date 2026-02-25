@@ -31,6 +31,7 @@ struct WorkspacesApp {
     // Edit mode state
     edit_name: String,
     edit_args: Vec<String>,
+    edit_positions: Vec<[String; 4]>, // [x, y, w, h] as strings for text fields
     // Status message
     status: Option<(String, std::time::Instant, bool)>, // (message, timestamp, is_error)
 }
@@ -44,6 +45,7 @@ impl WorkspacesApp {
             icon_cache: IconCache::new(),
             edit_name: String::new(),
             edit_args: Vec::new(),
+            edit_positions: Vec::new(),
             status: None,
         }
     }
@@ -58,6 +60,18 @@ impl WorkspacesApp {
         if let Some(ws) = self.config.workspaces.get(idx) {
             self.edit_name = ws.name.clone();
             self.edit_args = ws.apps.iter().map(|a| a.args.join(" ")).collect();
+            self.edit_positions = ws
+                .apps
+                .iter()
+                .map(|a| {
+                    [
+                        a.x.to_string(),
+                        a.y.to_string(),
+                        a.width.to_string(),
+                        a.height.to_string(),
+                    ]
+                })
+                .collect();
             self.mode = Mode::Edit(idx);
         }
     }
@@ -121,6 +135,7 @@ impl WorkspacesApp {
                     height: win.height,
                     monitor,
                     enabled: true,
+                    minimized: win.minimized,
                 }
             })
             .collect();
@@ -715,6 +730,146 @@ impl WorkspacesApp {
         }
     }
 
+    // ── Monitor preview ─────────────────────────────────────────────────────
+
+    fn draw_monitor_preview(&mut self, ctx: &egui::Context, ui: &mut egui::Ui, ws: &Workspace) {
+        let monitors = mpt_common::monitor::detect_monitors().unwrap_or_default();
+        if monitors.is_empty() {
+            return;
+        }
+
+        let preview_h = theme::MONITOR_PREVIEW_HEIGHT;
+        let available_w = ui.available_width();
+        let (rect, _) =
+            ui.allocate_exact_size(egui::vec2(available_w, preview_h), egui::Sense::hover());
+        let p = ui.painter_at(rect);
+
+        // Background
+        p.rect_filled(rect, theme::CARD_RADIUS, theme::BG_SECONDARY);
+        p.rect_stroke(
+            rect,
+            theme::CARD_RADIUS,
+            egui::Stroke::new(0.5, theme::CARD_BORDER),
+            egui::StrokeKind::Inside,
+        );
+
+        // Compute bounding box of all monitors
+        let total_x_min = monitors.iter().map(|m| m.x).min().unwrap_or(0);
+        let total_y_min = monitors.iter().map(|m| m.y).min().unwrap_or(0);
+        let total_x_max = monitors
+            .iter()
+            .map(|m| m.x + m.width as i32)
+            .max()
+            .unwrap_or(1920);
+        let total_y_max = monitors
+            .iter()
+            .map(|m| m.y + m.height as i32)
+            .max()
+            .unwrap_or(1080);
+        let total_w = (total_x_max - total_x_min) as f32;
+        let total_h = (total_y_max - total_y_min) as f32;
+
+        // Scale to fit in the preview rect with padding
+        let pad = 16.0;
+        let inner = rect.shrink(pad);
+        let scale_x = inner.width() / total_w;
+        let scale_y = inner.height() / total_h;
+        let scale = scale_x.min(scale_y);
+
+        // Center the preview
+        let scaled_w = total_w * scale;
+        let scaled_h = total_h * scale;
+        let offset_x = inner.left() + (inner.width() - scaled_w) / 2.0;
+        let offset_y = inner.top() + (inner.height() - scaled_h) / 2.0;
+
+        let to_screen = |x: i32, y: i32| -> egui::Pos2 {
+            egui::pos2(
+                offset_x + (x - total_x_min) as f32 * scale,
+                offset_y + (y - total_y_min) as f32 * scale,
+            )
+        };
+
+        // Draw monitors
+        for mon in &monitors {
+            let tl = to_screen(mon.x, mon.y);
+            let br = to_screen(mon.x + mon.width as i32, mon.y + mon.height as i32);
+            let mon_rect = egui::Rect::from_min_max(tl, br);
+
+            p.rect_filled(mon_rect, 3.0, theme::BG_CARD);
+            p.rect_stroke(
+                mon_rect,
+                3.0,
+                egui::Stroke::new(1.0, theme::CARD_BORDER),
+                egui::StrokeKind::Inside,
+            );
+        }
+
+        // Draw app windows on monitors
+        let non_minimized: Vec<_> = ws
+            .apps
+            .iter()
+            .filter(|a| a.enabled && !a.minimized)
+            .collect();
+        for app in &non_minimized {
+            let tl = to_screen(app.x, app.y);
+            let br = to_screen(app.x + app.width as i32, app.y + app.height as i32);
+            let win_rect = egui::Rect::from_min_max(tl, br);
+
+            p.rect_filled(win_rect, 2.0, theme::BG_CHIP);
+            p.rect_stroke(
+                win_rect,
+                2.0,
+                egui::Stroke::new(0.5, theme::TEXT_MUTED),
+                egui::StrokeKind::Inside,
+            );
+
+            // Draw app icon in center if space allows
+            let icon_sz = 16.0;
+            if win_rect.width() > icon_sz + 4.0
+                && win_rect.height() > icon_sz + 4.0
+                && let Some(source) = self.icon_cache.get_for_app(ctx, &app.wm_class, &app.exec)
+            {
+                let icon_rect =
+                    egui::Rect::from_center_size(win_rect.center(), egui::vec2(icon_sz, icon_sz));
+                ui.allocate_new_ui(egui::UiBuilder::new().max_rect(icon_rect), |ui| {
+                    ui.add(
+                        egui::Image::new(source).fit_to_exact_size(egui::vec2(icon_sz, icon_sz)),
+                    );
+                });
+            }
+        }
+
+        // Draw minimized apps as a taskbar-like strip at the bottom
+        let minimized: Vec<_> = ws
+            .apps
+            .iter()
+            .filter(|a| a.enabled && a.minimized)
+            .collect();
+        if !minimized.is_empty() {
+            let bar_h = 14.0;
+            let bar_y = rect.bottom() - pad - bar_h;
+            let bar_x = offset_x;
+            let bar_w = scaled_w;
+            let bar_rect =
+                egui::Rect::from_min_size(egui::pos2(bar_x, bar_y), egui::vec2(bar_w, bar_h));
+            p.rect_filled(bar_rect, 2.0, theme::BG_CHIP);
+
+            let mut ix = bar_x + 4.0;
+            for app in &minimized {
+                if let Some(source) = self.icon_cache.get_for_app(ctx, &app.wm_class, &app.exec) {
+                    let icon_rect = egui::Rect::from_min_size(
+                        egui::pos2(ix, bar_y + 1.0),
+                        egui::vec2(12.0, 12.0),
+                    );
+                    ui.allocate_new_ui(egui::UiBuilder::new().max_rect(icon_rect), |ui| {
+                        ui.add(egui::Image::new(source).fit_to_exact_size(egui::vec2(12.0, 12.0)));
+                    });
+                }
+                ix += 16.0;
+            }
+        }
+    }
+
     // ── Edit mode ───────────────────────────────────────────────────────────
 
     fn draw_edit_mode(&mut self, ui: &mut egui::Ui, idx: usize) {
@@ -754,51 +909,82 @@ impl WorkspacesApp {
             );
         });
 
+        ui.add_space(8.0);
+
+        // Monitor preview
+        let ws_clone = self.config.workspaces[idx].clone();
+        let ctx = ui.ctx().clone();
+        self.draw_monitor_preview(&ctx, ui, &ws_clone);
+
         ui.add_space(12.0);
 
-        // Workspace name section
-        Self::draw_section_label(ui, "WORKSPACE NAME");
+        // Workspace name + checkboxes row
+        ui.horizontal(|ui| {
+            Self::draw_section_label(ui, "WORKSPACE NAME");
+        });
         ui.add_space(4.0);
 
         // Name text field
-        let name_response = ui.add(
+        ui.add(
             egui::TextEdit::singleline(&mut self.edit_name)
                 .desired_width(300.0)
                 .font(egui::FontId::proportional(theme::FONT_BODY)),
         );
-        let _ = name_response;
 
         ui.add_space(8.0);
 
-        // Move existing toggle
-        let move_existing = self.config.workspaces[idx].move_existing;
-        let mut me = move_existing;
+        // Checkboxes row
         ui.horizontal(|ui| {
-            ui.checkbox(&mut me, "");
+            // Create desktop shortcut
+            let mut cs = self.config.workspaces[idx].create_shortcut;
+            ui.checkbox(&mut cs, "");
             ui.label(
-                egui::RichText::new("Move existing windows instead of launching new")
+                egui::RichText::new("Create desktop shortcut")
                     .size(theme::FONT_BODY)
                     .color(theme::TEXT_SECONDARY),
             );
+            if cs != self.config.workspaces[idx].create_shortcut {
+                self.config.workspaces[idx].create_shortcut = cs;
+            }
+
+            ui.add_space(24.0);
+
+            // Move existing toggle
+            let mut me = self.config.workspaces[idx].move_existing;
+            ui.checkbox(&mut me, "");
+            ui.label(
+                egui::RichText::new("Move existing windows")
+                    .size(theme::FONT_BODY)
+                    .color(theme::TEXT_SECONDARY),
+            );
+            if me != self.config.workspaces[idx].move_existing {
+                self.config.workspaces[idx].move_existing = me;
+            }
         });
-        if me != move_existing {
-            self.config.workspaces[idx].move_existing = me;
-        }
 
         ui.add_space(theme::SECTION_SPACING);
         Self::draw_separator(ui);
         ui.add_space(theme::SECTION_SPACING);
 
-        // Applications section
+        // Split apps into normal and minimized
         let app_count = self.config.workspaces[idx].apps.len();
+        let normal_indices: Vec<usize> = (0..app_count)
+            .filter(|&i| !self.config.workspaces[idx].apps[i].minimized)
+            .collect();
+        let minimized_indices: Vec<usize> = (0..app_count)
+            .filter(|&i| self.config.workspaces[idx].apps[i].minimized)
+            .collect();
+
+        // Applications section
+        let normal_count = normal_indices.len();
         ui.horizontal(|ui| {
             Self::draw_section_label(ui, "APPLICATIONS");
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 ui.label(
                     egui::RichText::new(format!(
                         "{} app{}",
-                        app_count,
-                        if app_count != 1 { "s" } else { "" }
+                        normal_count,
+                        if normal_count != 1 { "s" } else { "" }
                     ))
                     .size(theme::FONT_SMALL)
                     .color(theme::TEXT_MUTED),
@@ -810,15 +996,27 @@ impl WorkspacesApp {
         // App list — use remaining space minus bottom buttons
         let available_height = ui.available_height() - 60.0; // reserve for buttons
         let mut to_remove = None;
-        let ctx = ui.ctx().clone();
 
         egui::ScrollArea::vertical()
             .max_height(available_height.max(100.0))
             .auto_shrink([false, false])
             .show(ui, |ui| {
-                for i in 0..app_count {
+                // Normal apps
+                for &i in &normal_indices {
                     self.draw_app_card(&ctx, ui, idx, i, &mut to_remove);
                     ui.add_space(4.0);
+                }
+
+                // Minimized apps section
+                if !minimized_indices.is_empty() {
+                    ui.add_space(8.0);
+                    Self::draw_section_label(ui, "MINIMIZED APPS");
+                    ui.add_space(6.0);
+
+                    for &i in &minimized_indices {
+                        self.draw_app_card(&ctx, ui, idx, i, &mut to_remove);
+                        ui.add_space(4.0);
+                    }
                 }
             });
 
@@ -827,6 +1025,9 @@ impl WorkspacesApp {
             self.config.workspaces[idx].apps.remove(i);
             if i < self.edit_args.len() {
                 self.edit_args.remove(i);
+            }
+            if i < self.edit_positions.len() {
+                self.edit_positions.remove(i);
             }
         }
 
@@ -859,7 +1060,7 @@ impl WorkspacesApp {
 
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if Self::draw_action_button(ui, "\u{25B6}  Save Workspace", true) {
-                    // Apply name and args
+                    // Apply name, args, and positions
                     if let Some(ws) = self.config.workspaces.get_mut(idx) {
                         ws.name = self.edit_name.clone();
                         for (i, args_str) in self.edit_args.iter().enumerate() {
@@ -867,8 +1068,34 @@ impl WorkspacesApp {
                                 app.args = args_str.split_whitespace().map(String::from).collect();
                             }
                         }
+                        for (i, pos) in self.edit_positions.iter().enumerate() {
+                            if let Some(app) = ws.apps.get_mut(i) {
+                                if let Ok(v) = pos[0].parse() {
+                                    app.x = v;
+                                }
+                                if let Ok(v) = pos[1].parse() {
+                                    app.y = v;
+                                }
+                                if let Ok(v) = pos[2].parse() {
+                                    app.width = v;
+                                }
+                                if let Ok(v) = pos[3].parse() {
+                                    app.height = v;
+                                }
+                            }
+                        }
                     }
                     self.save_config();
+
+                    // Handle desktop shortcut
+                    if self.config.workspaces[idx].create_shortcut {
+                        if let Err(e) = config::create_desktop_shortcut(&self.edit_name, idx) {
+                            warn!("Failed to create shortcut: {e}");
+                        }
+                    } else {
+                        config::remove_desktop_shortcut(&self.edit_name);
+                    }
+
                     self.set_status("Workspace saved", false);
                     self.mode = Mode::List;
                 }
@@ -1012,22 +1239,64 @@ impl WorkspacesApp {
             theme::TEXT_SECONDARY,
         );
 
-        // Position info
-        let pos_text = format!(
-            "{}x{}  pos({},{})  @{}",
-            app_width, app_height, app_x, app_y, app_monitor
-        );
-        p.text(
-            egui::pos2(text_x, rect.top() + 52.0),
-            egui::Align2::LEFT_CENTER,
-            &pos_text,
-            egui::FontId::proportional(theme::FONT_SMALL),
-            theme::TEXT_MUTED,
-        );
+        // Position fields (editable Left / Top / Width / Height)
+        let has_positions = app_idx < self.edit_positions.len();
+        if has_positions {
+            let field_y = rect.top() + 50.0;
+            let field_w = 64.0;
+            let field_h = 20.0;
+            let label_font = egui::FontId::proportional(9.0);
+            let labels = ["Left", "Top", "Width", "Height"];
+            let mut cursor = text_x;
+
+            for (fi, label) in labels.iter().enumerate() {
+                p.text(
+                    egui::pos2(cursor, field_y + 1.0),
+                    egui::Align2::LEFT_TOP,
+                    *label,
+                    label_font.clone(),
+                    theme::TEXT_MUTED,
+                );
+                let edit_rect = egui::Rect::from_min_size(
+                    egui::pos2(cursor, field_y + 13.0),
+                    egui::vec2(field_w, field_h),
+                );
+                ui.allocate_new_ui(egui::UiBuilder::new().max_rect(edit_rect), |ui| {
+                    ui.add(
+                        egui::TextEdit::singleline(&mut self.edit_positions[app_idx][fi])
+                            .desired_width(field_w)
+                            .font(egui::FontId::monospace(theme::FONT_SMALL)),
+                    );
+                });
+                cursor += field_w + 10.0;
+            }
+
+            // Monitor label
+            p.text(
+                egui::pos2(cursor + 4.0, field_y + 18.0),
+                egui::Align2::LEFT_CENTER,
+                format!("@{}", app_monitor),
+                egui::FontId::proportional(theme::FONT_SMALL),
+                theme::TEXT_MUTED,
+            );
+        } else {
+            // Fallback: read-only compact display
+            let pos_text = format!(
+                "{}x{}  pos({},{})  @{}",
+                app_width, app_height, app_x, app_y, app_monitor
+            );
+            p.text(
+                egui::pos2(text_x, rect.top() + 52.0),
+                egui::Align2::LEFT_CENTER,
+                &pos_text,
+                egui::FontId::proportional(theme::FONT_SMALL),
+                theme::TEXT_MUTED,
+            );
+        }
 
         // Args field (if available)
         if has_args {
-            let args_y = rect.top() + 72.0;
+            let args_y = rect.top() + 76.0;
             p.text(
                 egui::pos2(text_x, args_y + 12.0),
                 egui::Align2::LEFT_CENTER,

@@ -37,8 +37,9 @@ pub use mpt_common::theme::{
 // ── Module-specific dimensions ─────────────────────────────────────────────
 pub const WINDOW_WIDTH: f32 = 800.0;
 pub const WINDOW_HEIGHT: f32 = 650.0;
-pub const APP_CARD_HEIGHT: f32 = 72.0;
-pub const APP_CARD_EXPANDED_HEIGHT: f32 = 120.0;
+pub const APP_CARD_HEIGHT: f32 = 100.0;
+pub const APP_CARD_EXPANDED_HEIGHT: f32 = 132.0;
+pub const MONITOR_PREVIEW_HEIGHT: f32 = 140.0;
 pub const WORKSPACE_CARD_HEIGHT: f32 = 80.0;
 
 /// Apply the theme to an egui context.

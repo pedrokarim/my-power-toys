@@ -72,6 +72,11 @@ pub enum Message {
     AddKeyMapping(mpt_key_manager::KeyMapping),
     RemoveKeyMapping(usize),
     ToggleKeyMapping(usize, bool),
+    // Always on Top
+    ToggleAotBorder(bool),
+    SetAotBorderThickness(u32),
+    ToggleAotSound(bool),
+    RemoveAotExcludedApp(usize),
     // Workspaces
     RemoveWorkspace(usize),
     LaunchWorkspace(usize),

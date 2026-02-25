@@ -186,4 +186,14 @@ pub(super) static EN: Tr = Tr {
     ms_ws_delete: "Delete",
     ms_ws_no_workspaces: "No workspaces configured. Use Super+Ctrl+W to open the editor and capture your first workspace.",
     ms_ws_editor_hint: "Use Super+Ctrl+W to open the full Workspaces Editor for capture and editing.",
+
+    // Always on Top
+    ms_aot_show_border: "Show border",
+    ms_aot_show_border_desc: "Display a colored border around pinned windows.",
+    ms_aot_border_thickness: "Border thickness (px)",
+    ms_aot_play_sound: "Play sound",
+    ms_aot_play_sound_desc: "Play a notification sound when pinning or unpinning a window.",
+    ms_aot_excluded_apps: "Excluded apps",
+    ms_aot_excluded_apps_desc: "These applications cannot be pinned. Partial matches are supported.",
+    ms_aot_no_exclusions: "No excluded applications.",
 };

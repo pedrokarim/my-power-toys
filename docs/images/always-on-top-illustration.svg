@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" fill="none">
+  <!-- Background -->
+  <rect width="800" height="500" rx="16" fill="#0d1117"/>
+
+  <!-- Back window (unfocused) -->
+  <g transform="translate(180, 120)">
+    <rect width="340" height="240" rx="10" fill="#1c2128" stroke="#30363d" stroke-width="1.5"/>
+    <rect width="340" height="36" rx="10" fill="#21262d"/>
+    <rect y="36" width="340" height="0.5" fill="#30363d"/>
+    <!-- Title bar dots -->
+    <circle cx="20" cy="18" r="5" fill="#f85149" opacity="0.6"/>
+    <circle cx="38" cy="18" r="5" fill="#d29922" opacity="0.6"/>
+    <circle cx="56" cy="18" r="5" fill="#3fb950" opacity="0.6"/>
+    <!-- Title text -->
+    <rect x="120" y="13" width="80" height="10" rx="3" fill="#484f58"/>
+    <!-- Content lines -->
+    <rect x="24" y="56" width="200" height="8" rx="3" fill="#21262d"/>
+    <rect x="24" y="76" width="280" height="8" rx="3" fill="#21262d"/>
+    <rect x="24" y="96" width="160" height="8" rx="3" fill="#21262d"/>
+    <rect x="24" y="116" width="240" height="8" rx="3" fill="#21262d"/>
+    <rect x="24" y="148" width="220" height="8" rx="3" fill="#21262d"/>
+    <rect x="24" y="168" width="180" height="8" rx="3" fill="#21262d"/>
+  </g>
+
+  <!-- Front window (pinned, with border) -->
+  <g transform="translate(280, 80)">
+    <!-- Blue border glow -->
+    <rect x="-4" y="-4" width="348" height="268" rx="12" fill="none" stroke="#0078D4" stroke-width="3" opacity="0.85"/>
+    <!-- Window -->
+    <rect width="340" height="260" rx="10" fill="#1c2128" stroke="#30363d" stroke-width="1"/>
+    <rect width="340" height="36" rx="10" fill="#21262d"/>
+    <rect y="36" width="340" height="0.5" fill="#30363d"/>
+    <!-- Title bar dots -->
+    <circle cx="20" cy="18" r="5" fill="#f85149"/>
+    <circle cx="38" cy="18" r="5" fill="#d29922"/>
+    <circle cx="56" cy="18" r="5" fill="#3fb950"/>
+    <!-- Title text -->
+    <rect x="120" y="13" width="100" height="10" rx="3" fill="#8b949e"/>
+    <!-- Content lines -->
+    <rect x="24" y="56" width="240" height="8" rx="3" fill="#30363d"/>
+    <rect x="24" y="76" width="180" height="8" rx="3" fill="#30363d"/>
+    <rect x="24" y="96" width="290" height="8" rx="3" fill="#30363d"/>
+    <rect x="24" y="116" width="200" height="8" rx="3" fill="#30363d"/>
+    <rect x="24" y="148" width="260" height="8" rx="3" fill="#30363d"/>
+    <rect x="24" y="168" width="150" height="8" rx="3" fill="#30363d"/>
+    <rect x="24" y="188" width="220" height="8" rx="3" fill="#30363d"/>
+    <rect x="24" y="208" width="170" height="8" rx="3" fill="#30363d"/>
+  </g>
+
+  <!-- Pin icon (top-right of pinned window) -->
+  <g transform="translate(595, 68)">
+    <circle cx="0" cy="0" r="18" fill="#0078D4" opacity="0.9"/>
+    <g transform="translate(-9, -10) scale(0.85)" fill="white">
+      <path d="M12 2C11.45 2 11 2.45 11 3v1.51L7.5 7.5C7.18 7.82 7 8.26 7 8.71V12l-1.29 1.29a1 1 0 001.41 1.41L8.41 13.41 11 13v6a1 1 0 002 0v-6l2.59 0.71 1.29 1.29a1 1 0 001.41-1.41L17 12V8.71c0-.45-.18-.89-.5-1.21L13 4.51V3c0-.55-.45-1-1-1z"/>
+    </g>
+  </g>
+
+  <!-- Keyboard shortcut badge -->
+  <g transform="translate(400, 430)">
+    <rect x="-110" y="-18" width="220" height="36" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <!-- Super key -->
+    <rect x="-95" y="-10" width="52" height="20" rx="5" fill="#21262d" stroke="#484f58" stroke-width="0.5"/>
+    <text x="-69" y="5" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="600" fill="#e6edf3" text-anchor="middle">Super</text>
+    <!-- Plus -->
+    <text x="-35" y="5" font-family="Inter, system-ui, sans-serif" font-size="12" fill="#484f58" text-anchor="middle">+</text>
+    <!-- T key -->
+    <rect x="-25" y="-10" width="26" height="20" rx="5" fill="#21262d" stroke="#484f58" stroke-width="0.5"/>
+    <text x="-12" y="5" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="600" fill="#e6edf3" text-anchor="middle">T</text>
+    <!-- Label -->
+    <text x="40" y="5" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#8b949e" text-anchor="start">Always on Top</text>
+  </g>
+</svg>

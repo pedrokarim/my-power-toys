@@ -186,4 +186,14 @@ pub(super) static FR: Tr = Tr {
     ms_ws_delete: "Supprimer",
     ms_ws_no_workspaces: "Aucun workspace configuré. Utilisez Super+Ctrl+W pour ouvrir l'éditeur et capturer votre premier workspace.",
     ms_ws_editor_hint: "Utilisez Super+Ctrl+W pour ouvrir l'éditeur Workspaces complet.",
+
+    // Always on Top
+    ms_aot_show_border: "Afficher la bordure",
+    ms_aot_show_border_desc: "Afficher une bordure colorée autour des fenêtres épinglées.",
+    ms_aot_border_thickness: "Épaisseur de la bordure (px)",
+    ms_aot_play_sound: "Jouer un son",
+    ms_aot_play_sound_desc: "Jouer un son de notification lors de l'épinglage ou du désépinglage.",
+    ms_aot_excluded_apps: "Applications exclues",
+    ms_aot_excluded_apps_desc: "Ces applications ne peuvent pas être épinglées. Les correspondances partielles sont prises en charge.",
+    ms_aot_no_exclusions: "Aucune application exclue.",
 };

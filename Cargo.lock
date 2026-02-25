@@ -3475,6 +3475,8 @@ version = "0.3.23"
 dependencies = [
  "anyhow",
  "mpt-common",
+ "serde",
+ "toml",
  "tracing",
  "wayland-client",
  "wayland-protocols",
@@ -3777,6 +3779,7 @@ dependencies = [
  "dirs 6.0.0",
  "iced",
  "iced_fonts",
+ "mpt-always-on-top",
  "mpt-common",
  "mpt-key-manager",
  "mpt-workspaces",

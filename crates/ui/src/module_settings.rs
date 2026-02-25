@@ -327,6 +327,10 @@ impl Default for LightSwitchConf {
     }
 }
 
+// ── Always on Top ───────────────────────────────────────────────────────────
+
+pub type AlwaysOnTopConf = mpt_always_on_top::Config;
+
 // ── Key Manager ─────────────────────────────────────────────────────────────
 
 pub type KeyManagerConf = mpt_key_manager::KeyManagerConfig;
@@ -339,6 +343,7 @@ pub type WorkspacesConf = mpt_workspaces::config::WorkspacesConfig;
 
 #[derive(Debug, Clone)]
 pub struct ModuleConfigs {
+    pub always_on_top: AlwaysOnTopConf,
     pub color_picker: ColorPickerConf,
     pub text_extractor: TextExtractorConf,
     pub image_resizer: ImageResizerConf,
@@ -355,6 +360,7 @@ pub struct ModuleConfigs {
 impl ModuleConfigs {
     pub fn load_all() -> Self {
         Self {
+            always_on_top: load_module_config("always-on-top").unwrap_or_default(),
             color_picker: load_module_config("color-picker").unwrap_or_default(),
             text_extractor: load_module_config("text-extractor").unwrap_or_default(),
             image_resizer: load_module_config("image-resizer").unwrap_or_default(),
@@ -371,6 +377,7 @@ impl ModuleConfigs {
 
     pub fn save(&self, module_id: &str) {
         let _ = match module_id {
+            "always-on-top" => save_module_config("always-on-top", &self.always_on_top),
             "color-picker" => save_module_config("color-picker", &self.color_picker),
             "text-extractor" => save_module_config("text-extractor", &self.text_extractor),
             "image-resizer" => save_module_config("image-resizer", &self.image_resizer),

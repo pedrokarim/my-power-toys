@@ -202,6 +202,16 @@ pub struct Tr {
     pub ms_km_disabled: &'static str,
     pub ms_km_all_apps: &'static str,
 
+    // Always on Top
+    pub ms_aot_show_border: &'static str,
+    pub ms_aot_show_border_desc: &'static str,
+    pub ms_aot_border_thickness: &'static str,
+    pub ms_aot_play_sound: &'static str,
+    pub ms_aot_play_sound_desc: &'static str,
+    pub ms_aot_excluded_apps: &'static str,
+    pub ms_aot_excluded_apps_desc: &'static str,
+    pub ms_aot_no_exclusions: &'static str,
+
     // Workspaces
     pub ms_ws_title: &'static str,
     pub ms_ws_desc: &'static str,

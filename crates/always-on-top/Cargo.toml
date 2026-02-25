@@ -9,6 +9,8 @@ license.workspace = true
 mpt-common = { path = "../common" }
 anyhow = { workspace = true }
 tracing = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
 x11rb = { version = "0.13", features = ["allow-unsafe-code"] }
 wayland-client = "0.31"
 wayland-protocols = { version = "0.32", features = ["client", "unstable"] }

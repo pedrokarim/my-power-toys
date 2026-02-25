@@ -646,6 +646,25 @@ impl Settings {
                 }
                 self.module_configs.save("key-manager");
             }
+            // Always on Top
+            Message::ToggleAotBorder(v) => {
+                self.module_configs.always_on_top.show_border = v;
+                self.module_configs.save("always-on-top");
+            }
+            Message::SetAotBorderThickness(t) => {
+                self.module_configs.always_on_top.border_thickness = t;
+                self.module_configs.save("always-on-top");
+            }
+            Message::ToggleAotSound(v) => {
+                self.module_configs.always_on_top.play_sound = v;
+                self.module_configs.save("always-on-top");
+            }
+            Message::RemoveAotExcludedApp(idx) => {
+                if idx < self.module_configs.always_on_top.excluded_apps.len() {
+                    self.module_configs.always_on_top.excluded_apps.remove(idx);
+                    self.module_configs.save("always-on-top");
+                }
+            }
             // Workspaces
             Message::RemoveWorkspace(idx) => {
                 if idx < self.module_configs.workspaces.workspaces.len() {

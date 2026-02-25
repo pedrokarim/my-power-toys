@@ -152,3 +152,4 @@ kill %1
 | `image-resizer.png` | Image Resizer | Main window with drop zone and presets |
 | `command-palette.png` | Command Palette | Empty search bar |
 | `command-palette-results.png` | Command Palette | Search "set" with 8 results |
+| `always-on-top-illustration.svg` | Always on Top | SVG illustration: pinned window with blue border above other windows |

@@ -2532,6 +2532,7 @@ impl Settings {
         ui: Ui,
     ) -> Element<'a, Message> {
         let content = match id {
+            "always-on-top" => self.settings_always_on_top(tr, ui),
             "color-picker" => self.settings_color_picker(tr, ui),
             "text-extractor" => self.settings_text_extractor(tr, ui),
             "image-resizer" => self.settings_image_resizer(tr, ui),
@@ -2556,6 +2557,110 @@ impl Settings {
             .into(),
         };
         card(content, ui)
+    }
+
+    fn settings_always_on_top<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
+        let cfg = &self.module_configs.always_on_top;
+
+        // Excluded apps list
+        let mut excluded_col = column![].spacing(4);
+        if cfg.excluded_apps.is_empty() {
+            excluded_col = excluded_col.push(
+                text(tr.ms_aot_no_exclusions)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+            );
+        } else {
+            for (i, app) in cfg.excluded_apps.iter().enumerate() {
+                excluded_col = excluded_col.push(
+                    row![
+                        text(app.clone())
+                            .size(ui.sz(13.0))
+                            .font(ui.font())
+                            .width(Length::Fill),
+                        button(text("\u{2715}").size(ui.sz(12.0)).color(theme::red()),)
+                            .on_press(Message::RemoveAotExcludedApp(i))
+                            .style(theme::seg_button(false))
+                            .padding([2, 6]),
+                    ]
+                    .spacing(8)
+                    .align_y(Alignment::Center),
+                );
+            }
+        }
+
+        column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            // Show border toggle
+            pref_toggle(
+                tr.ms_aot_show_border,
+                tr.ms_aot_show_border_desc,
+                cfg.show_border,
+                Message::ToggleAotBorder,
+                ui,
+            ),
+            // Border thickness
+            text(tr.ms_aot_border_thickness)
+                .size(ui.sz(13.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        "1",
+                        cfg.border_thickness == 1,
+                        Message::SetAotBorderThickness(1),
+                        ui
+                    ),
+                    seg_button(
+                        "2",
+                        cfg.border_thickness == 2,
+                        Message::SetAotBorderThickness(2),
+                        ui
+                    ),
+                    seg_button(
+                        "3",
+                        cfg.border_thickness == 3,
+                        Message::SetAotBorderThickness(3),
+                        ui
+                    ),
+                    seg_button(
+                        "5",
+                        cfg.border_thickness == 5,
+                        Message::SetAotBorderThickness(5),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+            Space::with_height(4),
+            // Play sound toggle
+            pref_toggle(
+                tr.ms_aot_play_sound,
+                tr.ms_aot_play_sound_desc,
+                cfg.play_sound,
+                Message::ToggleAotSound,
+                ui,
+            ),
+            Space::with_height(4),
+            // Excluded apps
+            text(tr.ms_aot_excluded_apps)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(ui.heading()),
+            text(tr.ms_aot_excluded_apps_desc)
+                .size(ui.sz(12.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            excluded_col,
+        ]
+        .spacing(8)
+        .into()
     }
 
     fn settings_color_picker<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {

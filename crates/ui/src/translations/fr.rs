@@ -187,6 +187,21 @@ pub(super) static FR: Tr = Tr {
     ms_ws_no_workspaces: "Aucun workspace configuré. Utilisez Super+Ctrl+W pour ouvrir l'éditeur et capturer votre premier workspace.",
     ms_ws_editor_hint: "Utilisez Super+Ctrl+W pour ouvrir l'éditeur Workspaces complet.",
 
+    // Awake
+    ms_aw_mode: "Mode",
+    ms_aw_mode_desc: "Choisir comment Awake maintient votre système actif",
+    ms_aw_off: "Désactivé",
+    ms_aw_indefinite: "Indéfini",
+    ms_aw_timed: "Temporisé",
+    ms_aw_expirable: "Jusqu'à",
+    ms_aw_keep_screen: "Garder l'écran allumé",
+    ms_aw_keep_screen_desc: "Empêcher l'écran de s'éteindre",
+    ms_aw_duration: "Durée",
+    ms_aw_hours: "Heures",
+    ms_aw_minutes: "Minutes",
+    ms_aw_expire_at: "Garder éveillé jusqu'à",
+    ms_aw_expire_at_desc: "Date et heure (AAAA-MM-JJ HH:MM)",
+
     // Always on Top
     ms_aot_show_border: "Afficher la bordure",
     ms_aot_show_border_desc: "Afficher une bordure colorée autour des fenêtres épinglées.",

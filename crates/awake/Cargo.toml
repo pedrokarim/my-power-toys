@@ -11,3 +11,5 @@ anyhow = { workspace = true }
 tracing = { workspace = true }
 zbus = { workspace = true }
 tokio = { workspace = true }
+serde = { workspace = true }
+chrono = "0.4"

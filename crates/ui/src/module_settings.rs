@@ -327,6 +327,10 @@ impl Default for LightSwitchConf {
     }
 }
 
+// ── Awake ────────────────────────────────────────────────────────────────────
+
+pub type AwakeConf = mpt_awake::config::AwakeConfig;
+
 // ── Always on Top ───────────────────────────────────────────────────────────
 
 pub type AlwaysOnTopConf = mpt_always_on_top::Config;
@@ -343,6 +347,7 @@ pub type WorkspacesConf = mpt_workspaces::config::WorkspacesConfig;
 
 #[derive(Debug, Clone)]
 pub struct ModuleConfigs {
+    pub awake: AwakeConf,
     pub always_on_top: AlwaysOnTopConf,
     pub color_picker: ColorPickerConf,
     pub text_extractor: TextExtractorConf,
@@ -360,6 +365,7 @@ pub struct ModuleConfigs {
 impl ModuleConfigs {
     pub fn load_all() -> Self {
         Self {
+            awake: load_module_config("awake").unwrap_or_default(),
             always_on_top: load_module_config("always-on-top").unwrap_or_default(),
             color_picker: load_module_config("color-picker").unwrap_or_default(),
             text_extractor: load_module_config("text-extractor").unwrap_or_default(),
@@ -377,6 +383,7 @@ impl ModuleConfigs {
 
     pub fn save(&self, module_id: &str) {
         let _ = match module_id {
+            "awake" => save_module_config("awake", &self.awake),
             "always-on-top" => save_module_config("always-on-top", &self.always_on_top),
             "color-picker" => save_module_config("color-picker", &self.color_picker),
             "text-extractor" => save_module_config("text-extractor", &self.text_extractor),

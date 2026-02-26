@@ -11,17 +11,21 @@ pub struct ScreenSaverInhibitor {
 }
 
 impl ScreenSaverInhibitor {
-    /// Inhibit screensaver + suspend via D-Bus.
+    /// Inhibit screensaver and/or suspend via D-Bus.
     ///
     /// Uses two interfaces:
-    /// - `org.freedesktop.ScreenSaver.Inhibit` — prevents screen blanking
+    /// - `org.freedesktop.ScreenSaver.Inhibit` — prevents screen blanking (only when `keep_screen_on`)
     /// - `org.freedesktop.login1.Manager.Inhibit` — prevents system suspend
-    pub fn inhibit() -> Result<Self> {
+    pub fn inhibit(keep_screen_on: bool) -> Result<Self> {
         let conn =
             Connection::session().context("failed to connect to session D-Bus for screensaver")?;
 
-        // 1) Inhibit screensaver
-        let screensaver_cookie = inhibit_screensaver(&conn).ok();
+        // 1) Inhibit screensaver (only if keep_screen_on is requested)
+        let screensaver_cookie = if keep_screen_on {
+            inhibit_screensaver(&conn).ok()
+        } else {
+            None
+        };
 
         // 2) Inhibit suspend via logind (system bus)
         let login_fd = inhibit_suspend().ok();

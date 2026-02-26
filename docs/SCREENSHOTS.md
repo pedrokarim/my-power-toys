@@ -153,3 +153,4 @@ kill %1
 | `command-palette.png` | Command Palette | Empty search bar |
 | `command-palette-results.png` | Command Palette | Search "set" with 8 results |
 | `always-on-top-illustration.svg` | Always on Top | SVG illustration: pinned window with blue border above other windows |
+| `awake-illustration.svg` | Awake | SVG illustration: coffee cup with four mode icons (indefinite, timed, expirable, screen on) |

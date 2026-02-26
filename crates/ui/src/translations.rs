@@ -202,6 +202,21 @@ pub struct Tr {
     pub ms_km_disabled: &'static str,
     pub ms_km_all_apps: &'static str,
 
+    // Awake
+    pub ms_aw_mode: &'static str,
+    pub ms_aw_mode_desc: &'static str,
+    pub ms_aw_off: &'static str,
+    pub ms_aw_indefinite: &'static str,
+    pub ms_aw_timed: &'static str,
+    pub ms_aw_expirable: &'static str,
+    pub ms_aw_keep_screen: &'static str,
+    pub ms_aw_keep_screen_desc: &'static str,
+    pub ms_aw_duration: &'static str,
+    pub ms_aw_hours: &'static str,
+    pub ms_aw_minutes: &'static str,
+    pub ms_aw_expire_at: &'static str,
+    pub ms_aw_expire_at_desc: &'static str,
+
     // Always on Top
     pub ms_aot_show_border: &'static str,
     pub ms_aot_show_border_desc: &'static str,

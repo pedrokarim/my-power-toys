@@ -127,6 +127,10 @@ impl ModuleRegistry {
         }
     }
 
+    pub fn is_module_running(&self, id: &str) -> bool {
+        self.modules.get(id).is_some_and(|m| m.is_running())
+    }
+
     pub fn list_modules(&self) -> Vec<(&'static str, &'static str, bool)> {
         self.modules
             .values()

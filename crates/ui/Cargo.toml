@@ -11,6 +11,7 @@ path = "src/main.rs"
 
 [dependencies]
 mpt-common = { path = "../common" }
+mpt-awake = { path = "../awake" }
 mpt-always-on-top = { path = "../always-on-top" }
 mpt-key-manager = { path = "../key-manager" }
 mpt-workspaces = { path = "../workspaces", default-features = false }

@@ -3501,7 +3501,9 @@ name = "mpt-awake"
 version = "0.3.24"
 dependencies = [
  "anyhow",
+ "chrono",
  "mpt-common",
+ "serde",
  "tokio",
  "tracing",
  "zbus 5.13.2",
@@ -3780,6 +3782,7 @@ dependencies = [
  "iced",
  "iced_fonts",
  "mpt-always-on-top",
+ "mpt-awake",
  "mpt-common",
  "mpt-key-manager",
  "mpt-workspaces",

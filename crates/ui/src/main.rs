@@ -646,6 +646,36 @@ impl Settings {
                 }
                 self.module_configs.save("key-manager");
             }
+            // Awake
+            Message::SetAwakeMode(mode) => {
+                self.module_configs.awake.mode = match mode.as_str() {
+                    "off" => mpt_awake::config::AwakeMode::Off,
+                    "timed" => mpt_awake::config::AwakeMode::Timed,
+                    "expirable" => mpt_awake::config::AwakeMode::Expirable,
+                    _ => mpt_awake::config::AwakeMode::Indefinite,
+                };
+                self.module_configs.save("awake");
+            }
+            Message::ToggleAwakeKeepScreen(v) => {
+                self.module_configs.awake.keep_screen_on = v;
+                self.module_configs.save("awake");
+            }
+            Message::SetAwakeTimedHours(s) => {
+                if let Ok(h) = s.parse::<u32>() {
+                    self.module_configs.awake.timed_hours = h;
+                    self.module_configs.save("awake");
+                }
+            }
+            Message::SetAwakeTimedMinutes(s) => {
+                if let Ok(m) = s.parse::<u32>() {
+                    self.module_configs.awake.timed_minutes = m.min(59);
+                    self.module_configs.save("awake");
+                }
+            }
+            Message::SetAwakeExpireAt(s) => {
+                self.module_configs.awake.expire_at = s;
+                self.module_configs.save("awake");
+            }
             // Always on Top
             Message::ToggleAotBorder(v) => {
                 self.module_configs.always_on_top.show_border = v;

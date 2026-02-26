@@ -187,6 +187,21 @@ pub(super) static CN: Tr = Tr {
     ms_ws_no_workspaces: "No workspaces configured. Use Super+Ctrl+W to open the editor and capture your first workspace.",
     ms_ws_editor_hint: "Use Super+Ctrl+W to open the full Workspaces Editor for capture and editing.",
 
+    // Awake
+    ms_aw_mode: "模式",
+    ms_aw_mode_desc: "选择 Awake 保持系统活跃的方式",
+    ms_aw_off: "关闭",
+    ms_aw_indefinite: "无限期",
+    ms_aw_timed: "定时",
+    ms_aw_expirable: "直到",
+    ms_aw_keep_screen: "保持屏幕常亮",
+    ms_aw_keep_screen_desc: "防止显示器关闭",
+    ms_aw_duration: "持续时间",
+    ms_aw_hours: "小时",
+    ms_aw_minutes: "分钟",
+    ms_aw_expire_at: "保持唤醒直到",
+    ms_aw_expire_at_desc: "日期和时间（YYYY-MM-DD HH:MM）",
+
     // Always on Top
     ms_aot_show_border: "Show border",
     ms_aot_show_border_desc: "Display a colored border around pinned windows.",

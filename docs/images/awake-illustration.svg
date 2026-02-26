@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a1b2e"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <linearGradient id="cup" x1="340" y1="140" x2="460" y2="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#cba6f7"/>
+      <stop offset="100%" stop-color="#9b59b6"/>
+    </linearGradient>
+    <linearGradient id="steam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#cba6f7" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#cba6f7" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#cba6f7" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" rx="16" fill="url(#bg)"/>
+  <rect width="800" height="400" rx="16" stroke="#cba6f7" stroke-opacity="0.12" stroke-width="1" fill="none"/>
+
+  <!-- Subtle grid -->
+  <g stroke="#cba6f7" stroke-opacity="0.04" stroke-width="1">
+    <line x1="0" y1="100" x2="800" y2="100"/>
+    <line x1="0" y1="200" x2="800" y2="200"/>
+    <line x1="0" y1="300" x2="800" y2="300"/>
+    <line x1="200" y1="0" x2="200" y2="400"/>
+    <line x1="400" y1="0" x2="400" y2="400"/>
+    <line x1="600" y1="0" x2="600" y2="400"/>
+  </g>
+
+  <!-- Coffee cup body -->
+  <path d="M340 160 L350 290 C350 310 450 310 450 290 L460 160 Z" fill="url(#cup)" opacity="0.9"/>
+
+  <!-- Cup rim -->
+  <ellipse cx="400" cy="160" rx="62" ry="12" fill="#cba6f7" opacity="0.3"/>
+  <ellipse cx="400" cy="160" rx="60" ry="10" fill="#1a1b2e" stroke="#cba6f7" stroke-width="2"/>
+
+  <!-- Coffee liquid -->
+  <ellipse cx="400" cy="165" rx="54" ry="8" fill="#8B4513" opacity="0.7"/>
+
+  <!-- Cup handle -->
+  <path d="M460 180 C490 180 500 210 500 230 C500 250 490 260 460 260" fill="none" stroke="#cba6f7" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- Steam lines -->
+  <g opacity="0.5">
+    <path d="M380 140 C380 120 385 110 380 90 C375 70 385 60 380 45" fill="none" stroke="#cba6f7" stroke-width="2" stroke-linecap="round">
+      <animate attributeName="d" dur="3s" repeatCount="indefinite"
+        values="M380 140 C380 120 385 110 380 90 C375 70 385 60 380 45;
+                M380 140 C385 120 375 110 385 90 C390 70 375 60 385 45;
+                M380 140 C380 120 385 110 380 90 C375 70 385 60 380 45"/>
+      <animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0.5;0.8;0.5"/>
+    </path>
+    <path d="M400 135 C400 115 405 105 400 85 C395 65 405 55 400 40" fill="none" stroke="#cba6f7" stroke-width="2" stroke-linecap="round">
+      <animate attributeName="d" dur="3.5s" repeatCount="indefinite"
+        values="M400 135 C400 115 405 105 400 85 C395 65 405 55 400 40;
+                M400 135 C405 115 395 105 405 85 C410 65 395 55 405 40;
+                M400 135 C400 115 405 105 400 85 C395 65 405 55 400 40"/>
+      <animate attributeName="opacity" dur="3.5s" repeatCount="indefinite" values="0.4;0.7;0.4"/>
+    </path>
+    <path d="M420 140 C420 120 425 110 420 90 C415 70 425 60 420 45" fill="none" stroke="#cba6f7" stroke-width="2" stroke-linecap="round">
+      <animate attributeName="d" dur="2.8s" repeatCount="indefinite"
+        values="M420 140 C420 120 425 110 420 90 C415 70 425 60 420 45;
+                M420 140 C425 120 415 110 425 90 C430 70 415 60 425 45;
+                M420 140 C420 120 425 110 420 90 C415 70 425 60 420 45"/>
+      <animate attributeName="opacity" dur="2.8s" repeatCount="indefinite" values="0.6;0.9;0.6"/>
+    </path>
+  </g>
+
+  <!-- Saucer -->
+  <ellipse cx="400" cy="310" rx="80" ry="10" fill="#cba6f7" opacity="0.15"/>
+  <ellipse cx="400" cy="308" rx="75" ry="8" fill="none" stroke="#cba6f7" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- Mode icons arranged around the cup -->
+
+  <!-- Indefinite (infinity) — top left -->
+  <g transform="translate(170, 100)">
+    <circle cx="30" cy="30" r="32" fill="#cba6f7" fill-opacity="0.08" stroke="#cba6f7" stroke-opacity="0.2" stroke-width="1"/>
+    <path d="M17 30 C17 22 23 18 28 22 C33 26 37 26 42 22 C47 18 53 22 53 30 C53 38 47 42 42 38 C37 34 33 34 28 38 C23 42 17 38 17 30Z" fill="none" stroke="#cba6f7" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="30" y="80" text-anchor="middle" fill="#cba6f7" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="500" opacity="0.8">Indefinite</text>
+  </g>
+
+  <!-- Timed (clock) — top right -->
+  <g transform="translate(600, 100)">
+    <circle cx="30" cy="30" r="32" fill="#cba6f7" fill-opacity="0.08" stroke="#cba6f7" stroke-opacity="0.2" stroke-width="1"/>
+    <circle cx="30" cy="30" r="16" fill="none" stroke="#cba6f7" stroke-width="2"/>
+    <line x1="30" y1="30" x2="30" y2="20" stroke="#cba6f7" stroke-width="2" stroke-linecap="round"/>
+    <line x1="30" y1="30" x2="38" y2="33" stroke="#cba6f7" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="30" cy="30" r="2" fill="#cba6f7"/>
+    <text x="30" y="80" text-anchor="middle" fill="#cba6f7" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="500" opacity="0.8">Timed</text>
+  </g>
+
+  <!-- Expirable (calendar) — bottom left -->
+  <g transform="translate(170, 250)">
+    <circle cx="30" cy="30" r="32" fill="#cba6f7" fill-opacity="0.08" stroke="#cba6f7" stroke-opacity="0.2" stroke-width="1"/>
+    <rect x="14" y="18" width="32" height="26" rx="3" fill="none" stroke="#cba6f7" stroke-width="2"/>
+    <line x1="14" y1="26" x2="46" y2="26" stroke="#cba6f7" stroke-width="2"/>
+    <line x1="22" y1="14" x2="22" y2="20" stroke="#cba6f7" stroke-width="2" stroke-linecap="round"/>
+    <line x1="38" y1="14" x2="38" y2="20" stroke="#cba6f7" stroke-width="2" stroke-linecap="round"/>
+    <text x="30" y="37" text-anchor="middle" fill="#cba6f7" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="600">31</text>
+    <text x="30" y="80" text-anchor="middle" fill="#cba6f7" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="500" opacity="0.8">Until Date</text>
+  </g>
+
+  <!-- Screen on (monitor) — bottom right -->
+  <g transform="translate(600, 250)">
+    <circle cx="30" cy="30" r="32" fill="#cba6f7" fill-opacity="0.08" stroke="#cba6f7" stroke-opacity="0.2" stroke-width="1"/>
+    <rect x="12" y="16" width="36" height="24" rx="3" fill="none" stroke="#cba6f7" stroke-width="2"/>
+    <line x1="24" y1="42" x2="36" y2="42" stroke="#cba6f7" stroke-width="2" stroke-linecap="round"/>
+    <line x1="30" y1="40" x2="30" y2="42" stroke="#cba6f7" stroke-width="2"/>
+    <!-- Sun icon inside monitor -->
+    <circle cx="30" cy="27" r="5" fill="none" stroke="#cba6f7" stroke-width="1.5"/>
+    <g stroke="#cba6f7" stroke-width="1.5" stroke-linecap="round" opacity="0.7">
+      <line x1="30" y1="19" x2="30" y2="21"/>
+      <line x1="30" y1="33" x2="30" y2="35"/>
+      <line x1="22" y1="27" x2="24" y2="27"/>
+      <line x1="36" y1="27" x2="38" y2="27"/>
+    </g>
+    <text x="30" y="80" text-anchor="middle" fill="#cba6f7" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="500" opacity="0.8">Screen On</text>
+  </g>
+
+  <!-- Connecting dotted lines from modes to cup -->
+  <g stroke="#cba6f7" stroke-width="1" stroke-dasharray="4 4" opacity="0.2">
+    <line x1="232" y1="130" x2="340" y2="160"/>
+    <line x1="600" y1="130" x2="460" y2="160"/>
+    <line x1="232" y1="280" x2="350" y2="290"/>
+    <line x1="600" y1="280" x2="450" y2="290"/>
+  </g>
+
+  <!-- Title text -->
+  <text x="400" y="370" text-anchor="middle" fill="white" font-family="Inter, system-ui, sans-serif" font-size="14" font-weight="600" opacity="0.5">Keep your system awake — four flexible modes</text>
+</svg>

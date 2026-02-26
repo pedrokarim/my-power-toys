@@ -1,11 +1,20 @@
 use crate::modules::ModuleRegistry;
 use anyhow::Result;
-use ksni::menu::{CheckmarkItem, StandardItem};
+use ksni::menu::{CheckmarkItem, RadioGroup, RadioItem, StandardItem, SubMenu};
 use ksni::{Icon, Tray, TrayService};
+use mpt_awake::config::{AwakeConfig, AwakeMode};
 use std::sync::{Arc, Mutex};
 use tracing::info;
 
 const ICON_ARGB: &[u8] = include_bytes!("../../../assets/icons/icon-32.argb");
+
+// Awake mode-specific tray icons (32×32 PNG — for menu items' icon_data)
+const AWAKE_OFF_PNG: &[u8] = include_bytes!("../../../assets/icons/awake/awake-off.png");
+const AWAKE_INDEFINITE_PNG: &[u8] =
+    include_bytes!("../../../assets/icons/awake/awake-indefinite.png");
+const AWAKE_TIMED_PNG: &[u8] = include_bytes!("../../../assets/icons/awake/awake-timed.png");
+const AWAKE_EXPIRABLE_PNG: &[u8] =
+    include_bytes!("../../../assets/icons/awake/awake-expirable.png");
 
 struct MptTray {
     registry: Arc<Mutex<ModuleRegistry>>,
@@ -73,6 +82,15 @@ impl Tray for MptTray {
         };
 
         for (id, name, running) in modules {
+            if id == "awake" {
+                items.push(build_awake_submenu(
+                    &name,
+                    running,
+                    Arc::clone(&self.registry),
+                ));
+                continue;
+            }
+
             let module_id = id.clone();
             let registry = Arc::clone(&self.registry);
             items.push(
@@ -138,6 +156,132 @@ impl Tray for MptTray {
 
         items
     }
+}
+
+/// Return the PNG icon data for a given Awake mode (used in menu items).
+fn awake_mode_png(mode: AwakeMode) -> &'static [u8] {
+    match mode {
+        AwakeMode::Off => AWAKE_OFF_PNG,
+        AwakeMode::Indefinite => AWAKE_INDEFINITE_PNG,
+        AwakeMode::Timed => AWAKE_TIMED_PNG,
+        AwakeMode::Expirable => AWAKE_EXPIRABLE_PNG,
+    }
+}
+
+/// Build a SubMenu for the Awake module with RadioGroup mode selection.
+fn build_awake_submenu(
+    name: &str,
+    running: bool,
+    registry: Arc<Mutex<ModuleRegistry>>,
+) -> ksni::MenuItem<MptTray> {
+    let cfg: AwakeConfig = mpt_common::config::load_module_config("awake").unwrap_or_default();
+
+    let mode_label = match cfg.mode {
+        AwakeMode::Off => "Off",
+        AwakeMode::Indefinite => "∞",
+        AwakeMode::Timed => "⏱",
+        AwakeMode::Expirable => "⏰",
+    };
+
+    let selected = match cfg.mode {
+        AwakeMode::Off => 0,
+        AwakeMode::Indefinite => 1,
+        AwakeMode::Timed => 2,
+        AwakeMode::Expirable => 3,
+    };
+
+    let reg_radio = Arc::clone(&registry);
+    let radio = RadioGroup {
+        selected,
+        select: Box::new(move |_tray: &mut MptTray, idx| {
+            let new_mode = match idx {
+                0 => AwakeMode::Off,
+                1 => AwakeMode::Indefinite,
+                2 => AwakeMode::Timed,
+                3 => AwakeMode::Expirable,
+                _ => return,
+            };
+            // Update config on disk
+            let mut cfg: AwakeConfig =
+                mpt_common::config::load_module_config("awake").unwrap_or_default();
+            cfg.mode = new_mode;
+            let _ = mpt_common::config::save_module_config("awake", &cfg);
+
+            // Restart the module so it picks up the new mode
+            let mut reg = reg_radio.lock().unwrap();
+            let _ = reg.stop_module("awake");
+            if new_mode != AwakeMode::Off {
+                let _ = reg.start_module("awake");
+            }
+        }),
+        options: vec![
+            RadioItem {
+                label: "Off".into(),
+                icon_data: AWAKE_OFF_PNG.to_vec(),
+                enabled: true,
+                ..Default::default()
+            },
+            RadioItem {
+                label: "Indefinite".into(),
+                icon_data: AWAKE_INDEFINITE_PNG.to_vec(),
+                enabled: true,
+                ..Default::default()
+            },
+            RadioItem {
+                label: "Timed".into(),
+                icon_data: AWAKE_TIMED_PNG.to_vec(),
+                enabled: true,
+                ..Default::default()
+            },
+            RadioItem {
+                label: "Expirable".into(),
+                icon_data: AWAKE_EXPIRABLE_PNG.to_vec(),
+                enabled: true,
+                ..Default::default()
+            },
+        ],
+    };
+
+    let reg_screen = Arc::clone(&registry);
+    let keep_screen = cfg.keep_screen_on;
+    let screen_toggle = CheckmarkItem {
+        label: "Keep screen on".into(),
+        checked: keep_screen,
+        enabled: true,
+        activate: Box::new(move |_tray: &mut MptTray| {
+            let mut cfg: AwakeConfig =
+                mpt_common::config::load_module_config("awake").unwrap_or_default();
+            cfg.keep_screen_on = !cfg.keep_screen_on;
+            let _ = mpt_common::config::save_module_config("awake", &cfg);
+
+            // Restart if running to apply the change
+            let mut reg = reg_screen.lock().unwrap();
+            if reg.is_module_running("awake") {
+                let _ = reg.stop_module("awake");
+                let _ = reg.start_module("awake");
+            }
+        }),
+        ..Default::default()
+    };
+
+    let label = if running {
+        format!("{name} ({mode_label})")
+    } else {
+        name.to_string()
+    };
+
+    SubMenu {
+        label,
+        icon_data: awake_mode_png(cfg.mode).to_vec(),
+        enabled: true,
+        submenu: vec![
+            radio.into(),
+            ksni::MenuItem::Separator,
+            screen_toggle.into(),
+        ],
+        ..Default::default()
+    }
+    .into()
 }
 
 pub async fn run_tray(registry: Arc<Mutex<ModuleRegistry>>) -> Result<()> {

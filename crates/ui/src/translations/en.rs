@@ -187,6 +187,21 @@ pub(super) static EN: Tr = Tr {
     ms_ws_no_workspaces: "No workspaces configured. Use Super+Ctrl+W to open the editor and capture your first workspace.",
     ms_ws_editor_hint: "Use Super+Ctrl+W to open the full Workspaces Editor for capture and editing.",
 
+    // Awake
+    ms_aw_mode: "Mode",
+    ms_aw_mode_desc: "Choose how Awake keeps your system active",
+    ms_aw_off: "Off",
+    ms_aw_indefinite: "Indefinite",
+    ms_aw_timed: "Timed",
+    ms_aw_expirable: "Until",
+    ms_aw_keep_screen: "Keep screen on",
+    ms_aw_keep_screen_desc: "Prevent the display from turning off",
+    ms_aw_duration: "Duration",
+    ms_aw_hours: "Hours",
+    ms_aw_minutes: "Minutes",
+    ms_aw_expire_at: "Keep awake until",
+    ms_aw_expire_at_desc: "Date and time (YYYY-MM-DD HH:MM)",
+
     // Always on Top
     ms_aot_show_border: "Show border",
     ms_aot_show_border_desc: "Display a colored border around pinned windows.",

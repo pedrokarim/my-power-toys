@@ -2532,6 +2532,7 @@ impl Settings {
         ui: Ui,
     ) -> Element<'a, Message> {
         let content = match id {
+            "awake" => self.settings_awake(tr, ui),
             "always-on-top" => self.settings_always_on_top(tr, ui),
             "color-picker" => self.settings_color_picker(tr, ui),
             "text-extractor" => self.settings_text_extractor(tr, ui),
@@ -2557,6 +2558,143 @@ impl Settings {
             .into(),
         };
         card(content, ui)
+    }
+
+    fn settings_awake<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
+        use mpt_awake::config::AwakeMode;
+
+        let cfg = &self.module_configs.awake;
+        let mode_str = match cfg.mode {
+            AwakeMode::Off => "off",
+            AwakeMode::Indefinite => "indefinite",
+            AwakeMode::Timed => "timed",
+            AwakeMode::Expirable => "expirable",
+        };
+
+        let mut col = column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            // Mode selector
+            text(tr.ms_aw_mode)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(ui.heading()),
+            text(tr.ms_aw_mode_desc)
+                .size(ui.sz(12.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        tr.ms_aw_off,
+                        mode_str == "off",
+                        Message::SetAwakeMode("off".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_aw_indefinite,
+                        mode_str == "indefinite",
+                        Message::SetAwakeMode("indefinite".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_aw_timed,
+                        mode_str == "timed",
+                        Message::SetAwakeMode("timed".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_aw_expirable,
+                        mode_str == "expirable",
+                        Message::SetAwakeMode("expirable".into()),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+            Space::with_height(8),
+            // Keep screen on toggle
+            pref_toggle(
+                tr.ms_aw_keep_screen,
+                tr.ms_aw_keep_screen_desc,
+                cfg.keep_screen_on,
+                Message::ToggleAwakeKeepScreen,
+                ui,
+            ),
+            Space::with_height(4),
+        ]
+        .spacing(8);
+
+        // Timed section
+        if cfg.mode == AwakeMode::Timed {
+            let hours_str = format!("{}", cfg.timed_hours);
+            let minutes_str = format!("{}", cfg.timed_minutes);
+
+            col = col
+                .push(
+                    text(tr.ms_aw_duration)
+                        .size(ui.sz(14.0))
+                        .font(ui.font())
+                        .color(ui.heading()),
+                )
+                .push(
+                    row![
+                        column![
+                            text(tr.ms_aw_hours)
+                                .size(ui.sz(12.0))
+                                .font(ui.font())
+                                .color(theme::subtext0(ui.dark)),
+                            iced::widget::text_input("0", &hours_str)
+                                .on_input(Message::SetAwakeTimedHours)
+                                .size(ui.sz(13.0))
+                                .padding(8),
+                        ]
+                        .spacing(4)
+                        .width(Length::Fill),
+                        column![
+                            text(tr.ms_aw_minutes)
+                                .size(ui.sz(12.0))
+                                .font(ui.font())
+                                .color(theme::subtext0(ui.dark)),
+                            iced::widget::text_input("30", &minutes_str)
+                                .on_input(Message::SetAwakeTimedMinutes)
+                                .size(ui.sz(13.0))
+                                .padding(8),
+                        ]
+                        .spacing(4)
+                        .width(Length::Fill),
+                    ]
+                    .spacing(12),
+                );
+        }
+
+        // Expirable section
+        if cfg.mode == AwakeMode::Expirable {
+            col = col
+                .push(
+                    text(tr.ms_aw_expire_at)
+                        .size(ui.sz(14.0))
+                        .font(ui.font())
+                        .color(ui.heading()),
+                )
+                .push(
+                    text(tr.ms_aw_expire_at_desc)
+                        .size(ui.sz(12.0))
+                        .font(ui.font())
+                        .color(theme::subtext0(ui.dark)),
+                )
+                .push(
+                    iced::widget::text_input("2026-03-01T18:00", &cfg.expire_at)
+                        .on_input(Message::SetAwakeExpireAt)
+                        .size(ui.sz(13.0))
+                        .padding(8),
+                );
+        }
+
+        col.into()
     }
 
     fn settings_always_on_top<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {

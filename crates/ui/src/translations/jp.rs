@@ -187,6 +187,21 @@ pub(super) static JP: Tr = Tr {
     ms_ws_no_workspaces: "No workspaces configured. Use Super+Ctrl+W to open the editor and capture your first workspace.",
     ms_ws_editor_hint: "Use Super+Ctrl+W to open the full Workspaces Editor for capture and editing.",
 
+    // Awake
+    ms_aw_mode: "モード",
+    ms_aw_mode_desc: "Awakeがシステムをアクティブに保つ方法を選択",
+    ms_aw_off: "オフ",
+    ms_aw_indefinite: "無期限",
+    ms_aw_timed: "タイマー",
+    ms_aw_expirable: "期限付き",
+    ms_aw_keep_screen: "画面を常時オン",
+    ms_aw_keep_screen_desc: "ディスプレイの電源オフを防止",
+    ms_aw_duration: "期間",
+    ms_aw_hours: "時間",
+    ms_aw_minutes: "分",
+    ms_aw_expire_at: "指定時刻まで維持",
+    ms_aw_expire_at_desc: "日時（YYYY-MM-DD HH:MM）",
+
     // Always on Top
     ms_aot_show_border: "Show border",
     ms_aot_show_border_desc: "Display a colored border around pinned windows.",

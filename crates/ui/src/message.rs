@@ -72,6 +72,12 @@ pub enum Message {
     AddKeyMapping(mpt_key_manager::KeyMapping),
     RemoveKeyMapping(usize),
     ToggleKeyMapping(usize, bool),
+    // Awake
+    SetAwakeMode(String),
+    ToggleAwakeKeepScreen(bool),
+    SetAwakeTimedHours(String),
+    SetAwakeTimedMinutes(String),
+    SetAwakeExpireAt(String),
     // Always on Top
     ToggleAotBorder(bool),
     SetAotBorderThickness(u32),

@@ -212,6 +212,16 @@ pub(super) static CN: Tr = Tr {
     ms_aot_excluded_apps_desc: "These applications cannot be pinned. Partial matches are supported.",
     ms_aot_no_exclusions: "No excluded applications.",
 
+    // Hosts Editor
+    ms_he_show_disabled: "显示禁用的条目",
+    ms_he_show_disabled_desc: "在编辑器中显示被注释掉的（禁用的）主机条目",
+    ms_he_backup: "保存前备份",
+    ms_he_backup_desc: "在写入更改之前创建 /etc/hosts 的备份副本",
+    ms_he_placement: "新条目的位置",
+    ms_he_placement_desc: "在 hosts 文件中插入新条目的位置",
+    ms_he_bottom: "底部",
+    ms_he_top: "顶部",
+
     // Bulk Rename
     ms_br_use_regex: "使用正则表达式",
     ms_br_use_regex_desc: "将搜索字段解释为正则表达式",

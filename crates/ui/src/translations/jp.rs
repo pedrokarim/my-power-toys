@@ -212,6 +212,16 @@ pub(super) static JP: Tr = Tr {
     ms_aot_excluded_apps_desc: "These applications cannot be pinned. Partial matches are supported.",
     ms_aot_no_exclusions: "No excluded applications.",
 
+    // Hosts Editor
+    ms_he_show_disabled: "無効なエントリを表示",
+    ms_he_show_disabled_desc: "エディタでコメントアウトされた（無効な）ホストエントリを表示する",
+    ms_he_backup: "保存前にバックアップ",
+    ms_he_backup_desc: "変更を書き込む前に/etc/hostsのバックアップを作成する",
+    ms_he_placement: "新しいエントリの配置",
+    ms_he_placement_desc: "hostsファイルのどこに新しいエントリを挿入するか",
+    ms_he_bottom: "下部",
+    ms_he_top: "上部",
+
     // Bulk Rename
     ms_br_use_regex: "正規表現を使用",
     ms_br_use_regex_desc: "検索フィールドを正規表現として解釈する",

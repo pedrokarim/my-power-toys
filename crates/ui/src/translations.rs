@@ -237,6 +237,16 @@ pub struct Tr {
     pub ms_ws_no_workspaces: &'static str,
     pub ms_ws_editor_hint: &'static str,
 
+    // Hosts Editor
+    pub ms_he_show_disabled: &'static str,
+    pub ms_he_show_disabled_desc: &'static str,
+    pub ms_he_backup: &'static str,
+    pub ms_he_backup_desc: &'static str,
+    pub ms_he_placement: &'static str,
+    pub ms_he_placement_desc: &'static str,
+    pub ms_he_bottom: &'static str,
+    pub ms_he_top: &'static str,
+
     // Bulk Rename
     pub ms_br_use_regex: &'static str,
     pub ms_br_use_regex_desc: &'static str,

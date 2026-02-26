@@ -343,6 +343,10 @@ pub type KeyManagerConf = mpt_key_manager::KeyManagerConfig;
 
 pub type WorkspacesConf = mpt_workspaces::config::WorkspacesConfig;
 
+// ── Hosts Editor ────────────────────────────────────────────────────
+
+pub type HostsEditorConf = mpt_hosts_editor::config::HostsEditorConfig;
+
 // ── Bulk Rename ─────────────────────────────────────────────────────
 
 pub type BulkRenameConf = mpt_bulk_rename::config::BulkRenameConfig;
@@ -364,6 +368,7 @@ pub struct ModuleConfigs {
     pub light_switch: LightSwitchConf,
     pub key_manager: KeyManagerConf,
     pub workspaces: WorkspacesConf,
+    pub hosts_editor: HostsEditorConf,
     pub bulk_rename: BulkRenameConf,
 }
 
@@ -383,6 +388,7 @@ impl ModuleConfigs {
             light_switch: load_module_config("light-switch").unwrap_or_default(),
             key_manager: load_module_config("key-manager").unwrap_or_default(),
             workspaces: load_module_config("workspaces").unwrap_or_default(),
+            hosts_editor: load_module_config("hosts-editor").unwrap_or_default(),
             bulk_rename: load_module_config("bulk-rename").unwrap_or_default(),
         }
     }
@@ -402,6 +408,7 @@ impl ModuleConfigs {
             "light-switch" => save_module_config("light-switch", &self.light_switch),
             "key-manager" => save_module_config("key-manager", &self.key_manager),
             "workspaces" => save_module_config("workspaces", &self.workspaces),
+            "hosts-editor" => save_module_config("hosts-editor", &self.hosts_editor),
             "bulk-rename" => save_module_config("bulk-rename", &self.bulk_rename),
             _ => Ok(()),
         };

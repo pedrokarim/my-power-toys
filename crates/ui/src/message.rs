@@ -87,6 +87,10 @@ pub enum Message {
     RemoveWorkspace(usize),
     LaunchWorkspace(usize),
     ToggleWorkspaceApp(usize, usize, bool),
+    // Hosts Editor
+    ToggleHostsEditorShowDisabled(bool),
+    ToggleHostsEditorBackup(bool),
+    SetHostsEditorPlacement(String),
     // Bulk Rename
     ToggleBulkRenameRegex(bool),
     ToggleBulkRenameMatchAll(bool),

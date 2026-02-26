@@ -212,6 +212,16 @@ pub(super) static EN: Tr = Tr {
     ms_aot_excluded_apps_desc: "These applications cannot be pinned. Partial matches are supported.",
     ms_aot_no_exclusions: "No excluded applications.",
 
+    // Hosts Editor
+    ms_he_show_disabled: "Show disabled entries",
+    ms_he_show_disabled_desc: "Display commented-out (disabled) host entries in the editor",
+    ms_he_backup: "Backup before save",
+    ms_he_backup_desc: "Create a backup of /etc/hosts before writing changes",
+    ms_he_placement: "New entry placement",
+    ms_he_placement_desc: "Where to insert new entries in the hosts file",
+    ms_he_bottom: "Bottom",
+    ms_he_top: "Top",
+
     // Bulk Rename
     ms_br_use_regex: "Use regular expressions",
     ms_br_use_regex_desc: "Interpret the search field as a regular expression",

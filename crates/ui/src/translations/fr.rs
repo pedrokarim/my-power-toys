@@ -212,6 +212,16 @@ pub(super) static FR: Tr = Tr {
     ms_aot_excluded_apps_desc: "Ces applications ne peuvent pas être épinglées. Les correspondances partielles sont prises en charge.",
     ms_aot_no_exclusions: "Aucune application exclue.",
 
+    // Hosts Editor
+    ms_he_show_disabled: "Afficher les entrées désactivées",
+    ms_he_show_disabled_desc: "Afficher les entrées commentées (désactivées) dans l'éditeur",
+    ms_he_backup: "Sauvegarder avant écriture",
+    ms_he_backup_desc: "Créer une copie de sauvegarde de /etc/hosts avant d'écrire les modifications",
+    ms_he_placement: "Placement des nouvelles entrées",
+    ms_he_placement_desc: "Où insérer les nouvelles entrées dans le fichier hosts",
+    ms_he_bottom: "En bas",
+    ms_he_top: "En haut",
+
     // Bulk Rename
     ms_br_use_regex: "Utiliser les expressions régulières",
     ms_br_use_regex_desc: "Interpréter le champ de recherche comme une expression régulière",

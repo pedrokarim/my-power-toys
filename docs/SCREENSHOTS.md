@@ -176,3 +176,4 @@ kill %1
 | `always-on-top-illustration.svg` | Always on Top | SVG illustration: pinned window with blue border above other windows |
 | `awake-illustration.svg` | Awake | SVG illustration: coffee cup with four mode icons (indefinite, timed, expirable, screen on) |
 | `bulk-rename.png` | Bulk Rename | Main window with search/replace, options, file table preview |
+| `hosts-editor.png` | Hosts Editor | Main window with toggle, filter, entry table, add/edit form |

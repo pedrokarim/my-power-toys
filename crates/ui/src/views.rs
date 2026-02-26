@@ -2544,6 +2544,7 @@ impl Settings {
             "light-switch" => self.settings_light_switch(tr, ui),
             "key-manager" => self.settings_key_manager(tr, ui),
             "workspaces" => self.settings_workspaces(tr, ui),
+            "hosts-editor" => self.settings_hosts_editor(tr, ui),
             "bulk-rename" => self.settings_bulk_rename(tr, ui),
             _ => column![
                 text(tr.module_settings)
@@ -3907,6 +3908,70 @@ impl Settings {
         );
 
         col.into()
+    }
+
+    fn settings_hosts_editor<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
+        use mpt_hosts_editor::config::Placement;
+
+        let cfg = &self.module_configs.hosts_editor;
+
+        let placement_str = match cfg.new_entry_placement {
+            Placement::Bottom => "bottom",
+            Placement::Top => "top",
+        };
+
+        column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            // Show disabled entries
+            pref_toggle(
+                tr.ms_he_show_disabled,
+                tr.ms_he_show_disabled_desc,
+                cfg.show_disabled,
+                Message::ToggleHostsEditorShowDisabled,
+                ui,
+            ),
+            // Backup before save
+            pref_toggle(
+                tr.ms_he_backup,
+                tr.ms_he_backup_desc,
+                cfg.backup_before_save,
+                Message::ToggleHostsEditorBackup,
+                ui,
+            ),
+            Space::with_height(4),
+            // New entry placement
+            text(tr.ms_he_placement)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(ui.heading()),
+            text(tr.ms_he_placement_desc)
+                .size(ui.sz(12.0))
+                .font(ui.font())
+                .color(theme::subtext0(ui.dark)),
+            container(
+                row![
+                    seg_button(
+                        tr.ms_he_bottom,
+                        placement_str == "bottom",
+                        Message::SetHostsEditorPlacement("bottom".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_he_top,
+                        placement_str == "top",
+                        Message::SetHostsEditorPlacement("top".into()),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+        ]
+        .spacing(8)
+        .into()
     }
 
     fn settings_bulk_rename<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {

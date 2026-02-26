@@ -3648,8 +3648,13 @@ name = "mpt-hosts-editor"
 version = "0.3.26"
 dependencies = [
  "anyhow",
+ "eframe",
+ "egui",
  "mpt-common",
+ "scopeguard",
+ "serde",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -3791,6 +3796,7 @@ dependencies = [
  "mpt-awake",
  "mpt-bulk-rename",
  "mpt-common",
+ "mpt-hosts-editor",
  "mpt-key-manager",
  "mpt-workspaces",
  "rdev",

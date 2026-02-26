@@ -107,6 +107,54 @@ impl HostsFile {
             .join("\n")
     }
 
+    /// Update an existing entry by index (among entries only).
+    pub fn update_entry(
+        &mut self,
+        entry_index: usize,
+        ip: String,
+        hostnames: Vec<String>,
+        comment: Option<String>,
+    ) -> Result<()> {
+        let mut count = 0;
+        for line in &mut self.lines {
+            if let HostsLine::Entry(entry) = line {
+                if count == entry_index {
+                    entry.ip = ip;
+                    entry.hostnames = hostnames;
+                    entry.comment = comment;
+                    return Ok(());
+                }
+                count += 1;
+            }
+        }
+        anyhow::bail!("entry index {entry_index} out of range (have {count} entries)");
+    }
+
+    /// Add a new entry after the header comments (top of actual entries).
+    pub fn add_entry_at_top(
+        &mut self,
+        ip: String,
+        hostnames: Vec<String>,
+        comment: Option<String>,
+    ) {
+        // Find the first non-comment, non-blank line (i.e. first entry or end of header)
+        let insert_pos = self
+            .lines
+            .iter()
+            .position(|l| matches!(l, HostsLine::Entry(_)))
+            .unwrap_or(self.lines.len());
+
+        self.lines.insert(
+            insert_pos,
+            HostsLine::Entry(HostEntry {
+                ip,
+                hostnames,
+                comment,
+                enabled: true,
+            }),
+        );
+    }
+
     /// Save to a file. For /etc/hosts, the caller should handle privilege elevation.
     pub fn save(&self, path: &Path) -> Result<()> {
         let content = self.serialize();
@@ -243,5 +291,49 @@ mod tests {
         let hosts = HostsFile::parse_str("192.168.1.100\tdevserver # dev box");
         let entry = &hosts.entries()[0];
         assert_eq!(entry.comment.as_deref(), Some("dev box"));
+    }
+
+    #[test]
+    fn update_entry() {
+        let mut hosts = HostsFile::parse_str(SAMPLE);
+        // Update entry 0 (127.0.0.1 localhost)
+        hosts
+            .update_entry(
+                0,
+                "10.0.0.1".to_string(),
+                vec!["new-host".to_string()],
+                Some("updated".to_string()),
+            )
+            .unwrap();
+        let e = &hosts.entries()[0];
+        assert_eq!(e.ip, "10.0.0.1");
+        assert_eq!(e.hostnames, vec!["new-host"]);
+        assert_eq!(e.comment.as_deref(), Some("updated"));
+        assert!(e.enabled);
+    }
+
+    #[test]
+    fn update_entry_out_of_range() {
+        let mut hosts = HostsFile::parse_str(SAMPLE);
+        assert!(
+            hosts
+                .update_entry(99, "x".into(), vec!["y".into()], None)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn add_entry_at_top() {
+        let mut hosts = HostsFile::parse_str(SAMPLE);
+        let count_before = hosts.entries().len();
+        hosts.add_entry_at_top("10.0.0.1".to_string(), vec!["top-host".to_string()], None);
+        let entries = hosts.entries();
+        assert_eq!(entries.len(), count_before + 1);
+        // The new entry should be the first entry (after the header comment)
+        assert_eq!(entries[0].ip, "10.0.0.1");
+        assert_eq!(entries[0].hostnames, vec!["top-host"]);
+        // Serialized output should preserve header comment before the new entry
+        let output = hosts.serialize();
+        assert!(output.starts_with("# /etc/hosts\n10.0.0.1"));
     }
 }

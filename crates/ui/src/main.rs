@@ -716,6 +716,23 @@ impl Settings {
                 }
                 self.module_configs.save("workspaces");
             }
+            // Hosts Editor
+            Message::ToggleHostsEditorShowDisabled(v) => {
+                self.module_configs.hosts_editor.show_disabled = v;
+                self.module_configs.save("hosts-editor");
+            }
+            Message::ToggleHostsEditorBackup(v) => {
+                self.module_configs.hosts_editor.backup_before_save = v;
+                self.module_configs.save("hosts-editor");
+            }
+            Message::SetHostsEditorPlacement(val) => {
+                use mpt_hosts_editor::config::Placement;
+                self.module_configs.hosts_editor.new_entry_placement = match val.as_str() {
+                    "top" => Placement::Top,
+                    _ => Placement::Bottom,
+                };
+                self.module_configs.save("hosts-editor");
+            }
             // Bulk Rename
             Message::ToggleBulkRenameRegex(v) => {
                 self.module_configs.bulk_rename.use_regex = v;

@@ -3123,36 +3123,295 @@ impl Settings {
     }
 
     fn settings_mouse_utils<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
+        use mpt_mouse_utils::config::{FindMyMouseActivation, HighlightMode, CrosshairOrientation};
+
         let cfg = &self.module_configs.mouse_utils;
-        column![
+
+        let activation_str = match cfg.find_my_mouse_activation {
+            FindMyMouseActivation::LeftCtrlTwice => "left-ctrl-twice",
+            FindMyMouseActivation::RightCtrlTwice => "right-ctrl-twice",
+            FindMyMouseActivation::ShakeMouse => "shake-mouse",
+            FindMyMouseActivation::CustomShortcut => "custom-shortcut",
+        };
+
+        let hl_mode_str = match cfg.highlighter_mode {
+            HighlightMode::CircleHighlight => "circle",
+            HighlightMode::Spotlight => "spotlight",
+        };
+
+        let orient_str = match cfg.crosshair_orientation {
+            CrosshairOrientation::Horizontal => "horizontal",
+            CrosshairOrientation::Vertical => "vertical",
+            CrosshairOrientation::Both => "both",
+        };
+
+        let heading = |s: &'a str| -> Element<'a, Message> {
+            text(s)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(ui.heading())
+                .into()
+        };
+
+        let label_input = |label: &'a str, value: &str, msg: fn(String) -> Message| -> Element<'a, Message> {
+            column![
+                text(label)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                iced::widget::text_input(label, value)
+                    .on_input(msg)
+                    .size(ui.sz(13.0))
+                    .padding(8),
+            ]
+            .spacing(4)
+            .width(Length::Fill)
+            .into()
+        };
+
+        // ── Build the column ───────────────────────────────────────────
+        let mut col = column![
             text(tr.module_settings)
                 .size(ui.sz(16.0))
                 .font(bold())
                 .color(ui.heading()),
-            pref_toggle(
+        ]
+        .spacing(8);
+
+        // ── 1. Find My Mouse ───────────────────────────────────────────
+        col = col
+            .push(Space::with_height(4))
+            .push(pref_toggle(
                 tr.ms_find_my_mouse,
                 tr.ms_find_my_mouse_desc,
                 cfg.find_my_mouse,
                 Message::ToggleMouseFindMyMouse,
-                ui
-            ),
-            pref_toggle(
+                ui,
+            ));
+
+        if cfg.find_my_mouse {
+            // Activation method
+            col = col
+                .push(heading(tr.ms_fmm_activation))
+                .push(
+                    container(
+                        row![
+                            seg_button(tr.ms_fmm_left_ctrl, activation_str == "left-ctrl-twice", Message::SetFindMyMouseActivation("left-ctrl-twice".into()), ui),
+                            seg_button(tr.ms_fmm_right_ctrl, activation_str == "right-ctrl-twice", Message::SetFindMyMouseActivation("right-ctrl-twice".into()), ui),
+                            seg_button(tr.ms_fmm_shake, activation_str == "shake-mouse", Message::SetFindMyMouseActivation("shake-mouse".into()), ui),
+                            seg_button(tr.ms_fmm_custom, activation_str == "custom-shortcut", Message::SetFindMyMouseActivation("custom-shortcut".into()), ui),
+                        ]
+                        .spacing(2),
+                    )
+                    .style(theme::segmented_control),
+                );
+
+            // Conditional: custom shortcut input
+            if cfg.find_my_mouse_activation == FindMyMouseActivation::CustomShortcut {
+                col = col.push(label_input(tr.ms_fmm_shortcut, &cfg.find_my_mouse_shortcut, Message::SetFindMyMouseShortcut));
+            }
+
+            // Conditional: shake distance
+            if cfg.find_my_mouse_activation == FindMyMouseActivation::ShakeMouse {
+                col = col.push(label_input(tr.ms_fmm_shake_distance, &cfg.find_my_mouse_shake_distance.to_string(), Message::SetFindMyMouseShakeDistance));
+            }
+
+            // Settings row: colors + radius
+            col = col.push(
+                row![
+                    label_input(tr.ms_fmm_bg_color, &cfg.find_my_mouse_bg_color, Message::SetFindMyMouseBgColor),
+                    label_input(tr.ms_fmm_spotlight_color, &cfg.find_my_mouse_spotlight_color, Message::SetFindMyMouseSpotlightColor),
+                    label_input(tr.ms_fmm_radius, &cfg.find_my_mouse_spotlight_radius.to_string(), Message::SetFindMyMouseSpotlightRadius),
+                ]
+                .spacing(12),
+            );
+
+            // Settings row: opacity + zoom + animation
+            col = col.push(
+                row![
+                    label_input(tr.ms_fmm_opacity, &cfg.find_my_mouse_overlay_opacity.to_string(), Message::SetFindMyMouseOverlayOpacity),
+                    label_input(tr.ms_fmm_zoom, &cfg.find_my_mouse_initial_zoom.to_string(), Message::SetFindMyMouseInitialZoom),
+                    label_input(tr.ms_fmm_animation, &cfg.find_my_mouse_animation_ms.to_string(), Message::SetFindMyMouseAnimationMs),
+                ]
+                .spacing(12),
+            );
+
+            // Game mode toggle
+            col = col.push(pref_toggle(
+                tr.ms_fmm_game_mode,
+                tr.ms_fmm_game_mode_desc,
+                cfg.find_my_mouse_game_mode,
+                Message::ToggleFindMyMouseGameMode,
+                ui,
+            ));
+
+            // Excluded apps
+            col = col.push(label_input(tr.ms_fmm_excluded_apps, &cfg.find_my_mouse_excluded_apps, Message::SetFindMyMouseExcludedApps));
+        }
+
+        // ── 2. Mouse Highlighter ───────────────────────────────────────
+        col = col
+            .push(Space::with_height(8))
+            .push(pref_toggle(
                 tr.ms_click_highlighter,
                 tr.ms_click_highlighter_desc,
                 cfg.click_highlighter,
                 Message::ToggleMouseClickHighlighter,
-                ui
-            ),
-            pref_toggle(
+                ui,
+            ));
+
+        if cfg.click_highlighter {
+            col = col
+                .push(label_input(tr.ms_hl_shortcut, &cfg.highlighter_shortcut, Message::SetHighlighterShortcut))
+                .push(
+                    row![
+                        label_input(tr.ms_hl_primary_color, &cfg.highlighter_primary_color, Message::SetHighlighterPrimaryColor),
+                        label_input(tr.ms_hl_secondary_color, &cfg.highlighter_secondary_color, Message::SetHighlighterSecondaryColor),
+                        label_input(tr.ms_hl_always_color, &cfg.highlighter_always_color, Message::SetHighlighterAlwaysColor),
+                    ]
+                    .spacing(12),
+                )
+                .push(heading(tr.ms_hl_mode))
+                .push(
+                    container(
+                        row![
+                            seg_button(tr.ms_hl_circle, hl_mode_str == "circle", Message::SetHighlighterMode("circle".into()), ui),
+                            seg_button(tr.ms_hl_spotlight, hl_mode_str == "spotlight", Message::SetHighlighterMode("spotlight".into()), ui),
+                        ]
+                        .spacing(2),
+                    )
+                    .style(theme::segmented_control),
+                )
+                .push(
+                    row![
+                        label_input(tr.ms_hl_radius, &cfg.highlighter_radius.to_string(), Message::SetHighlighterRadius),
+                        label_input(tr.ms_hl_fade_delay, &cfg.highlighter_fade_delay_ms.to_string(), Message::SetHighlighterFadeDelay),
+                        label_input(tr.ms_hl_fade_duration, &cfg.highlighter_fade_duration_ms.to_string(), Message::SetHighlighterFadeDuration),
+                    ]
+                    .spacing(12),
+                );
+        }
+
+        // ── 3. Crosshairs ──────────────────────────────────────────────
+        col = col
+            .push(Space::with_height(8))
+            .push(pref_toggle(
                 tr.ms_crosshair,
                 tr.ms_crosshair_desc,
                 cfg.crosshair,
                 Message::ToggleMouseCrosshair,
-                ui
-            ),
-        ]
-        .spacing(12)
-        .into()
+                ui,
+            ));
+
+        if cfg.crosshair {
+            col = col
+                .push(label_input(tr.ms_ch_shortcut, &cfg.crosshair_shortcut, Message::SetCrosshairShortcut))
+                .push(
+                    row![
+                        label_input(tr.ms_ch_color, &cfg.crosshair_color, Message::SetCrosshairColor),
+                        label_input(tr.ms_ch_opacity, &cfg.crosshair_opacity.to_string(), Message::SetCrosshairOpacity),
+                        label_input(tr.ms_ch_thickness, &cfg.crosshair_thickness.to_string(), Message::SetCrosshairThickness),
+                    ]
+                    .spacing(12),
+                )
+                .push(
+                    row![
+                        label_input(tr.ms_ch_center_radius, &cfg.crosshair_center_radius.to_string(), Message::SetCrosshairCenterRadius),
+                        label_input(tr.ms_ch_border_color, &cfg.crosshair_border_color, Message::SetCrosshairBorderColor),
+                        label_input(tr.ms_ch_border_size, &cfg.crosshair_border_size.to_string(), Message::SetCrosshairBorderSize),
+                    ]
+                    .spacing(12),
+                )
+                .push(heading(tr.ms_ch_orientation))
+                .push(
+                    container(
+                        row![
+                            seg_button(tr.ms_ch_horizontal, orient_str == "horizontal", Message::SetCrosshairOrientation("horizontal".into()), ui),
+                            seg_button(tr.ms_ch_vertical, orient_str == "vertical", Message::SetCrosshairOrientation("vertical".into()), ui),
+                            seg_button(tr.ms_ch_both, orient_str == "both", Message::SetCrosshairOrientation("both".into()), ui),
+                        ]
+                        .spacing(2),
+                    )
+                    .style(theme::segmented_control),
+                )
+                .push(pref_toggle(
+                    tr.ms_ch_auto_hide,
+                    tr.ms_ch_auto_hide_desc,
+                    cfg.crosshair_auto_hide,
+                    Message::ToggleCrosshairAutoHide,
+                    ui,
+                ))
+                .push(pref_toggle(
+                    tr.ms_ch_fixed_length,
+                    tr.ms_ch_fixed_length_desc,
+                    cfg.crosshair_fixed_length,
+                    Message::ToggleCrosshairFixedLength,
+                    ui,
+                ));
+
+            if cfg.crosshair_fixed_length {
+                col = col.push(label_input(tr.ms_ch_fixed_length_px, &cfg.crosshair_fixed_length_px.to_string(), Message::SetCrosshairFixedLengthPx));
+            }
+        }
+
+        // ── 4. Mouse Jump ──────────────────────────────────────────────
+        col = col
+            .push(Space::with_height(8))
+            .push(pref_toggle(
+                tr.ms_mouse_jump,
+                tr.ms_mouse_jump_desc,
+                cfg.mouse_jump,
+                Message::ToggleMouseJump,
+                ui,
+            ));
+
+        if cfg.mouse_jump {
+            col = col
+                .push(label_input(tr.ms_mj_shortcut, &cfg.mouse_jump_shortcut, Message::SetMouseJumpShortcut))
+                .push(
+                    row![
+                        label_input(tr.ms_mj_max_width, &cfg.mouse_jump_max_width.to_string(), Message::SetMouseJumpMaxWidth),
+                        label_input(tr.ms_mj_max_height, &cfg.mouse_jump_max_height.to_string(), Message::SetMouseJumpMaxHeight),
+                    ]
+                    .spacing(12),
+                );
+        }
+
+        // ── 5. Cursor Wrap ─────────────────────────────────────────────
+        col = col
+            .push(Space::with_height(8))
+            .push(pref_toggle(
+                tr.ms_cursor_wrap,
+                tr.ms_cursor_wrap_desc,
+                cfg.cursor_wrap,
+                Message::ToggleCursorWrap,
+                ui,
+            ));
+
+        // ── 6. Gliding Cursor ──────────────────────────────────────────
+        col = col
+            .push(Space::with_height(8))
+            .push(pref_toggle(
+                tr.ms_gliding_cursor,
+                tr.ms_gliding_cursor_desc,
+                cfg.gliding_cursor,
+                Message::ToggleGlidingCursor,
+                ui,
+            ));
+
+        if cfg.gliding_cursor {
+            col = col
+                .push(label_input(tr.ms_gc_shortcut, &cfg.gliding_cursor_shortcut, Message::SetGlidingCursorShortcut))
+                .push(
+                    row![
+                        label_input(tr.ms_gc_travel_speed, &cfg.gliding_cursor_travel_speed.to_string(), Message::SetGlidingCursorTravelSpeed),
+                        label_input(tr.ms_gc_delay_speed, &cfg.gliding_cursor_delay_speed.to_string(), Message::SetGlidingCursorDelaySpeed),
+                    ]
+                    .spacing(12),
+                );
+        }
+
+        col.into()
     }
 
     fn settings_app_launcher<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {

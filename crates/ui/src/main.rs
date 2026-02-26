@@ -552,17 +552,228 @@ impl Settings {
                 self.module_configs.image_resizer.quality = q;
                 self.module_configs.save("image-resizer");
             }
+            // ── Mouse Utilities — Find My Mouse ────────────────────────
             Message::ToggleMouseFindMyMouse(v) => {
                 self.module_configs.mouse_utils.find_my_mouse = v;
                 self.module_configs.save("mouse-utils");
             }
+            Message::SetFindMyMouseActivation(s) => {
+                use mpt_mouse_utils::config::FindMyMouseActivation;
+                self.module_configs.mouse_utils.find_my_mouse_activation = match s.as_str() {
+                    "right-ctrl-twice" => FindMyMouseActivation::RightCtrlTwice,
+                    "shake-mouse" => FindMyMouseActivation::ShakeMouse,
+                    "custom-shortcut" => FindMyMouseActivation::CustomShortcut,
+                    _ => FindMyMouseActivation::LeftCtrlTwice,
+                };
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetFindMyMouseShortcut(s) => {
+                self.module_configs.mouse_utils.find_my_mouse_shortcut = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetFindMyMouseShakeDistance(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.find_my_mouse_shake_distance = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::ToggleFindMyMouseGameMode(v) => {
+                self.module_configs.mouse_utils.find_my_mouse_game_mode = v;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetFindMyMouseBgColor(s) => {
+                self.module_configs.mouse_utils.find_my_mouse_bg_color = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetFindMyMouseSpotlightColor(s) => {
+                self.module_configs.mouse_utils.find_my_mouse_spotlight_color = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetFindMyMouseSpotlightRadius(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.find_my_mouse_spotlight_radius = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetFindMyMouseOverlayOpacity(s) => {
+                if let Ok(v) = s.parse::<f32>() {
+                    self.module_configs.mouse_utils.find_my_mouse_overlay_opacity = v.clamp(0.0, 1.0);
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetFindMyMouseInitialZoom(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.find_my_mouse_initial_zoom = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetFindMyMouseAnimationMs(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.find_my_mouse_animation_ms = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetFindMyMouseExcludedApps(s) => {
+                self.module_configs.mouse_utils.find_my_mouse_excluded_apps = s;
+                self.module_configs.save("mouse-utils");
+            }
+            // ── Mouse Utilities — Highlighter ─────────────────────────
             Message::ToggleMouseClickHighlighter(v) => {
                 self.module_configs.mouse_utils.click_highlighter = v;
                 self.module_configs.save("mouse-utils");
             }
+            Message::SetHighlighterShortcut(s) => {
+                self.module_configs.mouse_utils.highlighter_shortcut = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetHighlighterPrimaryColor(s) => {
+                self.module_configs.mouse_utils.highlighter_primary_color = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetHighlighterSecondaryColor(s) => {
+                self.module_configs.mouse_utils.highlighter_secondary_color = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetHighlighterAlwaysColor(s) => {
+                self.module_configs.mouse_utils.highlighter_always_color = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetHighlighterMode(s) => {
+                use mpt_mouse_utils::config::HighlightMode;
+                self.module_configs.mouse_utils.highlighter_mode = match s.as_str() {
+                    "spotlight" => HighlightMode::Spotlight,
+                    _ => HighlightMode::CircleHighlight,
+                };
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetHighlighterRadius(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.highlighter_radius = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetHighlighterFadeDelay(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.highlighter_fade_delay_ms = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetHighlighterFadeDuration(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.highlighter_fade_duration_ms = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            // ── Mouse Utilities — Crosshairs ──────────────────────────
             Message::ToggleMouseCrosshair(v) => {
                 self.module_configs.mouse_utils.crosshair = v;
                 self.module_configs.save("mouse-utils");
+            }
+            Message::SetCrosshairShortcut(s) => {
+                self.module_configs.mouse_utils.crosshair_shortcut = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetCrosshairColor(s) => {
+                self.module_configs.mouse_utils.crosshair_color = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetCrosshairOpacity(s) => {
+                if let Ok(v) = s.parse::<f32>() {
+                    self.module_configs.mouse_utils.crosshair_opacity = v.clamp(0.0, 1.0);
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetCrosshairCenterRadius(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.crosshair_center_radius = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetCrosshairThickness(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.crosshair_thickness = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetCrosshairBorderColor(s) => {
+                self.module_configs.mouse_utils.crosshair_border_color = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetCrosshairBorderSize(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.crosshair_border_size = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetCrosshairOrientation(s) => {
+                use mpt_mouse_utils::config::CrosshairOrientation;
+                self.module_configs.mouse_utils.crosshair_orientation = match s.as_str() {
+                    "horizontal" => CrosshairOrientation::Horizontal,
+                    "vertical" => CrosshairOrientation::Vertical,
+                    _ => CrosshairOrientation::Both,
+                };
+                self.module_configs.save("mouse-utils");
+            }
+            Message::ToggleCrosshairAutoHide(v) => {
+                self.module_configs.mouse_utils.crosshair_auto_hide = v;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::ToggleCrosshairFixedLength(v) => {
+                self.module_configs.mouse_utils.crosshair_fixed_length = v;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetCrosshairFixedLengthPx(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.crosshair_fixed_length_px = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            // ── Mouse Utilities — Mouse Jump ──────────────────────────
+            Message::ToggleMouseJump(v) => {
+                self.module_configs.mouse_utils.mouse_jump = v;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetMouseJumpShortcut(s) => {
+                self.module_configs.mouse_utils.mouse_jump_shortcut = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetMouseJumpMaxWidth(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.mouse_jump_max_width = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetMouseJumpMaxHeight(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.mouse_jump_max_height = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            // ── Mouse Utilities — Cursor Wrap ─────────────────────────
+            Message::ToggleCursorWrap(v) => {
+                self.module_configs.mouse_utils.cursor_wrap = v;
+                self.module_configs.save("mouse-utils");
+            }
+            // ── Mouse Utilities — Gliding Cursor ──────────────────────
+            Message::ToggleGlidingCursor(v) => {
+                self.module_configs.mouse_utils.gliding_cursor = v;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetGlidingCursorShortcut(s) => {
+                self.module_configs.mouse_utils.gliding_cursor_shortcut = s;
+                self.module_configs.save("mouse-utils");
+            }
+            Message::SetGlidingCursorTravelSpeed(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.gliding_cursor_travel_speed = v;
+                    self.module_configs.save("mouse-utils");
+                }
+            }
+            Message::SetGlidingCursorDelaySpeed(s) => {
+                if let Ok(v) = s.parse::<u32>() {
+                    self.module_configs.mouse_utils.gliding_cursor_delay_speed = v;
+                    self.module_configs.save("mouse-utils");
+                }
             }
             Message::SetAppLauncherMaxResults(n) => {
                 self.module_configs.app_launcher.max_results = n;

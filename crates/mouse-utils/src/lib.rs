@@ -39,14 +39,19 @@ impl PowerModule for MouseUtils {
     }
 
     fn description(&self) -> &'static str {
-        "Find my mouse spotlight, click highlighter, and crosshair overlay"
+        "Find My Mouse, click highlighter, crosshairs, mouse jump, cursor wrap, gliding cursor"
     }
 
     fn start(&mut self) -> Result<()> {
         self.running = true;
         info!(
-            "Mouse Utilities started (find_mouse={}, highlighter={}, crosshair={})",
-            self.config.find_my_mouse, self.config.click_highlighter, self.config.crosshair
+            "Mouse Utilities started (find_mouse={}, highlighter={}, crosshair={}, jump={}, wrap={}, gliding={})",
+            self.config.find_my_mouse,
+            self.config.click_highlighter,
+            self.config.crosshair,
+            self.config.mouse_jump,
+            self.config.cursor_wrap,
+            self.config.gliding_cursor,
         );
         Ok(())
     }

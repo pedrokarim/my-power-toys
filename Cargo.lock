@@ -3798,6 +3798,7 @@ dependencies = [
  "mpt-common",
  "mpt-hosts-editor",
  "mpt-key-manager",
+ "mpt-mouse-utils",
  "mpt-workspaces",
  "rdev",
  "rfd",

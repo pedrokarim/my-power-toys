@@ -131,49 +131,10 @@ impl Default for ImageResizerConf {
 
 // ── Mouse Utilities ──────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MouseUtilsConf {
-    #[serde(default = "default_true")]
-    pub find_my_mouse: bool,
-    #[serde(default)]
-    pub click_highlighter: bool,
-    #[serde(default)]
-    pub crosshair: bool,
-    #[serde(default = "default_radius")]
-    pub spotlight_radius: u32,
-    #[serde(default = "default_color")]
-    pub spotlight_color: String,
-    #[serde(default = "default_opacity")]
-    pub spotlight_opacity: f32,
-}
+pub type MouseUtilsConf = mpt_mouse_utils::config::MouseUtilsConfig;
 
 fn default_true() -> bool {
     true
-}
-
-fn default_radius() -> u32 {
-    100
-}
-
-fn default_color() -> String {
-    "#FFFF00".into()
-}
-
-fn default_opacity() -> f32 {
-    0.5
-}
-
-impl Default for MouseUtilsConf {
-    fn default() -> Self {
-        Self {
-            find_my_mouse: true,
-            click_highlighter: false,
-            crosshair: false,
-            spotlight_radius: default_radius(),
-            spotlight_color: default_color(),
-            spotlight_opacity: default_opacity(),
-        }
-    }
 }
 
 // ── App Launcher ─────────────────────────────────────────────────────────────

@@ -17,6 +17,7 @@ mpt-key-manager = { path = "../key-manager" }
 mpt-workspaces = { path = "../workspaces", default-features = false }
 mpt-hosts-editor = { path = "../hosts-editor", default-features = false }
 mpt-bulk-rename = { path = "../bulk-rename" }
+mpt-mouse-utils = { path = "../mouse-utils" }
 anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }

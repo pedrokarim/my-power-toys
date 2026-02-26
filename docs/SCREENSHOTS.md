@@ -94,6 +94,27 @@ import -window "$WID" docs/images/image-resizer.png
 kill %1
 ```
 
+### Bulk Rename (`mpt-bulk-rename`)
+
+Bulk Rename works best with file arguments. Create a temp directory with sample files.
+
+```bash
+# Create sample files
+mkdir -p /tmp/bulk-rename-demo
+touch /tmp/bulk-rename-demo/photo_{001..010}.jpg
+touch /tmp/bulk-rename-demo/document_{a..e}.txt
+
+rm -f /tmp/mpt-bulk-rename.lock
+mpt-bulk-rename /tmp/bulk-rename-demo/* &
+sleep 2
+WID=$(xdotool search --name "Bulk Rename" | head -1)
+import -window "$WID" docs/images/bulk-rename.png
+kill %1
+
+# Clean up
+rm -rf /tmp/bulk-rename-demo
+```
+
 ### Command Palette (`mpt-command-palette`)
 
 The palette opens empty and needs keyboard input to show results.
@@ -154,3 +175,4 @@ kill %1
 | `command-palette-results.png` | Command Palette | Search "set" with 8 results |
 | `always-on-top-illustration.svg` | Always on Top | SVG illustration: pinned window with blue border above other windows |
 | `awake-illustration.svg` | Awake | SVG illustration: coffee cup with four mode icons (indefinite, timed, expirable, screen on) |
+| `bulk-rename.png` | Bulk Rename | Main window with search/replace, options, file table preview |

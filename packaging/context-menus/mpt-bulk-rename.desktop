@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=inode/directory;application/octet-stream;
+Icon=my-power-toys
+Actions=bulkRename
+
+[Desktop Action bulkRename]
+Name=Bulk Rename with MyPowerToys
+Icon=my-power-toys
+Exec=mpt-bulk-rename %F

@@ -236,6 +236,30 @@ pub struct Tr {
     pub ms_ws_delete: &'static str,
     pub ms_ws_no_workspaces: &'static str,
     pub ms_ws_editor_hint: &'static str,
+
+    // Bulk Rename
+    pub ms_br_use_regex: &'static str,
+    pub ms_br_use_regex_desc: &'static str,
+    pub ms_br_match_all: &'static str,
+    pub ms_br_match_all_desc: &'static str,
+    pub ms_br_case_sensitive: &'static str,
+    pub ms_br_case_sensitive_desc: &'static str,
+    pub ms_br_apply_to: &'static str,
+    pub ms_br_filename_only: &'static str,
+    pub ms_br_extension_only: &'static str,
+    pub ms_br_filename_ext: &'static str,
+    pub ms_br_include_folders: &'static str,
+    pub ms_br_include_folders_desc: &'static str,
+    pub ms_br_include_subfolders: &'static str,
+    pub ms_br_include_subfolders_desc: &'static str,
+    pub ms_br_text_formatting: &'static str,
+    pub ms_br_fmt_none: &'static str,
+    pub ms_br_fmt_lower: &'static str,
+    pub ms_br_fmt_upper: &'static str,
+    pub ms_br_fmt_title: &'static str,
+    pub ms_br_fmt_capitalize: &'static str,
+    pub ms_br_enumerate: &'static str,
+    pub ms_br_enumerate_desc: &'static str,
 }
 
 pub fn get(lang: Language) -> &'static Tr {

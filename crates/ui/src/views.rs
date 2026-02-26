@@ -2544,6 +2544,7 @@ impl Settings {
             "light-switch" => self.settings_light_switch(tr, ui),
             "key-manager" => self.settings_key_manager(tr, ui),
             "workspaces" => self.settings_workspaces(tr, ui),
+            "bulk-rename" => self.settings_bulk_rename(tr, ui),
             _ => column![
                 text(tr.module_settings)
                     .size(ui.sz(16.0))
@@ -3906,5 +3907,155 @@ impl Settings {
         );
 
         col.into()
+    }
+
+    fn settings_bulk_rename<'a>(&self, tr: &'a translations::Tr, ui: Ui) -> Element<'a, Message> {
+        use mpt_bulk_rename::config::{ApplyTo, TextFormatting};
+
+        let cfg = &self.module_configs.bulk_rename;
+
+        let apply_to_str = match cfg.apply_to {
+            ApplyTo::FilenameOnly => "filename-only",
+            ApplyTo::ExtensionOnly => "extension-only",
+            ApplyTo::FilenameAndExtension => "filename-and-extension",
+        };
+
+        let fmt_str = match cfg.text_formatting {
+            TextFormatting::None => "none",
+            TextFormatting::Lowercase => "lowercase",
+            TextFormatting::Uppercase => "uppercase",
+            TextFormatting::TitleCase => "title-case",
+            TextFormatting::CapitalizeEachWord => "capitalize-each-word",
+        };
+
+        column![
+            text(tr.module_settings)
+                .size(ui.sz(16.0))
+                .font(bold())
+                .color(ui.heading()),
+            // Use regex
+            pref_toggle(
+                tr.ms_br_use_regex,
+                tr.ms_br_use_regex_desc,
+                cfg.use_regex,
+                Message::ToggleBulkRenameRegex,
+                ui,
+            ),
+            // Match all occurrences
+            pref_toggle(
+                tr.ms_br_match_all,
+                tr.ms_br_match_all_desc,
+                cfg.match_all_occurrences,
+                Message::ToggleBulkRenameMatchAll,
+                ui,
+            ),
+            // Case sensitive
+            pref_toggle(
+                tr.ms_br_case_sensitive,
+                tr.ms_br_case_sensitive_desc,
+                cfg.case_sensitive,
+                Message::ToggleBulkRenameCaseSensitive,
+                ui,
+            ),
+            Space::with_height(4),
+            // Apply to
+            text(tr.ms_br_apply_to)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(ui.heading()),
+            container(
+                row![
+                    seg_button(
+                        tr.ms_br_filename_only,
+                        apply_to_str == "filename-only",
+                        Message::SetBulkRenameApplyTo("filename-only".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_br_extension_only,
+                        apply_to_str == "extension-only",
+                        Message::SetBulkRenameApplyTo("extension-only".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_br_filename_ext,
+                        apply_to_str == "filename-and-extension",
+                        Message::SetBulkRenameApplyTo("filename-and-extension".into()),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+            Space::with_height(4),
+            // Text formatting
+            text(tr.ms_br_text_formatting)
+                .size(ui.sz(14.0))
+                .font(ui.font())
+                .color(ui.heading()),
+            container(
+                row![
+                    seg_button(
+                        tr.ms_br_fmt_none,
+                        fmt_str == "none",
+                        Message::SetBulkRenameTextFormatting("none".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_br_fmt_lower,
+                        fmt_str == "lowercase",
+                        Message::SetBulkRenameTextFormatting("lowercase".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_br_fmt_upper,
+                        fmt_str == "uppercase",
+                        Message::SetBulkRenameTextFormatting("uppercase".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_br_fmt_title,
+                        fmt_str == "title-case",
+                        Message::SetBulkRenameTextFormatting("title-case".into()),
+                        ui
+                    ),
+                    seg_button(
+                        tr.ms_br_fmt_capitalize,
+                        fmt_str == "capitalize-each-word",
+                        Message::SetBulkRenameTextFormatting("capitalize-each-word".into()),
+                        ui
+                    ),
+                ]
+                .spacing(2),
+            )
+            .style(theme::segmented_control),
+            Space::with_height(4),
+            // Include folders
+            pref_toggle(
+                tr.ms_br_include_folders,
+                tr.ms_br_include_folders_desc,
+                cfg.include_folders,
+                Message::ToggleBulkRenameIncludeFolders,
+                ui,
+            ),
+            // Include subfolders
+            pref_toggle(
+                tr.ms_br_include_subfolders,
+                tr.ms_br_include_subfolders_desc,
+                cfg.include_subfolders,
+                Message::ToggleBulkRenameIncludeSubfolders,
+                ui,
+            ),
+            // Enumerate items
+            pref_toggle(
+                tr.ms_br_enumerate,
+                tr.ms_br_enumerate_desc,
+                cfg.enumerate_items,
+                Message::ToggleBulkRenameEnumerate,
+                ui,
+            ),
+        ]
+        .spacing(8)
+        .into()
     }
 }

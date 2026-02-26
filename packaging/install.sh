@@ -59,7 +59,7 @@ tar xzf "$TMPDIR/release.tar.gz" -C "$TMPDIR"
 # Install binaries
 echo "==> Installing binaries to $INSTALL_DIR..."
 mkdir -p "$INSTALL_DIR"
-for bin in mpt-daemon mpt-ctl mpt-settings mpt-color-picker mpt-command-palette mpt-peek mpt-image-resizer mpt-fancy-zones mpt-quick-accent mpt-workspaces; do
+for bin in mpt-daemon mpt-ctl mpt-settings mpt-color-picker mpt-command-palette mpt-peek mpt-image-resizer mpt-bulk-rename mpt-fancy-zones mpt-quick-accent mpt-workspaces; do
     if [ -f "$TMPDIR/$bin" ]; then
         install -m 755 "$TMPDIR/$bin" "$INSTALL_DIR/$bin"
         echo "    Installed $bin"
@@ -169,6 +169,38 @@ DESKTOP
 
 # Update desktop database if available
 update-desktop-database "$APP_DIR" 2>/dev/null || true
+
+# Install file manager integration for Bulk Rename
+CONTEXT_MENUS_URL="https://raw.githubusercontent.com/$REPO/main/packaging/context-menus"
+echo "==> Installing file manager integration for Bulk Rename..."
+if command -v nautilus >/dev/null 2>&1; then
+    # Nautilus Python extension
+    NAUTILUS_EXT_DIR="$HOME/.local/share/nautilus-python/extensions"
+    mkdir -p "$NAUTILUS_EXT_DIR"
+    curl -fsSL "$CONTEXT_MENUS_URL/mpt-bulk-rename-nautilus.py" \
+        -o "$NAUTILUS_EXT_DIR/mpt-bulk-rename-nautilus.py" 2>/dev/null || true
+    # Nautilus script fallback
+    NAUTILUS_SCRIPTS_DIR="$HOME/.local/share/nautilus/scripts"
+    mkdir -p "$NAUTILUS_SCRIPTS_DIR"
+    curl -fsSL "$CONTEXT_MENUS_URL/mpt-bulk-rename-nautilus-script.sh" \
+        -o "$NAUTILUS_SCRIPTS_DIR/Bulk Rename (MyPowerToys)" 2>/dev/null || true
+    chmod +x "$NAUTILUS_SCRIPTS_DIR/Bulk Rename (MyPowerToys)" 2>/dev/null || true
+    echo "    Installed Nautilus integration"
+fi
+if command -v dolphin >/dev/null 2>&1; then
+    DOLPHIN_DIR="$HOME/.local/share/kio/servicemenus"
+    mkdir -p "$DOLPHIN_DIR"
+    curl -fsSL "$CONTEXT_MENUS_URL/mpt-bulk-rename.desktop" \
+        -o "$DOLPHIN_DIR/mpt-bulk-rename.desktop" 2>/dev/null || true
+    echo "    Installed Dolphin integration"
+fi
+if command -v nemo >/dev/null 2>&1; then
+    NEMO_DIR="$HOME/.local/share/nemo/actions"
+    mkdir -p "$NEMO_DIR"
+    curl -fsSL "$CONTEXT_MENUS_URL/mpt-bulk-rename.nemo_action" \
+        -o "$NEMO_DIR/mpt-bulk-rename.nemo_action" 2>/dev/null || true
+    echo "    Installed Nemo integration"
+fi
 
 echo ""
 echo "  MyPowerToys v$VERSION installed successfully!"

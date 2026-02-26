@@ -1,0 +1,7 @@
+[Nemo Action]
+Name=Bulk Rename with MyPowerToys
+Comment=Rename selected files using patterns with live preview
+Exec=mpt-bulk-rename %F
+Icon-Name=my-power-toys
+Selection=Any
+Extensions=any

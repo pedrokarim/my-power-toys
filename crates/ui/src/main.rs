@@ -716,6 +716,51 @@ impl Settings {
                 }
                 self.module_configs.save("workspaces");
             }
+            // Bulk Rename
+            Message::ToggleBulkRenameRegex(v) => {
+                self.module_configs.bulk_rename.use_regex = v;
+                self.module_configs.save("bulk-rename");
+            }
+            Message::ToggleBulkRenameMatchAll(v) => {
+                self.module_configs.bulk_rename.match_all_occurrences = v;
+                self.module_configs.save("bulk-rename");
+            }
+            Message::ToggleBulkRenameCaseSensitive(v) => {
+                self.module_configs.bulk_rename.case_sensitive = v;
+                self.module_configs.save("bulk-rename");
+            }
+            Message::SetBulkRenameApplyTo(val) => {
+                use mpt_bulk_rename::config::ApplyTo;
+                self.module_configs.bulk_rename.apply_to = match val.as_str() {
+                    "filename-only" => ApplyTo::FilenameOnly,
+                    "extension-only" => ApplyTo::ExtensionOnly,
+                    _ => ApplyTo::FilenameAndExtension,
+                };
+                self.module_configs.save("bulk-rename");
+            }
+            Message::ToggleBulkRenameIncludeFolders(v) => {
+                self.module_configs.bulk_rename.include_folders = v;
+                self.module_configs.save("bulk-rename");
+            }
+            Message::ToggleBulkRenameIncludeSubfolders(v) => {
+                self.module_configs.bulk_rename.include_subfolders = v;
+                self.module_configs.save("bulk-rename");
+            }
+            Message::SetBulkRenameTextFormatting(val) => {
+                use mpt_bulk_rename::config::TextFormatting;
+                self.module_configs.bulk_rename.text_formatting = match val.as_str() {
+                    "lowercase" => TextFormatting::Lowercase,
+                    "uppercase" => TextFormatting::Uppercase,
+                    "title-case" => TextFormatting::TitleCase,
+                    "capitalize-each-word" => TextFormatting::CapitalizeEachWord,
+                    _ => TextFormatting::None,
+                };
+                self.module_configs.save("bulk-rename");
+            }
+            Message::ToggleBulkRenameEnumerate(v) => {
+                self.module_configs.bulk_rename.enumerate_items = v;
+                self.module_configs.save("bulk-rename");
+            }
             Message::DemoToast(kind) => {
                 let tr = translations::get(self.language);
                 match kind {

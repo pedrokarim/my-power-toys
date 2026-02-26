@@ -5,8 +5,23 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "mpt-bulk-rename"
+path = "src/main.rs"
+required-features = ["gui"]
+
+[features]
+default = ["gui"]
+gui = ["dep:egui", "dep:eframe", "dep:scopeguard", "dep:rfd", "mpt-common/gui"]
+
 [dependencies]
 mpt-common = { path = "../common" }
 anyhow = { workspace = true }
 tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
 regex = "1"
+egui = { workspace = true, optional = true }
+eframe = { workspace = true, optional = true }
+scopeguard = { version = "1", optional = true }
+rfd = { version = "0.15", optional = true }

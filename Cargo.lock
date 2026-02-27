@@ -3708,6 +3708,8 @@ dependencies = [
  "serde",
  "toml",
  "tracing",
+ "x11rb",
+ "xkeysym",
 ]
 
 [[package]]

@@ -101,6 +101,10 @@ struct Settings {
     test_active_keys: Vec<String>,
     /// Receiver for global keyboard events from the rdev listener thread.
     hotkey_test_rx: Option<std_mpsc::Receiver<(String, bool)>>,
+    /// Which shortcut field is currently being captured (e.g. "find_my_mouse_shortcut").
+    capturing_shortcut_for: Option<String>,
+    /// Keys currently held during shortcut capture.
+    captured_keys: Vec<String>,
     dependency_help_for: Option<String>,
     distro_name: String,
     package_manager: helpers::PackageManager,
@@ -140,6 +144,8 @@ impl Settings {
                 hotkey_test_active: false,
                 test_active_keys: Vec::new(),
                 hotkey_test_rx: None,
+                capturing_shortcut_for: None,
+                captured_keys: Vec::new(),
                 dependency_help_for: None,
                 distro_name: helpers::detect_distro_name(),
                 package_manager: helpers::detect_package_manager(),
@@ -266,6 +272,9 @@ impl Settings {
                     m.running = !desired;
                 }
             }
+            Message::RestartModuleResult(()) => {
+                // Fire-and-forget: daemon restarted the module with new config
+            }
             Message::TriggerHotkeyTest(id) => {
                 if !self.daemon_connected {
                     self.shortcut_test_results
@@ -312,18 +321,104 @@ impl Settings {
             Message::PollKeyboardEvents => {
                 if let Some(rx) = &self.hotkey_test_rx {
                     while let Ok((name, pressed)) = rx.try_recv() {
-                        if !self.hotkey_test_active {
-                            continue;
-                        }
-                        if pressed {
-                            if !self.test_active_keys.contains(&name) {
-                                self.test_active_keys.push(name);
+                        // Feed the test screen
+                        if self.hotkey_test_active {
+                            if pressed {
+                                if !self.test_active_keys.contains(&name) {
+                                    self.test_active_keys.push(name.clone());
+                                }
+                            } else {
+                                self.test_active_keys.retain(|k| k != &name);
                             }
-                        } else {
-                            self.test_active_keys.retain(|k| k != &name);
+                        }
+                        // Feed the shortcut capture
+                        if self.capturing_shortcut_for.is_some() {
+                            if pressed {
+                                if !self.captured_keys.contains(&name) {
+                                    self.captured_keys.push(name.clone());
+                                }
+                            } else {
+                                self.captured_keys.retain(|k| k != &name);
+                            }
                         }
                     }
                 }
+            }
+            Message::StartCaptureShortcut(field_id) => {
+                self.capturing_shortcut_for = Some(field_id);
+                self.captured_keys.clear();
+                // Start the rdev listener if not already running
+                if self.hotkey_test_rx.is_none() {
+                    let (tx, rx) = std_mpsc::channel();
+                    self.hotkey_test_rx = Some(rx);
+                    std::thread::spawn(move || {
+                        let _ = rdev::listen(move |event| {
+                            let pair = match event.event_type {
+                                rdev::EventType::KeyPress(key) => {
+                                    rdev_key_name(key).map(|n| (n, true))
+                                }
+                                rdev::EventType::KeyRelease(key) => {
+                                    rdev_key_name(key).map(|n| (n, false))
+                                }
+                                _ => None,
+                            };
+                            if let Some(p) = pair {
+                                let _ = tx.send(p);
+                            }
+                        });
+                    });
+                }
+            }
+            Message::ConfirmCaptureShortcut => {
+                if let Some(field_id) = self.capturing_shortcut_for.take() {
+                    // Build the combo string: modifiers first, then regular keys
+                    let mut mods = Vec::new();
+                    let mut keys = Vec::new();
+                    for k in &self.captured_keys {
+                        match k.as_str() {
+                            "Super" | "Ctrl" | "Alt" | "AltGr" | "Shift" => mods.push(k.as_str()),
+                            _ => keys.push(k.as_str()),
+                        }
+                    }
+                    // Sort modifiers in conventional order
+                    let mod_order = |m: &str| match m {
+                        "Super" => 0, "Ctrl" => 1, "Alt" => 2, "AltGr" => 3, "Shift" => 4, _ => 9,
+                    };
+                    mods.sort_by_key(|m| mod_order(m));
+                    mods.extend(keys);
+                    let combo = mods.join("+");
+
+                    match field_id.as_str() {
+                        "find_my_mouse_shortcut" => {
+                            self.module_configs.mouse_utils.find_my_mouse_shortcut = combo;
+                        }
+                        "highlighter_shortcut" => {
+                            self.module_configs.mouse_utils.highlighter_shortcut = combo;
+                        }
+                        "crosshair_shortcut" => {
+                            self.module_configs.mouse_utils.crosshair_shortcut = combo;
+                        }
+                        "mouse_jump_shortcut" => {
+                            self.module_configs.mouse_utils.mouse_jump_shortcut = combo;
+                        }
+                        "gliding_cursor_shortcut" => {
+                            self.module_configs.mouse_utils.gliding_cursor_shortcut = combo;
+                        }
+                        _ => {}
+                    }
+                    self.module_configs.save("mouse-utils");
+                    self.captured_keys.clear();
+                    if self.daemon_connected {
+                        return Task::perform(
+                            daemon::daemon_restart_module("mouse-utils".into()),
+                            Message::RestartModuleResult,
+                        );
+                    }
+                }
+            }
+            Message::CancelCaptureShortcut => {
+                self.capturing_shortcut_for = None;
+                self.captured_keys.clear();
             }
             Message::ToggleDependencyHelp(id) => {
                 if self.dependency_help_for.as_deref() == Some(id.as_str()) {
@@ -556,6 +651,12 @@ impl Settings {
             Message::ToggleMouseFindMyMouse(v) => {
                 self.module_configs.mouse_utils.find_my_mouse = v;
                 self.module_configs.save("mouse-utils");
+                if self.daemon_connected {
+                    return Task::perform(
+                        daemon::daemon_restart_module("mouse-utils".into()),
+                        Message::RestartModuleResult,
+                    );
+                }
             }
             Message::SetFindMyMouseActivation(s) => {
                 use mpt_mouse_utils::config::FindMyMouseActivation;
@@ -565,10 +666,6 @@ impl Settings {
                     "custom-shortcut" => FindMyMouseActivation::CustomShortcut,
                     _ => FindMyMouseActivation::LeftCtrlTwice,
                 };
-                self.module_configs.save("mouse-utils");
-            }
-            Message::SetFindMyMouseShortcut(s) => {
-                self.module_configs.mouse_utils.find_my_mouse_shortcut = s;
                 self.module_configs.save("mouse-utils");
             }
             Message::SetFindMyMouseShakeDistance(s) => {
@@ -621,10 +718,12 @@ impl Settings {
             Message::ToggleMouseClickHighlighter(v) => {
                 self.module_configs.mouse_utils.click_highlighter = v;
                 self.module_configs.save("mouse-utils");
-            }
-            Message::SetHighlighterShortcut(s) => {
-                self.module_configs.mouse_utils.highlighter_shortcut = s;
-                self.module_configs.save("mouse-utils");
+                if self.daemon_connected {
+                    return Task::perform(
+                        daemon::daemon_restart_module("mouse-utils".into()),
+                        Message::RestartModuleResult,
+                    );
+                }
             }
             Message::SetHighlighterPrimaryColor(s) => {
                 self.module_configs.mouse_utils.highlighter_primary_color = s;
@@ -668,10 +767,12 @@ impl Settings {
             Message::ToggleMouseCrosshair(v) => {
                 self.module_configs.mouse_utils.crosshair = v;
                 self.module_configs.save("mouse-utils");
-            }
-            Message::SetCrosshairShortcut(s) => {
-                self.module_configs.mouse_utils.crosshair_shortcut = s;
-                self.module_configs.save("mouse-utils");
+                if self.daemon_connected {
+                    return Task::perform(
+                        daemon::daemon_restart_module("mouse-utils".into()),
+                        Message::RestartModuleResult,
+                    );
+                }
             }
             Message::SetCrosshairColor(s) => {
                 self.module_configs.mouse_utils.crosshair_color = s;
@@ -732,10 +833,12 @@ impl Settings {
             Message::ToggleMouseJump(v) => {
                 self.module_configs.mouse_utils.mouse_jump = v;
                 self.module_configs.save("mouse-utils");
-            }
-            Message::SetMouseJumpShortcut(s) => {
-                self.module_configs.mouse_utils.mouse_jump_shortcut = s;
-                self.module_configs.save("mouse-utils");
+                if self.daemon_connected {
+                    return Task::perform(
+                        daemon::daemon_restart_module("mouse-utils".into()),
+                        Message::RestartModuleResult,
+                    );
+                }
             }
             Message::SetMouseJumpMaxWidth(s) => {
                 if let Ok(v) = s.parse::<u32>() {
@@ -753,15 +856,23 @@ impl Settings {
             Message::ToggleCursorWrap(v) => {
                 self.module_configs.mouse_utils.cursor_wrap = v;
                 self.module_configs.save("mouse-utils");
+                if self.daemon_connected {
+                    return Task::perform(
+                        daemon::daemon_restart_module("mouse-utils".into()),
+                        Message::RestartModuleResult,
+                    );
+                }
             }
             // ── Mouse Utilities — Gliding Cursor ──────────────────────
             Message::ToggleGlidingCursor(v) => {
                 self.module_configs.mouse_utils.gliding_cursor = v;
                 self.module_configs.save("mouse-utils");
-            }
-            Message::SetGlidingCursorShortcut(s) => {
-                self.module_configs.mouse_utils.gliding_cursor_shortcut = s;
-                self.module_configs.save("mouse-utils");
+                if self.daemon_connected {
+                    return Task::perform(
+                        daemon::daemon_restart_module("mouse-utils".into()),
+                        Message::RestartModuleResult,
+                    );
+                }
             }
             Message::SetGlidingCursorTravelSpeed(s) => {
                 if let Ok(v) = s.parse::<u32>() {
@@ -1050,7 +1161,7 @@ impl Settings {
         if self.theme_mode == ThemeMode::System {
             subs.push(time::every(Duration::from_secs(2)).map(|_| Message::SystemThemeCheck));
         }
-        if self.hotkey_test_active && self.hotkey_test_rx.is_some() {
+        if (self.hotkey_test_active || self.capturing_shortcut_for.is_some()) && self.hotkey_test_rx.is_some() {
             subs.push(time::every(Duration::from_millis(20)).map(|_| Message::PollKeyboardEvents));
         }
         let needs_progress_tick = matches!(

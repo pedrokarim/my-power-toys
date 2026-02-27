@@ -57,6 +57,22 @@ pub async fn poll_daemon() -> DaemonStateResult {
     }
 }
 
+pub async fn daemon_restart_module(id: String) {
+    let _ = async {
+        let conn = zbus::Connection::session().await?;
+        conn.call_method(
+            Some(ipc::BUS_NAME),
+            ipc::OBJECT_PATH,
+            Some(ipc::BUS_NAME),
+            "RestartModule",
+            &id.as_str(),
+        )
+        .await?;
+        Ok::<(), zbus::Error>(())
+    }
+    .await;
+}
+
 pub async fn daemon_toggle_module(id: String, enable: bool) -> (String, bool, String) {
     let method = if enable { "StartModule" } else { "StopModule" };
     let result = async {

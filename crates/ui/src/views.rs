@@ -3169,6 +3169,87 @@ impl Settings {
             .into()
         };
 
+        let capturing_for = &self.capturing_shortcut_for;
+        let captured = &self.captured_keys;
+
+        let shortcut_input = |label: &'a str, value: &str, field_id: &str| -> Element<'a, Message> {
+            let is_capturing = capturing_for.as_deref() == Some(field_id);
+
+            let display: Element<'a, Message> = if is_capturing {
+                // Recording mode: show captured keys or placeholder
+                if captured.is_empty() {
+                    text(tr.shortcut_press_keys)
+                        .size(ui.sz(12.0))
+                        .font(ui.font())
+                        .color(theme::subtext0(ui.dark))
+                        .into()
+                } else {
+                    kbd(&captured.join("+"), ui)
+                }
+            } else if value.is_empty() {
+                text(tr.shortcut_none)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark))
+                    .into()
+            } else {
+                kbd(value, ui)
+            };
+
+            let action_btn: Element<'a, Message> = if is_capturing {
+                row![
+                    button(
+                        text(tr.shortcut_confirm)
+                            .size(ui.sz(11.0))
+                            .font(ui.font()),
+                    )
+                    .padding(Padding::from([4.0, 10.0]))
+                    .style(theme::seg_button(true))
+                    .on_press(Message::ConfirmCaptureShortcut),
+                    button(
+                        text(tr.shortcut_cancel)
+                            .size(ui.sz(11.0))
+                            .font(ui.font()),
+                    )
+                    .padding(Padding::from([4.0, 10.0]))
+                    .style(theme::seg_button(false))
+                    .on_press(Message::CancelCaptureShortcut),
+                ]
+                .spacing(4)
+                .into()
+            } else {
+                button(
+                    row![
+                        text(Bootstrap::RecordCircle.to_string())
+                            .font(BOOTSTRAP_FONT)
+                            .size(ui.sz(11.0)),
+                        text(tr.shortcut_record)
+                            .size(ui.sz(11.0))
+                            .font(ui.font()),
+                    ]
+                    .spacing(4)
+                    .align_y(Alignment::Center),
+                )
+                .padding(Padding::from([4.0, 10.0]))
+                .style(theme::seg_button(false))
+                .on_press(Message::StartCaptureShortcut(field_id.to_string()))
+                .into()
+            };
+
+            column![
+                text(label)
+                    .size(ui.sz(12.0))
+                    .font(ui.font())
+                    .color(theme::subtext0(ui.dark)),
+                row![display, Space::with_width(Length::Fill), action_btn]
+                    .spacing(8)
+                    .align_y(Alignment::Center),
+            ]
+            .spacing(4)
+            .width(Length::Fill)
+            .into()
+        };
+
         // ── Build the column ───────────────────────────────────────────
         let mut col = column![
             text(tr.module_settings)
@@ -3208,7 +3289,7 @@ impl Settings {
 
             // Conditional: custom shortcut input
             if cfg.find_my_mouse_activation == FindMyMouseActivation::CustomShortcut {
-                col = col.push(label_input(tr.ms_fmm_shortcut, &cfg.find_my_mouse_shortcut, Message::SetFindMyMouseShortcut));
+                col = col.push(shortcut_input(tr.ms_fmm_shortcut, &cfg.find_my_mouse_shortcut, "find_my_mouse_shortcut"));
             }
 
             // Conditional: shake distance
@@ -3262,7 +3343,7 @@ impl Settings {
 
         if cfg.click_highlighter {
             col = col
-                .push(label_input(tr.ms_hl_shortcut, &cfg.highlighter_shortcut, Message::SetHighlighterShortcut))
+                .push(shortcut_input(tr.ms_hl_shortcut, &cfg.highlighter_shortcut, "highlighter_shortcut"))
                 .push(
                     row![
                         label_input(tr.ms_hl_primary_color, &cfg.highlighter_primary_color, Message::SetHighlighterPrimaryColor),
@@ -3305,7 +3386,7 @@ impl Settings {
 
         if cfg.crosshair {
             col = col
-                .push(label_input(tr.ms_ch_shortcut, &cfg.crosshair_shortcut, Message::SetCrosshairShortcut))
+                .push(shortcut_input(tr.ms_ch_shortcut, &cfg.crosshair_shortcut, "crosshair_shortcut"))
                 .push(
                     row![
                         label_input(tr.ms_ch_color, &cfg.crosshair_color, Message::SetCrosshairColor),
@@ -3367,7 +3448,7 @@ impl Settings {
 
         if cfg.mouse_jump {
             col = col
-                .push(label_input(tr.ms_mj_shortcut, &cfg.mouse_jump_shortcut, Message::SetMouseJumpShortcut))
+                .push(shortcut_input(tr.ms_mj_shortcut, &cfg.mouse_jump_shortcut, "mouse_jump_shortcut"))
                 .push(
                     row![
                         label_input(tr.ms_mj_max_width, &cfg.mouse_jump_max_width.to_string(), Message::SetMouseJumpMaxWidth),
@@ -3401,7 +3482,7 @@ impl Settings {
 
         if cfg.gliding_cursor {
             col = col
-                .push(label_input(tr.ms_gc_shortcut, &cfg.gliding_cursor_shortcut, Message::SetGlidingCursorShortcut))
+                .push(shortcut_input(tr.ms_gc_shortcut, &cfg.gliding_cursor_shortcut, "gliding_cursor_shortcut"))
                 .push(
                     row![
                         label_input(tr.ms_gc_travel_speed, &cfg.gliding_cursor_travel_speed.to_string(), Message::SetGlidingCursorTravelSpeed),

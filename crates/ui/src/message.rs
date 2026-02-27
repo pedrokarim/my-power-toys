@@ -8,11 +8,16 @@ pub enum Message {
     NavigateTo(Page),
     ToggleModule(String, bool),
     ToggleModuleResult(String, bool, String),
+    RestartModuleResult(()),
     TriggerHotkeyTest(String),
     TriggerHotkeyTestResult(String, String),
     StartHotkeyTest,
     StopHotkeyTest,
     PollKeyboardEvents,
+    // Shortcut capture (interactive hotkey recording for settings)
+    StartCaptureShortcut(String),
+    ConfirmCaptureShortcut,
+    CancelCaptureShortcut,
     ToggleDependencyHelp(String),
     CloseDependencyHelp,
     CopyInstallCommand(String),
@@ -53,7 +58,6 @@ pub enum Message {
     // Mouse Utilities — Find My Mouse
     ToggleMouseFindMyMouse(bool),
     SetFindMyMouseActivation(String),
-    SetFindMyMouseShortcut(String),
     SetFindMyMouseShakeDistance(String),
     ToggleFindMyMouseGameMode(bool),
     SetFindMyMouseBgColor(String),
@@ -65,7 +69,6 @@ pub enum Message {
     SetFindMyMouseExcludedApps(String),
     // Mouse Utilities — Highlighter
     ToggleMouseClickHighlighter(bool),
-    SetHighlighterShortcut(String),
     SetHighlighterPrimaryColor(String),
     SetHighlighterSecondaryColor(String),
     SetHighlighterAlwaysColor(String),
@@ -75,7 +78,6 @@ pub enum Message {
     SetHighlighterFadeDuration(String),
     // Mouse Utilities — Crosshairs
     ToggleMouseCrosshair(bool),
-    SetCrosshairShortcut(String),
     SetCrosshairColor(String),
     SetCrosshairOpacity(String),
     SetCrosshairCenterRadius(String),
@@ -88,14 +90,12 @@ pub enum Message {
     SetCrosshairFixedLengthPx(String),
     // Mouse Utilities — Mouse Jump
     ToggleMouseJump(bool),
-    SetMouseJumpShortcut(String),
     SetMouseJumpMaxWidth(String),
     SetMouseJumpMaxHeight(String),
     // Mouse Utilities — Cursor Wrap
     ToggleCursorWrap(bool),
     // Mouse Utilities — Gliding Cursor
     ToggleGlidingCursor(bool),
-    SetGlidingCursorShortcut(String),
     SetGlidingCursorTravelSpeed(String),
     SetGlidingCursorDelaySpeed(String),
     SetAppLauncherMaxResults(usize),

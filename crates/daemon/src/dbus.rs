@@ -46,6 +46,17 @@ impl DaemonInterface {
         }
     }
 
+    /// Restart a module (stop + start) so it re-reads its config.
+    fn restart_module(&self, id: &str) -> String {
+        let mut reg = self.registry.lock().unwrap();
+        // Stop first (ignores "not running" gracefully)
+        let _ = reg.stop_module(id);
+        match reg.start_module(id) {
+            Ok(()) => "ok".to_string(),
+            Err(e) => format!("error: {e}"),
+        }
+    }
+
     /// Trigger a module's hotkey action.
     fn trigger_hotkey(&self, id: &str) -> String {
         let mut reg = self.registry.lock().unwrap();

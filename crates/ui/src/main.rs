@@ -1215,27 +1215,32 @@ impl Settings {
 /// for printable characters and falling back to scancode-based names for
 /// modifiers and special keys.
 fn resolve_key_name(key: rdev::Key, event_name: &Option<String>) -> String {
-    // For letter/digit keys, prefer the layout-aware name from the event
-    if is_printable_key(key) {
-        if let Some(name) = event_name {
-            let name = name.trim();
-            if !name.is_empty() {
-                return name.to_uppercase();
-            }
+    // First, check if we have a known special key (modifiers, arrows, etc.)
+    // These should NOT use event.name (which may be empty or misleading).
+    if is_special_key(key) {
+        return rdev_key_name(key).unwrap_or_else(|| format!("{:?}", key));
+    }
+    // For all other keys, prefer the layout-aware name from the event.
+    // This correctly handles AZERTY and other non-QWERTY layouts.
+    if let Some(name) = event_name {
+        let name = name.trim();
+        if !name.is_empty() {
+            return name.to_uppercase();
         }
     }
-    // Fallback to scancode-based name
+    // Final fallback to scancode-based name
     rdev_key_name(key).unwrap_or_else(|| format!("{:?}", key))
 }
 
-fn is_printable_key(key: rdev::Key) -> bool {
+fn is_special_key(key: rdev::Key) -> bool {
     use rdev::Key::*;
     matches!(
         key,
-        KeyA | KeyB | KeyC | KeyD | KeyE | KeyF | KeyG | KeyH | KeyI | KeyJ | KeyK | KeyL
-            | KeyM | KeyN | KeyO | KeyP | KeyQ | KeyR | KeyS | KeyT | KeyU | KeyV | KeyW
-            | KeyX | KeyY | KeyZ | Num0 | Num1 | Num2 | Num3 | Num4 | Num5 | Num6 | Num7
-            | Num8 | Num9
+        ShiftLeft | ShiftRight | ControlLeft | ControlRight | Alt | AltGr
+            | MetaLeft | MetaRight | Space | Tab | Return | Escape
+            | UpArrow | DownArrow | LeftArrow | RightArrow
+            | Backspace | Delete | Home | End | PageUp | PageDown | CapsLock
+            | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 | F10 | F11 | F12
     )
 }
 

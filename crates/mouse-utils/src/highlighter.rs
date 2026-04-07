@@ -107,39 +107,32 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
 
         // Process events
         let event = conn.poll_for_event()?;
-        if let Some(event) = event {
-            if let x11rb::protocol::Event::XinputRawButtonPress(e) = &event {
-                let button = e.detail;
-                // button 1 = primary, button 3 = secondary
-                // Ignore scroll buttons (4, 5, 6, 7)
-                if button == 1 || button == 3 {
-                    let color = if button == 1 {
-                        primary_color
-                    } else {
-                        secondary_color
-                    };
+        if let Some(event) = event
+            && let x11rb::protocol::Event::XinputRawButtonPress(e) = &event
+        {
+            let button = e.detail;
+            // button 1 = primary, button 3 = secondary
+            // Ignore scroll buttons (4, 5, 6, 7)
+            if button == 1 || button == 3 {
+                let color = if button == 1 {
+                    primary_color
+                } else {
+                    secondary_color
+                };
 
-                    let cursor = conn.query_pointer(root)?.reply()?;
-                    let cx = cursor.root_x;
-                    let cy = cursor.root_y;
+                let cursor = conn.query_pointer(root)?.reply()?;
+                let cx = cursor.root_x;
+                let cy = cursor.root_y;
 
-                    debug!("Highlighter: click at ({}, {}), button={}", cx, cy, button);
+                debug!("Highlighter: click at ({}, {}), button={}", cx, cy, button);
 
-                    if let Ok(win) = create_circle_window(
-                        &conn,
-                        root,
-                        depth,
-                        color,
-                        opacity_atom,
-                        cx,
-                        cy,
-                        radius,
-                    ) {
-                        circles.push(HighlightCircle {
-                            window: win,
-                            created_at: Instant::now(),
-                        });
-                    }
+                if let Ok(win) =
+                    create_circle_window(&conn, root, depth, color, opacity_atom, cx, cy, radius)
+                {
+                    circles.push(HighlightCircle {
+                        window: win,
+                        created_at: Instant::now(),
+                    });
                 }
             }
         }
@@ -158,6 +151,7 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn create_circle_window(
     conn: &RustConnection,
     root: u32,

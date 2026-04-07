@@ -64,10 +64,8 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
         let event = conn.poll_for_event()?;
         let Some(event) = event else {
             // If spotlight is active, update cursor tracking
-            if spotlight_active {
-                if let Some(ref mut ov) = overlay {
-                    ov.update_cursor()?;
-                }
+            if spotlight_active && let Some(ref mut ov) = overlay {
+                ov.update_cursor()?;
             }
             thread::sleep(Duration::from_millis(16)); // ~60fps when active, idle otherwise
             continue;
@@ -104,18 +102,16 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
 
                         if is_target_ctrl {
                             let now = Instant::now();
-                            if let Some(last) = last_ctrl_time {
-                                if now.duration_since(last) < Duration::from_millis(400) {
-                                    // Double press detected!
-                                    debug!(
-                                        "Find My Mouse: double Ctrl detected, activating spotlight"
-                                    );
-                                    last_ctrl_time = None;
-                                    let ov = SpotlightOverlay::create(&config)?;
-                                    overlay = Some(ov);
-                                    spotlight_active = true;
-                                    continue;
-                                }
+                            if let Some(last) = last_ctrl_time
+                                && now.duration_since(last) < Duration::from_millis(400)
+                            {
+                                // Double press detected!
+                                debug!("Find My Mouse: double Ctrl detected, activating spotlight");
+                                last_ctrl_time = None;
+                                let ov = SpotlightOverlay::create(&config)?;
+                                overlay = Some(ov);
+                                spotlight_active = true;
+                                continue;
                             }
                             last_ctrl_time = Some(now);
                         }

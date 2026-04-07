@@ -156,6 +156,7 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn create_line_window(
     conn: &RustConnection,
     root: u32,

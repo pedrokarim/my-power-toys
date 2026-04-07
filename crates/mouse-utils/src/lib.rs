@@ -3,6 +3,7 @@ pub mod crosshairs;
 pub mod cursor_wrap;
 pub mod find_my_mouse;
 pub mod highlighter;
+pub mod mouse_jump;
 
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -103,7 +104,10 @@ impl PowerModule for MouseUtils {
         // Mouse Jump & Gliding Cursor are more complex GUI features;
         // they will be implemented as separate overlay popups in a future phase.
         if self.config.mouse_jump {
-            info!("Mouse Jump: enabled (popup overlay not yet implemented)");
+            let stop = Arc::new(AtomicBool::new(false));
+            let handle = mouse_jump::spawn(self.config.clone(), stop.clone());
+            self.stop_flags.push(stop);
+            self.threads.push(handle);
         }
         if self.config.gliding_cursor {
             info!("Gliding Cursor: enabled (guided line overlay not yet implemented)");

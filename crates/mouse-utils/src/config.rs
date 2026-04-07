@@ -108,7 +108,7 @@ pub struct MouseUtilsConfig {
     // ── Mouse Jump ─────────────────────────────────────────────────────
     #[serde(default)]
     pub mouse_jump: bool,
-    #[serde(default)]
+    #[serde(default = "default_jump_shortcut")]
     pub mouse_jump_shortcut: String,
     #[serde(default = "default_jump_width")]
     pub mouse_jump_max_width: u32,
@@ -200,11 +200,14 @@ fn default_crosshair_fixed_length_px() -> u32 {
 }
 
 // Mouse Jump
+fn default_jump_shortcut() -> String {
+    "Super+Shift+D".into()
+}
 fn default_jump_width() -> u32 {
-    1600
+    400
 }
 fn default_jump_height() -> u32 {
-    1200
+    300
 }
 
 // Gliding Cursor
@@ -262,9 +265,9 @@ impl Default for MouseUtilsConfig {
 
             // Mouse Jump
             mouse_jump: false,
-            mouse_jump_shortcut: String::new(),
-            mouse_jump_max_width: default_jump_width(),
-            mouse_jump_max_height: default_jump_height(),
+            mouse_jump_shortcut: default_jump_shortcut(),
+            mouse_jump_max_width: 400,
+            mouse_jump_max_height: 300,
 
             // Cursor Wrap
             cursor_wrap: false,
@@ -297,7 +300,7 @@ mod tests {
         assert_eq!(parsed.find_my_mouse_animation_ms, 500);
         assert_eq!(parsed.highlighter_radius, 20);
         assert_eq!(parsed.crosshair_thickness, 5);
-        assert_eq!(parsed.mouse_jump_max_width, 1600);
+        assert_eq!(parsed.mouse_jump_max_width, 400);
     }
 
     #[test]

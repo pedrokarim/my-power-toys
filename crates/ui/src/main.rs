@@ -103,8 +103,10 @@ struct Settings {
     hotkey_test_rx: Option<std_mpsc::Receiver<(String, bool)>>,
     /// Which shortcut field is currently being captured (e.g. "find_my_mouse_shortcut").
     capturing_shortcut_for: Option<String>,
-    /// Keys currently held during shortcut capture.
+    /// Best combo seen during shortcut capture (persists after key release).
     captured_keys: Vec<String>,
+    /// Number of keys currently held down during capture (to detect new combo).
+    capture_held_count: usize,
     dependency_help_for: Option<String>,
     distro_name: String,
     package_manager: helpers::PackageManager,
@@ -146,6 +148,7 @@ impl Settings {
                 hotkey_test_rx: None,
                 capturing_shortcut_for: None,
                 captured_keys: Vec::new(),
+                capture_held_count: 0,
                 dependency_help_for: None,
                 distro_name: helpers::detect_distro_name(),
                 package_manager: helpers::detect_package_manager(),
@@ -300,10 +303,10 @@ impl Settings {
                         let _ = rdev::listen(move |event| {
                             let pair = match event.event_type {
                                 rdev::EventType::KeyPress(key) => {
-                                    rdev_key_name(key).map(|n| (n, true))
+                                    Some((resolve_key_name(key, &event.name), true))
                                 }
                                 rdev::EventType::KeyRelease(key) => {
-                                    rdev_key_name(key).map(|n| (n, false))
+                                    Some((resolve_key_name(key, &event.name), false))
                                 }
                                 _ => None,
                             };
@@ -334,11 +337,19 @@ impl Settings {
                         // Feed the shortcut capture
                         if self.capturing_shortcut_for.is_some() {
                             if pressed {
+                                // If all keys were released and user presses a new key,
+                                // start a fresh combo
+                                if self.capture_held_count == 0 {
+                                    self.captured_keys.clear();
+                                }
+                                self.capture_held_count += 1;
                                 if !self.captured_keys.contains(&name) {
                                     self.captured_keys.push(name.clone());
                                 }
                             } else {
-                                self.captured_keys.retain(|k| k != &name);
+                                // Don't remove from captured_keys — keep the combo visible
+                                self.capture_held_count =
+                                    self.capture_held_count.saturating_sub(1);
                             }
                         }
                     }
@@ -347,6 +358,7 @@ impl Settings {
             Message::StartCaptureShortcut(field_id) => {
                 self.capturing_shortcut_for = Some(field_id);
                 self.captured_keys.clear();
+                self.capture_held_count = 0;
                 // Start the rdev listener if not already running
                 if self.hotkey_test_rx.is_none() {
                     let (tx, rx) = std_mpsc::channel();
@@ -355,10 +367,10 @@ impl Settings {
                         let _ = rdev::listen(move |event| {
                             let pair = match event.event_type {
                                 rdev::EventType::KeyPress(key) => {
-                                    rdev_key_name(key).map(|n| (n, true))
+                                    Some((resolve_key_name(key, &event.name), true))
                                 }
                                 rdev::EventType::KeyRelease(key) => {
-                                    rdev_key_name(key).map(|n| (n, false))
+                                    Some((resolve_key_name(key, &event.name), false))
                                 }
                                 _ => None,
                             };
@@ -413,6 +425,7 @@ impl Settings {
                     }
                     self.module_configs.save("mouse-utils");
                     self.captured_keys.clear();
+                    self.capture_held_count = 0;
                     if self.daemon_connected {
                         return Task::perform(
                             daemon::daemon_restart_module("mouse-utils".into()),
@@ -424,6 +437,7 @@ impl Settings {
             Message::CancelCaptureShortcut => {
                 self.capturing_shortcut_for = None;
                 self.captured_keys.clear();
+                self.capture_held_count = 0;
             }
             Message::ToggleDependencyHelp(id) => {
                 if self.dependency_help_for.as_deref() == Some(id.as_str()) {
@@ -1196,6 +1210,34 @@ impl Settings {
 }
 
 // ── Keyboard helpers (rdev) ─────────────────────────────────────────────────
+
+/// Resolve the display name for a key, using the layout-aware `event.name`
+/// for printable characters and falling back to scancode-based names for
+/// modifiers and special keys.
+fn resolve_key_name(key: rdev::Key, event_name: &Option<String>) -> String {
+    // For letter/digit keys, prefer the layout-aware name from the event
+    if is_printable_key(key) {
+        if let Some(name) = event_name {
+            let name = name.trim();
+            if !name.is_empty() {
+                return name.to_uppercase();
+            }
+        }
+    }
+    // Fallback to scancode-based name
+    rdev_key_name(key).unwrap_or_else(|| format!("{:?}", key))
+}
+
+fn is_printable_key(key: rdev::Key) -> bool {
+    use rdev::Key::*;
+    matches!(
+        key,
+        KeyA | KeyB | KeyC | KeyD | KeyE | KeyF | KeyG | KeyH | KeyI | KeyJ | KeyK | KeyL
+            | KeyM | KeyN | KeyO | KeyP | KeyQ | KeyR | KeyS | KeyT | KeyU | KeyV | KeyW
+            | KeyX | KeyY | KeyZ | Num0 | Num1 | Num2 | Num3 | Num4 | Num5 | Num6 | Num7
+            | Num8 | Num9
+    )
+}
 
 fn rdev_key_name(key: rdev::Key) -> Option<String> {
     use rdev::Key::*;

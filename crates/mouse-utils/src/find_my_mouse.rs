@@ -6,8 +6,8 @@ use std::time::{Duration, Instant};
 use anyhow::{Context, Result};
 use tracing::{debug, info, warn};
 use x11rb::connection::Connection;
-use x11rb::protocol::xproto::{self, ConnectionExt};
 use x11rb::protocol::xinput::{self, ConnectionExt as XiConnectionExt};
+use x11rb::protocol::xproto::{self, ConnectionExt};
 use x11rb::rust_connection::RustConnection;
 
 use crate::config::{FindMyMouseActivation, MouseUtilsConfig};
@@ -47,7 +47,10 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
     // Build keycode -> keysym map
     let keymap = build_keymap(&conn)?;
 
-    info!("Find My Mouse monitor active (activation={:?})", config.find_my_mouse_activation);
+    info!(
+        "Find My Mouse monitor active (activation={:?})",
+        config.find_my_mouse_activation
+    );
 
     let mut last_ctrl_time: Option<Instant> = None;
     let mut spotlight_active = false;
@@ -87,7 +90,8 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
 
                 // Check for Ctrl press based on activation method
                 match config.find_my_mouse_activation {
-                    FindMyMouseActivation::LeftCtrlTwice | FindMyMouseActivation::RightCtrlTwice => {
+                    FindMyMouseActivation::LeftCtrlTwice
+                    | FindMyMouseActivation::RightCtrlTwice => {
                         let is_target_ctrl = match config.find_my_mouse_activation {
                             FindMyMouseActivation::LeftCtrlTwice => {
                                 keysym == xkeysym::key::Control_L
@@ -103,7 +107,9 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
                             if let Some(last) = last_ctrl_time {
                                 if now.duration_since(last) < Duration::from_millis(400) {
                                     // Double press detected!
-                                    debug!("Find My Mouse: double Ctrl detected, activating spotlight");
+                                    debug!(
+                                        "Find My Mouse: double Ctrl detected, activating spotlight"
+                                    );
                                     last_ctrl_time = None;
                                     let ov = SpotlightOverlay::create(&config)?;
                                     overlay = Some(ov);
@@ -170,7 +176,11 @@ impl SpotlightOverlay {
         let values = xproto::CreateWindowAux::new()
             .background_pixel(bg_color)
             .override_redirect(1)
-            .event_mask(xproto::EventMask::EXPOSURE | xproto::EventMask::KEY_PRESS | xproto::EventMask::BUTTON_PRESS);
+            .event_mask(
+                xproto::EventMask::EXPOSURE
+                    | xproto::EventMask::KEY_PRESS
+                    | xproto::EventMask::BUTTON_PRESS,
+            );
 
         conn.create_window(
             depth,
@@ -187,7 +197,8 @@ impl SpotlightOverlay {
         )?;
 
         // Set opacity
-        let opacity_value = (config.find_my_mouse_overlay_opacity.clamp(0.0, 1.0) * u32::MAX as f32) as u32;
+        let opacity_value =
+            (config.find_my_mouse_overlay_opacity.clamp(0.0, 1.0) * u32::MAX as f32) as u32;
         let opacity_atom = conn
             .intern_atom(false, b"_NET_WM_WINDOW_OPACITY")?
             .reply()?
@@ -208,12 +219,23 @@ impl SpotlightOverlay {
 
         // Apply SHAPE to cut a circle around the cursor
         let cursor = get_cursor_position(&conn, root)?;
-        apply_spotlight_shape(&conn, window, screen_width, screen_height, cursor.0, cursor.1, radius)?;
+        apply_spotlight_shape(
+            &conn,
+            window,
+            screen_width,
+            screen_height,
+            cursor.0,
+            cursor.1,
+            radius,
+        )?;
 
         conn.map_window(window)?;
         conn.flush()?;
 
-        info!("Find My Mouse: spotlight overlay created at ({}, {})", cursor.0, cursor.1);
+        info!(
+            "Find My Mouse: spotlight overlay created at ({}, {})",
+            cursor.0, cursor.1
+        );
 
         Ok(Self {
             conn,

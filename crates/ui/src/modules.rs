@@ -89,7 +89,8 @@ pub fn default_module_list() -> Vec<ModuleInfo> {
         ModuleInfo {
             id: "mouse-utils".into(),
             name: "Mouse Utilities".into(),
-            description: "Find My Mouse, highlighter, crosshairs, jump, wrap, gliding cursor".into(),
+            description: "Find My Mouse, highlighter, crosshairs, jump, wrap, gliding cursor"
+                .into(),
             icon: Bootstrap::Mouse,
             accent: theme::yellow(),
             hotkey: None,

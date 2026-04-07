@@ -52,8 +52,16 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
     // Create horizontal line window (if enabled)
     let h_win = if orientation != CrosshairOrientation::Vertical {
         Some(create_line_window(
-            &conn, root, depth, color, opacity_value, opacity_atom,
-            0, 0, sw, thickness as u16,
+            &conn,
+            root,
+            depth,
+            color,
+            opacity_value,
+            opacity_atom,
+            0,
+            0,
+            sw,
+            thickness as u16,
         )?)
     } else {
         None
@@ -62,15 +70,26 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
     // Create vertical line window (if enabled)
     let v_win = if orientation != CrosshairOrientation::Horizontal {
         Some(create_line_window(
-            &conn, root, depth, color, opacity_value, opacity_atom,
-            0, 0, thickness as u16, sh,
+            &conn,
+            root,
+            depth,
+            color,
+            opacity_value,
+            opacity_atom,
+            0,
+            0,
+            thickness as u16,
+            sh,
         )?)
     } else {
         None
     };
 
     conn.flush()?;
-    info!("Crosshairs overlay active (orientation={:?}, thickness={}px)", orientation, thickness);
+    info!(
+        "Crosshairs overlay active (orientation={:?}, thickness={}px)",
+        orientation, thickness
+    );
 
     let half_t = (thickness / 2) as i16;
 
@@ -190,9 +209,22 @@ fn create_line_window(
     conn.poly_fill_rectangle(
         empty_pixmap,
         gc,
-        &[xproto::Rectangle { x: 0, y: 0, width: 1, height: 1 }],
+        &[xproto::Rectangle {
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1,
+        }],
     )?;
-    shape::mask(conn, shape::SO::SET, shape::SK::INPUT, wid, 0, 0, empty_pixmap)?;
+    shape::mask(
+        conn,
+        shape::SO::SET,
+        shape::SK::INPUT,
+        wid,
+        0,
+        0,
+        empty_pixmap,
+    )?;
     conn.free_gc(gc)?;
     conn.free_pixmap(empty_pixmap)?;
 

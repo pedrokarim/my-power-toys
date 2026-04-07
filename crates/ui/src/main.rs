@@ -382,7 +382,12 @@ impl Settings {
                     }
                     // Sort modifiers in conventional order
                     let mod_order = |m: &str| match m {
-                        "Super" => 0, "Ctrl" => 1, "Alt" => 2, "AltGr" => 3, "Shift" => 4, _ => 9,
+                        "Super" => 0,
+                        "Ctrl" => 1,
+                        "Alt" => 2,
+                        "AltGr" => 3,
+                        "Shift" => 4,
+                        _ => 9,
                     };
                     mods.sort_by_key(|m| mod_order(m));
                     mods.extend(keys);
@@ -683,18 +688,24 @@ impl Settings {
                 self.module_configs.save("mouse-utils");
             }
             Message::SetFindMyMouseSpotlightColor(s) => {
-                self.module_configs.mouse_utils.find_my_mouse_spotlight_color = s;
+                self.module_configs
+                    .mouse_utils
+                    .find_my_mouse_spotlight_color = s;
                 self.module_configs.save("mouse-utils");
             }
             Message::SetFindMyMouseSpotlightRadius(s) => {
                 if let Ok(v) = s.parse::<u32>() {
-                    self.module_configs.mouse_utils.find_my_mouse_spotlight_radius = v;
+                    self.module_configs
+                        .mouse_utils
+                        .find_my_mouse_spotlight_radius = v;
                     self.module_configs.save("mouse-utils");
                 }
             }
             Message::SetFindMyMouseOverlayOpacity(s) => {
                 if let Ok(v) = s.parse::<f32>() {
-                    self.module_configs.mouse_utils.find_my_mouse_overlay_opacity = v.clamp(0.0, 1.0);
+                    self.module_configs
+                        .mouse_utils
+                        .find_my_mouse_overlay_opacity = v.clamp(0.0, 1.0);
                     self.module_configs.save("mouse-utils");
                 }
             }
@@ -1161,7 +1172,9 @@ impl Settings {
         if self.theme_mode == ThemeMode::System {
             subs.push(time::every(Duration::from_secs(2)).map(|_| Message::SystemThemeCheck));
         }
-        if (self.hotkey_test_active || self.capturing_shortcut_for.is_some()) && self.hotkey_test_rx.is_some() {
+        if (self.hotkey_test_active || self.capturing_shortcut_for.is_some())
+            && self.hotkey_test_rx.is_some()
+        {
             subs.push(time::every(Duration::from_millis(20)).map(|_| Message::PollKeyboardEvents));
         }
         let needs_progress_tick = matches!(

@@ -6,8 +6,8 @@ use std::time::{Duration, Instant};
 use anyhow::{Context, Result};
 use tracing::{debug, info, warn};
 use x11rb::connection::Connection;
-use x11rb::protocol::xproto::{self, ConnectionExt};
 use x11rb::protocol::xinput::{self, ConnectionExt as XiConnectionExt};
+use x11rb::protocol::xproto::{self, ConnectionExt};
 use x11rb::rust_connection::RustConnection;
 
 use crate::config::MouseUtilsConfig;
@@ -89,7 +89,8 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
         for circle in &circles {
             let elapsed = now.duration_since(circle.created_at);
             if elapsed > fade_delay {
-                let fade_progress = (elapsed - fade_delay).as_secs_f32() / fade_duration.as_secs_f32();
+                let fade_progress =
+                    (elapsed - fade_delay).as_secs_f32() / fade_duration.as_secs_f32();
                 let alpha = (1.0 - fade_progress).clamp(0.0, 1.0);
                 let opacity_value = (alpha * u32::MAX as f32) as u32;
                 let _ = conn.change_property(
@@ -125,8 +126,14 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
                     debug!("Highlighter: click at ({}, {}), button={}", cx, cy, button);
 
                     if let Ok(win) = create_circle_window(
-                        &conn, root, depth, color, opacity_atom,
-                        cx, cy, radius,
+                        &conn,
+                        root,
+                        depth,
+                        color,
+                        opacity_atom,
+                        cx,
+                        cy,
+                        radius,
                     ) {
                         circles.push(HighlightCircle {
                             window: win,
@@ -228,11 +235,20 @@ fn create_circle_window(
     let empty_pix = conn.generate_id()?;
     conn.create_pixmap(1, empty_pix, wid, 1, 1)?;
     let gc_empty = conn.generate_id()?;
-    conn.create_gc(gc_empty, empty_pix, &xproto::CreateGCAux::new().foreground(0))?;
+    conn.create_gc(
+        gc_empty,
+        empty_pix,
+        &xproto::CreateGCAux::new().foreground(0),
+    )?;
     conn.poly_fill_rectangle(
         empty_pix,
         gc_empty,
-        &[xproto::Rectangle { x: 0, y: 0, width: 1, height: 1 }],
+        &[xproto::Rectangle {
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1,
+        }],
     )?;
     shape::mask(conn, shape::SO::SET, shape::SK::INPUT, wid, 0, 0, empty_pix)?;
 

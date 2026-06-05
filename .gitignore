@@ -3,3 +3,10 @@
 .idea
 
 .refs
+
+# Claude Code / agent state
+.agents/
+skills-lock.json
+
+# Design system extraction artifacts (regeneratable via extract-design-system)
+.extract-design-system/

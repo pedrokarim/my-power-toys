@@ -1,0 +1,88 @@
+/* Design tokens extracted from https://vibeisland.app/fr/
+ * Source: .extract-design-system/raw.json
+ * Theme: dark UI with cyan accent, monospace pixel headings
+ */
+
+:root {
+  /* ---------- Colors: surfaces ---------- */
+  --color-bg:            #000000;
+  --color-bg-elevated:   #101010;
+  --color-bg-muted:      #f0f0f0;       /* light surface (cards / inverted blocks) */
+  --color-surface-alt:   rgba(255, 255, 255, 0.04);
+  --color-surface-hover: rgba(255, 255, 255, 0.08);
+
+  /* ---------- Colors: text ---------- */
+  --color-fg:            #ffffff;
+  --color-fg-soft:       rgba(255, 255, 255, 0.5);
+  --color-fg-muted:      #888888;
+  --color-fg-subtle:     #e5e5e5;
+
+  /* ---------- Colors: accents ---------- */
+  --color-accent:        #06b6d4;       /* cyan — primary brand accent */
+  --color-accent-strong: #0891b2;
+  --color-accent-soft:   rgba(6, 182, 212, 0.15);
+
+  --color-success:       #22c55e;
+  --color-info:          #3b82f6;
+  --color-warning:       #f97316;
+
+  /* ---------- Colors: borders ---------- */
+  --color-border:        rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.31);
+
+  /* ---------- Typography ---------- */
+  --font-heading: "Departure Mono", "Geist Pixel Square", "JetBrains Mono", ui-monospace, monospace;
+  --font-body:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --font-serif:   "Instrument Serif", Georgia, serif;
+  --font-mono:    "Departure Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --font-size-xs:  0.83rem;   /* 13.33px */
+  --font-size-sm:  0.88rem;   /* 14px */
+  --font-size-base:1.00rem;   /* 16px */
+  --font-size-md:  1.13rem;   /* 18px */
+  --font-size-lg:  1.38rem;   /* 22px */
+  --font-size-xl:  1.75rem;   /* 28px */
+  --font-size-2xl: 3.00rem;   /* 48px */
+  --font-size-3xl: 3.75rem;   /* 60px — display, Departure Mono */
+
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  --line-height-tight: 1.27;  /* display headings */
+  --line-height-base:  1.60;  /* body & most UI */
+
+  --letter-spacing-tight: -0.96px; /* large headings */
+
+  /* ---------- Spacing (4-based scale, from observed values) ---------- */
+  --space-1:  4px;
+  --space-2:  6px;
+  --space-3:  8px;
+  --space-4:  12px;
+  --space-5:  16px;
+  --space-6:  20px;
+  --space-7:  24px;
+  --space-8:  32px;
+  --space-9:  64px;
+  --space-10: 80px;
+
+  /* ---------- Radius ---------- */
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   14px;
+  --radius-xl:   16px;
+  --radius-pill: 9999px;
+  --radius-full: 50%;
+
+  /* ---------- Shadows ---------- */
+  --shadow-sm:    0 2px 12px rgba(0, 0, 0, 0.30);
+  --shadow-md:    0 12px 32px rgba(0, 0, 0, 0.50);
+  --shadow-lg:    0 10px 30px rgba(0, 0, 0, 0.50), 0 2px 8px rgba(0, 0, 0, 0.30);
+  --shadow-xl:    0 20px 80px rgba(0, 0, 0, 0.60), inset 0 0.5px 0 rgba(255, 255, 255, 0.10);
+  --shadow-glow:  0 0 20px rgba(6, 182, 212, 0.25);
+  --shadow-glow-strong:
+                  0 2px 8px rgba(0, 0, 0, 0.60),
+                  0 8px 24px rgba(0, 0, 0, 0.30),
+                  0 0 20px rgba(6, 182, 212, 0.15);
+}

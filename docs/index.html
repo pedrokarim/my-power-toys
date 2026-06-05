@@ -6,7 +6,16 @@
     <title>MyPowerToys — PowerToys for Linux</title>
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/assets/icons/icon-32.png">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+        /* Departure Mono — self-hosted, SIL OFL 1.1 (Helena Zhang, departuremono.com) */
+        @font-face {
+            font-family: 'Departure Mono';
+            src: url('fonts/DepartureMono-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
 
         * {
             margin: 0;
@@ -14,65 +23,92 @@
             box-sizing: border-box;
         }
 
+        /* Design tokens — extracted from vibeisland.app */
         :root {
-            --accent: #60cdff;
-            --accent-dark: #0078d4;
-            --bg-base: #0d1117;
-            --bg-card: rgba(255, 255, 255, 0.05);
-            --bg-card-hover: rgba(255, 255, 255, 0.08);
-            --border: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(255, 255, 255, 0.15);
-            --text: #f5f5f5;
-            --text-secondary: rgba(255, 255, 255, 0.6);
-            --glass: rgba(255, 255, 255, 0.04);
-            --glass-border: rgba(255, 255, 255, 0.06);
-            --radius: 8px;
-            --radius-lg: 12px;
+            /* Surfaces */
+            --color-bg:            #000000;
+            --color-bg-elevated:   #101010;
+            --color-surface-alt:   rgba(255, 255, 255, 0.04);
+            --color-surface-hover: rgba(255, 255, 255, 0.08);
+
+            /* Text */
+            --color-fg:            #ffffff;
+            --color-fg-soft:       rgba(255, 255, 255, 0.5);
+            --color-fg-muted:      #888888;
+            --color-fg-subtle:     #e5e5e5;
+
+            /* Accents */
+            --color-accent:        #06b6d4;
+            --color-accent-strong: #0891b2;
+            --color-accent-soft:   rgba(6, 182, 212, 0.15);
+            --color-success:       #22c55e;
+            --color-info:          #3b82f6;
+            --color-warning:       #f97316;
+
+            /* Borders */
+            --color-border:        rgba(255, 255, 255, 0.12);
+            --color-border-strong: rgba(255, 255, 255, 0.31);
+
+            /* Typography */
+            --font-heading: "Departure Mono", "JetBrains Mono", ui-monospace, monospace;
+            --font-body:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+            --font-mono:    "JetBrains Mono", "Departure Mono", ui-monospace, monospace;
+
+            /* Radius */
+            --radius-sm:   4px;
+            --radius-md:   6px;
+            --radius-lg:   14px;
+            --radius-pill: 9999px;
+
+            /* Shadows */
+            --shadow-sm:   0 2px 12px rgba(0, 0, 0, 0.30);
+            --shadow-md:   0 12px 32px rgba(0, 0, 0, 0.50);
+            --shadow-xl:   0 20px 80px rgba(0, 0, 0, 0.60), inset 0 0.5px 0 rgba(255, 255, 255, 0.10);
+            --shadow-glow: 0 0 20px rgba(6, 182, 212, 0.25);
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg-base);
-            color: var(--text);
+            font-family: var(--font-body);
+            background: var(--color-bg);
+            color: var(--color-fg);
             overflow-x: hidden;
             line-height: 1.6;
         }
 
-        /* Mica-like background */
+        /* Cyan-tinted ambient background */
         .bg-layer {
             position: fixed;
             inset: 0;
             z-index: -1;
             background:
-                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(96, 205, 255, 0.08) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 50% at 80% 20%, rgba(0, 120, 212, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse 50% 40% at 20% 80%, rgba(134, 97, 193, 0.05) 0%, transparent 50%),
-                var(--bg-base);
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(6, 182, 212, 0.10) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 20%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 40% at 20% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+                var(--color-bg);
         }
 
-        /* Noise texture overlay */
         .bg-layer::after {
             content: '';
             position: absolute;
             inset: 0;
-            opacity: 0.015;
+            opacity: 0.02;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
             background-size: 128px 128px;
         }
 
-        /* Glass card mixin */
+        /* Glass card */
         .glass {
-            background: var(--bg-card);
+            background: var(--color-surface-alt);
             backdrop-filter: blur(20px) saturate(150%);
             -webkit-backdrop-filter: blur(20px) saturate(150%);
-            border: 1px solid var(--border);
+            border: 1px solid var(--color-border);
             border-radius: var(--radius-lg);
             transition: all 0.2s ease;
         }
 
         .glass:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--border-hover);
+            background: var(--color-surface-hover);
+            border-color: var(--color-border-strong);
         }
 
         /* Navigation */
@@ -86,20 +122,23 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(13, 17, 23, 0.7);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(24px) saturate(150%);
             -webkit-backdrop-filter: blur(24px) saturate(150%);
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--color-border);
         }
 
         .nav-brand {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-weight: 600;
-            font-size: 15px;
+            font-family: var(--font-heading);
+            font-weight: 400;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             text-decoration: none;
-            color: var(--text);
+            color: var(--color-fg);
         }
 
         .nav-brand img {
@@ -114,18 +153,18 @@
         }
 
         .nav-links a {
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
             text-decoration: none;
             font-size: 13px;
             font-weight: 500;
             padding: 6px 14px;
-            border-radius: 6px;
+            border-radius: var(--radius-md);
             transition: all 0.15s ease;
         }
 
         .nav-links a:hover {
-            color: var(--text);
-            background: rgba(255, 255, 255, 0.06);
+            color: var(--color-fg);
+            background: var(--color-surface-hover);
         }
 
         /* Hero Section */
@@ -145,29 +184,30 @@
             height: 96px;
             border-radius: 20px;
             margin-bottom: 20px;
-            box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.3),
-                0 0 0 1px rgba(255, 255, 255, 0.06);
+            box-shadow: var(--shadow-md), 0 0 0 1px var(--color-border);
         }
 
         .version-badge {
             display: inline-block;
             padding: 4px 14px;
+            font-family: var(--font-mono);
             font-size: 12px;
             font-weight: 500;
-            color: var(--accent);
-            background: rgba(96, 205, 255, 0.08);
-            border: 1px solid rgba(96, 205, 255, 0.15);
-            border-radius: 20px;
+            color: var(--color-accent);
+            background: var(--color-accent-soft);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            border-radius: var(--radius-pill);
             margin-bottom: 24px;
         }
 
         .hero h1 {
-            font-size: clamp(2.5rem, 6vw, 4rem);
-            font-weight: 700;
-            letter-spacing: -0.03em;
+            font-family: var(--font-heading);
+            font-size: clamp(2.5rem, 6vw, 3.75rem);
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            line-height: 1.27;
             margin-bottom: 16px;
-            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.6) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -175,7 +215,7 @@
 
         .hero p {
             font-size: 17px;
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
             max-width: 520px;
             margin: 0 auto 40px;
             line-height: 1.7;
@@ -197,7 +237,7 @@
             font-size: 14px;
             font-weight: 500;
             font-family: inherit;
-            border-radius: var(--radius);
+            border-radius: var(--radius-md);
             text-decoration: none;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -205,27 +245,27 @@
         }
 
         .btn-primary {
-            background: var(--accent-dark);
-            color: white;
-            box-shadow: 0 1px 4px rgba(0, 120, 212, 0.3);
+            background: var(--color-accent);
+            color: #000;
+            box-shadow: var(--shadow-glow);
         }
 
         .btn-primary:hover {
-            background: #1a8ad4;
-            box-shadow: 0 4px 16px rgba(0, 120, 212, 0.4);
+            background: #22d3ee;
+            box-shadow: 0 0 28px rgba(6, 182, 212, 0.45);
             transform: translateY(-1px);
         }
 
         .btn-secondary {
-            background: var(--bg-card);
-            color: var(--text);
-            border: 1px solid var(--border);
+            background: var(--color-surface-alt);
+            color: var(--color-fg);
+            border: 1px solid var(--color-border);
             backdrop-filter: blur(12px);
         }
 
         .btn-secondary:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--border-hover);
+            background: var(--color-surface-hover);
+            border-color: var(--color-border-strong);
             transform: translateY(-1px);
         }
 
@@ -240,17 +280,17 @@
             align-items: center;
             gap: 12px;
             padding: 12px 20px;
-            border-radius: var(--radius);
+            border-radius: var(--radius-md);
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
+            border: 1px solid var(--color-border);
             max-width: 520px;
             margin: 0 auto;
         }
 
         .install-box code {
-            font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+            font-family: var(--font-mono);
             font-size: 13px;
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
             flex: 1;
             text-align: left;
             white-space: nowrap;
@@ -258,27 +298,27 @@
         }
 
         .install-box code span {
-            color: var(--accent);
+            color: var(--color-accent);
         }
 
         .copy-btn {
             background: none;
             border: none;
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
             cursor: pointer;
             padding: 4px;
-            border-radius: 4px;
+            border-radius: var(--radius-sm);
             transition: all 0.15s;
             flex-shrink: 0;
         }
 
         .copy-btn:hover {
-            color: var(--text);
-            background: rgba(255, 255, 255, 0.08);
+            color: var(--color-fg);
+            background: var(--color-surface-hover);
         }
 
         .copy-btn.copied {
-            color: #4ade80;
+            color: var(--color-success);
         }
 
         /* Badges */
@@ -295,7 +335,7 @@
             align-items: center;
             gap: 8px;
             font-size: 13px;
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
         }
 
         .badge-dot {
@@ -304,10 +344,10 @@
             border-radius: 50%;
         }
 
-        .badge-dot.green { background: #4ade80; }
-        .badge-dot.blue { background: var(--accent); }
+        .badge-dot.green  { background: var(--color-success); }
+        .badge-dot.blue   { background: var(--color-accent); }
         .badge-dot.purple { background: #a78bfa; }
-        .badge-dot.orange { background: #fb923c; }
+        .badge-dot.orange { background: var(--color-warning); }
 
         /* Features Section */
         .section {
@@ -322,14 +362,15 @@
         }
 
         .section-header h2 {
+            font-family: var(--font-heading);
             font-size: 28px;
-            font-weight: 600;
-            letter-spacing: -0.02em;
+            font-weight: 400;
+            letter-spacing: -0.01em;
             margin-bottom: 12px;
         }
 
         .section-header p {
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
             font-size: 15px;
             max-width: 480px;
             margin: 0 auto;
@@ -358,8 +399,8 @@
             justify-content: center;
             font-size: 18px;
             flex-shrink: 0;
-            background: rgba(96, 205, 255, 0.08);
-            border: 1px solid rgba(96, 205, 255, 0.1);
+            background: var(--color-accent-soft);
+            border: 1px solid rgba(6, 182, 212, 0.2);
         }
 
         .module-card h3 {
@@ -370,7 +411,7 @@
 
         .module-card p {
             font-size: 13px;
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
             line-height: 1.5;
         }
 
@@ -394,14 +435,17 @@
         }
 
         .highlight-card h3 {
-            font-size: 15px;
-            font-weight: 600;
+            font-family: var(--font-heading);
+            font-size: 14px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             margin-bottom: 8px;
         }
 
         .highlight-card p {
             font-size: 13px;
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
             line-height: 1.6;
         }
 
@@ -418,13 +462,14 @@
         }
 
         .install-card h2 {
+            font-family: var(--font-heading);
             font-size: 24px;
-            font-weight: 600;
+            font-weight: 400;
             margin-bottom: 12px;
         }
 
         .install-card p {
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
             font-size: 14px;
             margin-bottom: 28px;
         }
@@ -438,43 +483,44 @@
 
         .install-method {
             padding: 16px;
-            border-radius: var(--radius);
+            border-radius: var(--radius-md);
             background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border);
+            border: 1px solid var(--color-border);
         }
 
         .install-method-label {
+            font-family: var(--font-mono);
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: var(--accent);
+            color: var(--color-accent);
             margin-bottom: 8px;
         }
 
         .install-method code {
-            font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+            font-family: var(--font-mono);
             font-size: 13px;
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
         }
 
         /* Footer */
         footer {
             text-align: center;
             padding: 40px 24px;
-            border-top: 1px solid var(--border);
-            color: var(--text-secondary);
+            border-top: 1px solid var(--color-border);
+            color: var(--color-fg-soft);
             font-size: 13px;
         }
 
         footer a {
-            color: var(--text-secondary);
+            color: var(--color-fg-soft);
             text-decoration: none;
             transition: color 0.15s;
         }
 
         footer a:hover {
-            color: var(--text);
+            color: var(--color-fg);
         }
 
         /* Responsive */
@@ -513,7 +559,7 @@
 
         /* Selection */
         ::selection {
-            background: rgba(0, 120, 212, 0.3);
+            background: rgba(6, 182, 212, 0.3);
         }
     </style>
 </head>
@@ -604,42 +650,42 @@
             <a href="always-on-top.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#128204;</div>
                 <div>
-                    <h3>Always on Top <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
+                    <h3>Always on Top <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
                     <p>Pin any window above all others with a single shortcut.</p>
                 </div>
             </a>
             <a href="awake.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#9749;</div>
                 <div>
-                    <h3>Awake <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
+                    <h3>Awake <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
                     <p>Prevent your screen from sleeping, with timed or indefinite modes.</p>
                 </div>
             </a>
             <a href="color-picker.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#127912;</div>
                 <div>
-                    <h3>Color Picker <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
+                    <h3>Color Picker <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
                     <p>Pick any color from your screen. Copy as HEX, RGB or HSL.</p>
                 </div>
             </a>
             <a href="key-manager.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#9000;</div>
                 <div>
-                    <h3>Key Manager <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
+                    <h3>Key Manager <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
                     <p>Remap keys and create custom shortcuts per application.</p>
                 </div>
             </a>
             <a href="bulk-rename.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#128196;</div>
                 <div>
-                    <h3>Bulk Rename <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">NEW &rarr;</span></h3>
+                    <h3>Bulk Rename <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">NEW &rarr;</span></h3>
                     <p>Rename files in batch with regex, sequences and live preview.</p>
                 </div>
             </a>
             <a href="image-resizer.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#128444;</div>
                 <div>
-                    <h3>Image Resizer <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
+                    <h3>Image Resizer <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
                     <p>Resize images in bulk with presets or custom dimensions.</p>
                 </div>
             </a>
@@ -681,49 +727,49 @@
             <a href="peek.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#128065;</div>
                 <div>
-                    <h3>Peek <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">NEW &rarr;</span></h3>
+                    <h3>Peek <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">NEW &rarr;</span></h3>
                     <p>Quick Look for Linux — preview files without opening them.</p>
                 </div>
             </a>
             <a href="hosts-editor.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#127760;</div>
                 <div>
-                    <h3>Hosts Editor <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">NEW &rarr;</span></h3>
+                    <h3>Hosts Editor <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">NEW &rarr;</span></h3>
                     <p>Visual editor for /etc/hosts with toggle on/off and pkexec save.</p>
                 </div>
             </a>
             <a href="command-palette.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#128269;</div>
                 <div>
-                    <h3>App Launcher <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
+                    <h3>App Launcher <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
                     <p>Spotlight-like launcher with search, calculator and plugins.</p>
                 </div>
             </a>
             <a href="fancy-zones.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#11036;</div>
                 <div>
-                    <h3>FancyZones <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">NEW &rarr;</span></h3>
+                    <h3>FancyZones <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">NEW &rarr;</span></h3>
                     <p>Advanced window tiling with custom zone layouts.</p>
                 </div>
             </a>
             <a href="light-switch.html" class="glass module-card" style="text-decoration: none; color: inherit;">
                 <div class="module-icon">&#9728;&#65039;</div>
                 <div>
-                    <h3>Light Switch <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
+                    <h3>Light Switch <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">&rarr;</span></h3>
                     <p>Auto dark/light mode switching on schedule or shortcut.</p>
                 </div>
             </a>
             <div class="glass module-card">
                 <div class="module-icon">&#224;</div>
                 <div>
-                    <h3>Quick Accent <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">NEW</span></h3>
+                    <h3>Quick Accent <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">NEW</span></h3>
                     <p>Type accented characters by holding a letter key and pressing Space.</p>
                 </div>
             </div>
             <div class="glass module-card">
                 <div class="module-icon">&#128187;</div>
                 <div>
-                    <h3>Workspaces <span style="font-size: 10px; color: var(--accent); font-weight: 500; margin-left: 6px;">NEW</span></h3>
+                    <h3>Workspaces <span style="font-size: 10px; color: var(--color-accent); font-weight: 500; margin-left: 6px;">NEW</span></h3>
                     <p>Save and restore desktop app layouts with one click — capture positions, relaunch apps automatically.</p>
                 </div>
             </div>

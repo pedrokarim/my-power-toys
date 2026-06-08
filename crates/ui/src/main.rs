@@ -348,8 +348,7 @@ impl Settings {
                                 }
                             } else {
                                 // Don't remove from captured_keys — keep the combo visible
-                                self.capture_held_count =
-                                    self.capture_held_count.saturating_sub(1);
+                                self.capture_held_count = self.capture_held_count.saturating_sub(1);
                             }
                         }
                     }
@@ -1236,11 +1235,41 @@ fn is_special_key(key: rdev::Key) -> bool {
     use rdev::Key::*;
     matches!(
         key,
-        ShiftLeft | ShiftRight | ControlLeft | ControlRight | Alt | AltGr
-            | MetaLeft | MetaRight | Space | Tab | Return | Escape
-            | UpArrow | DownArrow | LeftArrow | RightArrow
-            | Backspace | Delete | Home | End | PageUp | PageDown | CapsLock
-            | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 | F10 | F11 | F12
+        ShiftLeft
+            | ShiftRight
+            | ControlLeft
+            | ControlRight
+            | Alt
+            | AltGr
+            | MetaLeft
+            | MetaRight
+            | Space
+            | Tab
+            | Return
+            | Escape
+            | UpArrow
+            | DownArrow
+            | LeftArrow
+            | RightArrow
+            | Backspace
+            | Delete
+            | Home
+            | End
+            | PageUp
+            | PageDown
+            | CapsLock
+            | F1
+            | F2
+            | F3
+            | F4
+            | F5
+            | F6
+            | F7
+            | F8
+            | F9
+            | F10
+            | F11
+            | F12
     )
 }
 

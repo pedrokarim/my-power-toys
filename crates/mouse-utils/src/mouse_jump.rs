@@ -1,14 +1,14 @@
 use crate::config::MouseUtilsConfig;
 use anyhow::{Context, Result};
 use mpt_common::hotkey::{Hotkey, Modifier};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
 use tracing::{debug, info, warn};
 use x11rb::connection::Connection;
-use x11rb::protocol::xproto::{self, ConnectionExt, GrabMode, ModMask};
 use x11rb::protocol::Event;
+use x11rb::protocol::xproto::{self, ConnectionExt, GrabMode, ModMask};
 use x11rb::rust_connection::RustConnection;
 
 // ── X11 modifier masks ────────────────────────────────────────────────────
@@ -117,8 +117,8 @@ fn run(config: &MouseUtilsConfig, stop: &AtomicBool) -> Result<()> {
 // ── Popup ─────────────────────────────────────────────────────────────────
 
 fn show_popup(conn: &RustConnection, root: u32, config: &MouseUtilsConfig) -> Result<()> {
-    let monitors = mpt_common::monitor::detect_monitors()
-        .context("Mouse Jump: cannot detect monitors")?;
+    let monitors =
+        mpt_common::monitor::detect_monitors().context("Mouse Jump: cannot detect monitors")?;
     if monitors.is_empty() {
         anyhow::bail!("no monitors detected");
     }
@@ -127,7 +127,11 @@ fn show_popup(conn: &RustConnection, root: u32, config: &MouseUtilsConfig) -> Re
     let min_x = monitors.iter().map(|m| m.x).min().unwrap();
     let min_y = monitors.iter().map(|m| m.y).min().unwrap();
     let max_x = monitors.iter().map(|m| m.x + m.width as i32).max().unwrap();
-    let max_y = monitors.iter().map(|m| m.y + m.height as i32).max().unwrap();
+    let max_y = monitors
+        .iter()
+        .map(|m| m.y + m.height as i32)
+        .max()
+        .unwrap();
     let total_w = (max_x - min_x) as f64;
     let total_h = (max_y - min_y) as f64;
 
@@ -303,7 +307,13 @@ fn draw_monitors(
             window,
             &xproto::CreateGCAux::new().foreground(0x1E1E2E),
         )?;
-        conn.image_text8(window, gc_text, text_x as i16, text_y as i16, label.as_bytes())?;
+        conn.image_text8(
+            window,
+            gc_text,
+            text_x as i16,
+            text_y as i16,
+            label.as_bytes(),
+        )?;
 
         conn.free_gc(gc_fill)?;
         conn.free_gc(gc_text)?;

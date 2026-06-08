@@ -119,13 +119,11 @@ fn run(config: MouseUtilsConfig, stop: Arc<AtomicBool>) -> Result<()> {
                     _ => {}
                 }
             }
-            x11rb::protocol::Event::XinputRawButtonPress(_) => {
-                if spotlight_active {
-                    debug!("Find My Mouse: dismissed by click");
-                    spotlight_active = false;
-                    if let Some(ov) = overlay.take() {
-                        ov.destroy()?;
-                    }
+            x11rb::protocol::Event::XinputRawButtonPress(_) if spotlight_active => {
+                debug!("Find My Mouse: dismissed by click");
+                spotlight_active = false;
+                if let Some(ov) = overlay.take() {
+                    ov.destroy()?;
                 }
             }
             _ => {}

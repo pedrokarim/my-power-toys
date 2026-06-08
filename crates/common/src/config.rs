@@ -79,6 +79,21 @@ pub fn save_daemon_config(config: &DaemonConfig) -> Result<()> {
     Ok(())
 }
 
+/// Update the `enabled` flag for a module in `daemon.toml`, preserving the
+/// hotkey and other fields. Creates the entry if it doesn't exist.
+pub fn set_module_enabled(id: &str, enabled: bool) -> Result<()> {
+    let mut config = load_daemon_config().unwrap_or_default();
+    config
+        .modules
+        .entry(id.to_string())
+        .and_modify(|entry| entry.enabled = enabled)
+        .or_insert(ModuleEntry {
+            enabled,
+            hotkey: None,
+        });
+    save_daemon_config(&config)
+}
+
 /// Load a module-specific config file (e.g. `color-picker.toml`).
 pub fn load_module_config<T: serde::de::DeserializeOwned + Default>(module_id: &str) -> Result<T> {
     let path = config_dir()?.join(format!("{module_id}.toml"));

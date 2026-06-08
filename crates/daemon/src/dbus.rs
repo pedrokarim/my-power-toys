@@ -1,8 +1,9 @@
 use crate::modules::ModuleRegistry;
 use anyhow::Result;
+use mpt_common::config::set_module_enabled;
 use mpt_common::ipc;
 use std::sync::{Arc, Mutex};
-use tracing::info;
+use tracing::{info, warn};
 use zbus::{connection, interface};
 
 /// D-Bus interface exposed by the daemon.
@@ -32,7 +33,12 @@ impl DaemonInterface {
     fn start_module(&self, id: &str) -> String {
         let mut reg = self.registry.lock().unwrap();
         match reg.start_module(id) {
-            Ok(()) => "ok".to_string(),
+            Ok(()) => {
+                if let Err(e) = set_module_enabled(id, true) {
+                    warn!("Failed to persist enabled state for '{id}': {e}");
+                }
+                "ok".to_string()
+            }
             Err(e) => format!("error: {e}"),
         }
     }
@@ -41,7 +47,12 @@ impl DaemonInterface {
     fn stop_module(&self, id: &str) -> String {
         let mut reg = self.registry.lock().unwrap();
         match reg.stop_module(id) {
-            Ok(()) => "ok".to_string(),
+            Ok(()) => {
+                if let Err(e) = set_module_enabled(id, false) {
+                    warn!("Failed to persist disabled state for '{id}': {e}");
+                }
+                "ok".to_string()
+            }
             Err(e) => format!("error: {e}"),
         }
     }

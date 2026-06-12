@@ -11,6 +11,9 @@ Restart=on-failure
 RestartSec=5
 StartLimitBurst=3
 StartLimitIntervalSec=30
+# Exit code 1 means another daemon instance is already holding the D-Bus name —
+# that's a normal condition, not a failure, so don't restart on it.
+RestartPreventExitStatus=1
 
 [Install]
 WantedBy=graphical-session.target

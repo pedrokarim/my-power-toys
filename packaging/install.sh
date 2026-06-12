@@ -7,7 +7,6 @@ REPO="pedrokarim/my-power-toys"
 INSTALL_DIR="$HOME/.local/bin"
 ASSETS_DIR="$HOME/.local/share/my-power-toys/assets"
 ICON_DIR="$HOME/.local/share/icons/hicolor/128x128/apps"
-AUTOSTART_DIR="$HOME/.config/autostart"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
 TMPDIR="$(mktemp -d)"
 
@@ -99,22 +98,10 @@ mkdir -p "$ICON_DIR"
 curl -fsSL "https://raw.githubusercontent.com/$REPO/main/assets/icons/icon-128.png" \
     -o "$ICON_DIR/my-power-toys.png" 2>/dev/null || true
 
-# Setup desktop autostart
-echo "==> Setting up autostart..."
-mkdir -p "$AUTOSTART_DIR"
-cat > "$AUTOSTART_DIR/my-power-toys-daemon.desktop" << 'DESKTOP'
-[Desktop Entry]
-Type=Application
-Name=MyPowerToys Daemon
-Comment=Background daemon for MyPowerToys
-Exec=mpt-daemon
-Icon=my-power-toys
-Terminal=false
-Categories=Utility;System;
-NoDisplay=true
-X-GNOME-Autostart-enabled=true
-X-KDE-autostart-after=panel
-DESKTOP
+# Remove any legacy XDG autostart entry from previous installs
+# (the daemon is now managed exclusively by the systemd user service to avoid
+# duplicate launches racing on the D-Bus singleton)
+rm -f "$HOME/.config/autostart/my-power-toys-daemon.desktop"
 
 # Setup systemd user service
 echo "==> Setting up systemd user service..."
@@ -131,6 +118,9 @@ Type=simple
 ExecStart=$INSTALL_DIR/mpt-daemon
 Restart=on-failure
 RestartSec=5
+# Exit code 1 means another daemon instance is already holding the D-Bus name —
+# that's a normal condition, not a failure, so don't restart on it.
+RestartPreventExitStatus=1
 
 [Install]
 WantedBy=graphical-session.target
@@ -145,8 +135,7 @@ if systemctl --user enable my-power-toys.service 2>/dev/null; then
     echo "    Daemon (re)started via systemd"
 else
     echo "    WARNING: Could not enable systemd service."
-    echo "    The daemon will still autostart at login via desktop autostart."
-    echo "    You can start it manually: mpt-daemon"
+    echo "    You can start the daemon manually: mpt-daemon"
 fi
 
 # Install application menu entry for mpt-settings

@@ -3770,10 +3770,15 @@ name = "mpt-shortcut-guide"
 version = "0.3.29"
 dependencies = [
  "anyhow",
+ "eframe",
+ "egui",
  "mpt-common",
+ "scopeguard",
  "serde",
  "serde_json",
+ "toml",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

@@ -120,7 +120,7 @@ pub fn default_module_list() -> Vec<ModuleInfo> {
             description: "Overlay showing available keyboard shortcuts".into(),
             icon: Bootstrap::Lightning,
             accent: theme::yellow(),
-            hotkey: Some("Hold Super".into()),
+            hotkey: Some("Super+?".into()),
             running: false,
         },
         ModuleInfo {

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortcut Guide — Keyboard shortcuts overlay | MyPowerToys</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/assets/icons/icon-32.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #F9E2AF;
+            --accent-dark: #d1b678;
+            --bg-base: #0d1117;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --text: #f5f5f5;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-base);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .bg-layer {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(249, 226, 175, 0.10) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 20%, rgba(249, 226, 175, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 40% at 20% 80%, rgba(134, 97, 193, 0.05) 0%, transparent 50%),
+                var(--bg-base);
+        }
+
+        .bg-layer::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.015;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 128px 128px;
+        }
+
+        .glass {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            transition: all 0.2s ease;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 12px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(13, 17, 23, 0.7);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .nav-brand img {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .hero {
+            padding: 140px 24px 40px;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent);
+            background: rgba(249, 226, 175, 0.08);
+            border: 1px solid rgba(249, 226, 175, 0.20);
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 620px;
+            margin: 0 auto 32px;
+            line-height: 1.7;
+        }
+
+        .shortcut-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        kbd {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .illustration {
+            padding: 20px 24px 60px;
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .illustration img {
+            width: 100%;
+            max-width: 820px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .features {
+            padding: 60px 24px 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .feature-card {
+            padding: 24px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            background: rgba(249, 226, 175, 0.10);
+            border: 1px solid rgba(249, 226, 175, 0.20);
+        }
+
+        .feature-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .config {
+            padding: 40px 24px 60px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .config h2 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .config .lead {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            max-width: 640px;
+            margin: 0 auto 32px;
+        }
+
+        pre.code {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+            font-size: 12.5px;
+            line-height: 1.6;
+            color: #d5d5db;
+            overflow-x: auto;
+        }
+
+        pre.code .cm { color: #6b7280; }
+        pre.code .k { color: var(--accent); }
+        pre.code .s { color: #a5b4fc; }
+
+        .back-section {
+            text-align: center;
+            padding: 40px 24px 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 24px;
+            border-radius: var(--radius);
+            border: 1px solid rgba(249, 226, 175, 0.30);
+            transition: all 0.15s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(249, 226, 175, 0.10);
+            border-color: rgba(249, 226, 175, 0.45);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        footer a:hover {
+            color: var(--text);
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 12px 16px; }
+            .features-grid { grid-template-columns: 1fr; }
+        }
+
+        html { scroll-behavior: smooth; }
+        ::selection { background: rgba(249, 226, 175, 0.30); }
+    </style>
+</head>
+<body>
+    <div class="bg-layer"></div>
+
+    <nav>
+        <a href="index.html" class="nav-brand">
+            <img src="https://raw.githubusercontent.com/pedrokarim/my-power-toys/main/assets/icons/icon-128.png" alt="MyPowerToys">
+            MyPowerToys
+        </a>
+        <div class="nav-links">
+            <a href="index.html#features">Features</a>
+            <a href="index.html#modules">Modules</a>
+            <a href="index.html#install">Install</a>
+            <a href="https://github.com/pedrokarim/my-power-toys" target="_blank">GitHub</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-badge">&#9899; Module Spotlight</div>
+        <h1>Shortcut Guide</h1>
+        <p>Never memorize a keyboard shortcut again. Trigger a translucent overlay that lists every shortcut on your system, grouped by category and rendered as clean keyboard badges.</p>
+
+        <div class="shortcut-badge">
+            Activation shortcut: <kbd>Super</kbd> + <kbd>?</kbd>
+        </div>
+    </section>
+
+    <section class="illustration">
+        <img src="images/shortcut-guide.png" alt="Shortcut Guide overlay showing System, Windows, Apps and Workspaces shortcuts">
+    </section>
+
+    <section class="features">
+        <h2>Features</h2>
+
+        <div class="features-grid">
+            <div class="glass feature-card">
+                <div class="feature-icon">&#128209;</div>
+                <div>
+                    <h3>Grouped by Category</h3>
+                    <p>Shortcuts are automatically grouped by category (System, Windows, Apps, Workspaces&hellip;) for quick scanning.</p>
+                </div>
+            </div>
+            <div class="glass feature-card">
+                <div class="feature-icon">&#9000;</div>
+                <div>
+                    <h3>Keyboard Badges</h3>
+                    <p>Each key is rendered as its own badge, so <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd> reads exactly like your keyboard.</p>
+                </div>
+            </div>
+            <div class="glass feature-card">
+                <div class="feature-icon">&#128295;</div>
+                <div>
+                    <h3>Custom Shortcuts</h3>
+                    <p>Add your own shortcuts through the TOML config &mdash; app-specific bindings, personal muscle memory, team conventions.</p>
+                </div>
+            </div>
+            <div class="glass feature-card">
+                <div class="feature-icon">&#127912;</div>
+                <div>
+                    <h3>Glassmorphism Overlay</h3>
+                    <p>Frameless, always-on-top, translucent panel. Auto-closes on focus loss or with <kbd>Esc</kbd>.</p>
+                </div>
+            </div>
+            <div class="glass feature-card">
+                <div class="feature-icon">&#128736;</div>
+                <div>
+                    <h3>GNOME Shortcuts Preloaded</h3>
+                    <p>The most common GNOME/Linux shortcuts are bundled &mdash; disable them any time if you only want your custom set.</p>
+                </div>
+            </div>
+            <div class="glass feature-card">
+                <div class="feature-icon">&#128269;</div>
+                <div>
+                    <h3>Hide Categories</h3>
+                    <p>Not interested in workspaces or app-launching shortcuts? Blacklist entire categories in the config.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="config">
+        <h2>Configuration</h2>
+        <p class="lead">Configure Shortcut Guide via <code>~/.config/my-power-toys/modules/shortcut-guide.toml</code>. All fields are optional.</p>
+
+<pre class="code"><span class="cm"># Show the built-in GNOME/Linux shortcut list (default: true)</span>
+<span class="k">show_gnome_shortcuts</span> = true
+
+<span class="cm"># Hide entire categories (case-insensitive)</span>
+<span class="k">hidden_categories</span> = [<span class="s">"Apps"</span>]
+
+<span class="cm"># Add your own shortcuts</span>
+[[<span class="k">custom_shortcuts</span>]]
+<span class="k">keys</span> = <span class="s">"Ctrl+Alt+T"</span>
+<span class="k">description</span> = <span class="s">"Open terminal"</span>
+<span class="k">category</span> = <span class="s">"Apps"</span>
+
+[[<span class="k">custom_shortcuts</span>]]
+<span class="k">keys</span> = <span class="s">"Super+E"</span>
+<span class="k">description</span> = <span class="s">"Open file manager"</span>
+<span class="k">category</span> = <span class="s">"Apps"</span></pre>
+    </section>
+
+    <section class="back-section">
+        <a href="index.html" class="back-link">
+            &#8592; Back to MyPowerToys
+        </a>
+    </section>
+
+    <footer>
+        <p>MyPowerToys &mdash; GPL-3.0 &middot; Made with Rust &middot; <a href="https://github.com/pedrokarim/my-power-toys">GitHub</a></p>
+    </footer>
+</body>
+</html>

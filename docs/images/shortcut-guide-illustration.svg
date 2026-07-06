@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" fill="none">
+  <defs>
+    <linearGradient id="sg-bg" x1="0" y1="0" x2="800" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e1c14"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <linearGradient id="sg-card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a2820" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#1a1810" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" rx="16" fill="url(#sg-bg)"/>
+  <rect width="800" height="400" rx="16" stroke="#F9E2AF" stroke-opacity="0.14" stroke-width="1" fill="none"/>
+
+  <!-- Subtle grid -->
+  <g stroke="#F9E2AF" stroke-opacity="0.04" stroke-width="1">
+    <line x1="0" y1="100" x2="800" y2="100"/>
+    <line x1="0" y1="200" x2="800" y2="200"/>
+    <line x1="0" y1="300" x2="800" y2="300"/>
+    <line x1="200" y1="0" x2="200" y2="400"/>
+    <line x1="400" y1="0" x2="400" y2="400"/>
+    <line x1="600" y1="0" x2="600" y2="400"/>
+  </g>
+
+  <!-- Overlay panel -->
+  <g transform="translate(140, 60)">
+    <rect width="520" height="280" rx="14" fill="url(#sg-card)" stroke="#F9E2AF" stroke-opacity="0.28" stroke-width="1"/>
+
+    <!-- Header -->
+    <rect x="0" y="0" width="520" height="52" rx="14" fill="#F9E2AF" fill-opacity="0.06"/>
+    <rect x="0" y="38" width="520" height="14" fill="#F9E2AF" fill-opacity="0"/>
+    <text x="24" y="32" fill="#F9E2AF" font-family="Inter, system-ui, sans-serif" font-size="14" font-weight="700" letter-spacing="0.5">KEYBOARD SHORTCUTS</text>
+    <circle cx="490" cy="26" r="4" fill="#F9E2AF" opacity="0.6"/>
+    <circle cx="474" cy="26" r="4" fill="#F9E2AF" opacity="0.3"/>
+    <circle cx="458" cy="26" r="4" fill="#F9E2AF" opacity="0.3"/>
+
+    <!-- Left column: System -->
+    <text x="24" y="80" fill="#F9E2AF" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" letter-spacing="1" opacity="0.75">SYSTEM</text>
+    <line x1="24" y1="88" x2="240" y2="88" stroke="#F9E2AF" stroke-opacity="0.15"/>
+
+    <!-- rows -->
+    <g font-family="Inter, system-ui, sans-serif" font-size="11" fill="#c8c4b6">
+      <text x="24" y="108">Lock screen</text>
+      <g transform="translate(178, 96)">
+        <rect width="28" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="14" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Super</text>
+        <text x="34" y="12" fill="#7a7460" font-size="10">+</text>
+        <rect x="42" y="0" width="14" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="49" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">L</text>
+      </g>
+
+      <text x="24" y="132">Show desktop</text>
+      <g transform="translate(178, 120)">
+        <rect width="28" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="14" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Super</text>
+        <text x="34" y="12" fill="#7a7460" font-size="10">+</text>
+        <rect x="42" y="0" width="14" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="49" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">D</text>
+      </g>
+
+      <text x="24" y="156">Activities</text>
+      <g transform="translate(178, 144)">
+        <rect width="28" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="14" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Super</text>
+      </g>
+    </g>
+
+    <!-- Right column: Windows -->
+    <text x="278" y="80" fill="#F9E2AF" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" letter-spacing="1" opacity="0.75">WINDOWS</text>
+    <line x1="278" y1="88" x2="494" y2="88" stroke="#F9E2AF" stroke-opacity="0.15"/>
+
+    <g font-family="Inter, system-ui, sans-serif" font-size="11" fill="#c8c4b6">
+      <text x="278" y="108">Switch apps</text>
+      <g transform="translate(410, 96)">
+        <rect width="28" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="14" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Super</text>
+        <text x="34" y="12" fill="#7a7460" font-size="10">+</text>
+        <rect x="42" y="0" width="24" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="54" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Tab</text>
+      </g>
+
+      <text x="278" y="132">Tile right</text>
+      <g transform="translate(410, 120)">
+        <rect width="28" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="14" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Super</text>
+        <text x="34" y="12" fill="#7a7460" font-size="10">+</text>
+        <rect x="42" y="0" width="18" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="51" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">&#8594;</text>
+      </g>
+
+      <text x="278" y="156">Close window</text>
+      <g transform="translate(410, 144)">
+        <rect width="20" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="10" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Alt</text>
+        <text x="26" y="12" fill="#7a7460" font-size="10">+</text>
+        <rect x="34" y="0" width="20" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="44" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">F4</text>
+      </g>
+    </g>
+
+    <!-- Workspaces block -->
+    <text x="24" y="198" fill="#F9E2AF" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" letter-spacing="1" opacity="0.75">WORKSPACES</text>
+    <line x1="24" y1="206" x2="494" y2="206" stroke="#F9E2AF" stroke-opacity="0.15"/>
+
+    <g font-family="Inter, system-ui, sans-serif" font-size="11" fill="#c8c4b6">
+      <text x="24" y="226">Switch workspace</text>
+      <g transform="translate(178, 214)">
+        <rect width="20" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="10" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Ctrl</text>
+        <text x="24" y="12" fill="#7a7460" font-size="10">+</text>
+        <rect x="32" y="0" width="28" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="46" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Super</text>
+        <text x="62" y="12" fill="#7a7460" font-size="10">+</text>
+        <rect x="70" y="0" width="18" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="79" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">&#8593;</text>
+      </g>
+
+      <text x="278" y="226">Move window</text>
+      <g transform="translate(410, 214)">
+        <rect width="20" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="10" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Ctrl</text>
+        <text x="24" y="12" fill="#7a7460" font-size="10">+</text>
+        <rect x="32" y="0" width="28" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="46" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">Shift</text>
+        <text x="62" y="12" fill="#7a7460" font-size="10">+</text>
+        <rect x="70" y="0" width="18" height="16" rx="3" fill="#F9E2AF" fill-opacity="0.12" stroke="#F9E2AF" stroke-opacity="0.35"/>
+        <text x="79" y="12" text-anchor="middle" fill="#F9E2AF" font-size="9" font-weight="600">&#8595;</text>
+      </g>
+    </g>
+
+    <!-- Footer -->
+    <rect x="0" y="248" width="520" height="32" rx="14" fill="#F9E2AF" fill-opacity="0.05"/>
+    <rect x="0" y="248" width="520" height="14" fill="#F9E2AF" fill-opacity="0"/>
+    <text x="24" y="268" fill="#7a7460" font-family="Inter, system-ui, sans-serif" font-size="10">Press Esc to close</text>
+    <text x="496" y="268" text-anchor="end" fill="#7a7460" font-family="Inter, system-ui, sans-serif" font-size="10">MyPowerToys &#183; Shortcut Guide</text>
+  </g>
+
+  <!-- Trigger key hint at bottom -->
+  <g transform="translate(400, 360)" text-anchor="middle">
+    <text fill="#c8c4b6" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="500" opacity="0.75">
+      Trigger with
+      <tspan fill="#F9E2AF" font-weight="700">Super</tspan>
+      <tspan fill="#7a7460">+</tspan>
+      <tspan fill="#F9E2AF" font-weight="700">?</tspan>
+    </text>
+  </g>
+</svg>

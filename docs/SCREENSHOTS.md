@@ -177,3 +177,5 @@ kill %1
 | `awake-illustration.svg` | Awake | SVG illustration: coffee cup with four mode icons (indefinite, timed, expirable, screen on) |
 | `bulk-rename.png` | Bulk Rename | Main window with search/replace, options, file table preview |
 | `hosts-editor.png` | Hosts Editor | Main window with toggle, filter, entry table, add/edit form |
+| `shortcut-guide.png` | Shortcut Guide | Glass overlay with header, two-column categories (System/Apps, Windows/Workspaces), key badges, Esc footer |
+| `shortcut-guide-illustration.svg` | Shortcut Guide | SVG illustration: glass overlay panel with keyboard badges grouped by category |
